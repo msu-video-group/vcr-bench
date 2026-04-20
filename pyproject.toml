@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vcr-bench"
+version = "0.1.0"
+description = "Video classifier robustness benchmark"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "huggingface_hub>=0.24.0",
+  "tqdm>=4.66.0",
+  "tomli>=2.0.1; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0"]
+
+[project.scripts]
+vcr-bench-attack = "vcr_bench.cli.attack:main"
+vcr-bench-artifacts = "vcr_bench.cli.artifacts:main"
+vcr-bench-test = "vcr_bench.cli.test:main"
+vcr-bench-prepare = "vcr_bench.cli.prepare:main"
+vcr-bench-remote = "vcr_bench.remote.cli:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["vcr_bench*", "vg_videobench*"]

@@ -1,0 +1,18 @@
+[remote]
+default = "main"
+
+[remote.remotes.main]
+ssh_host = "your-host"
+repo_path = "~/your/path/vcr-bench"
+git_ref = "origin/main"
+
+[remote.remotes.main.slurm]
+container_image = "~/containers/python.sqsh"
+container_mounts = "~/your/path/vcr-bench:/work"
+
+[paths]
+cache_dir = ".cache/vcr_bench"
+data_dir = "data"
+results_dir = "results"
+remote_results_dir = "remote_results"
+

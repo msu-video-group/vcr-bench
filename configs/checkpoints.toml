@@ -1,0 +1,206 @@
+[checkpoints.x3d_m_kinetics400]
+model = "x3d"
+backbone = "m"
+weights_dataset = "kinetics400"
+repo_id = "vcr-bench/checkpoints-x3d"
+filename = "x3d_m_kinetics400_mmaction.pth"
+revision = "main"
+local_subdir = "checkpoints/x3d"
+
+[checkpoints.timesformer_base_kinetics400]
+model = "timesformer"
+backbone = "base"
+weights_dataset = "kinetics400"
+repo_id = "vcr-bench/checkpoints-timesformer"
+filename = "timesformer_vit_base_p16_kinetics400_mmaction.pth"
+revision = "main"
+local_subdir = "checkpoints/timesformer"
+
+[checkpoints.videomae_base_kinetics400]
+model = "videomae"
+backbone = "base"
+weights_dataset = "kinetics400"
+repo_id = "vcr-bench/checkpoints-videomae"
+filename = "videomae_vit_base_p16_kinetics400_mmaction.pth"
+revision = "main"
+local_subdir = "checkpoints/videomae"
+
+[checkpoints.videomaev2_base_kinetics400]
+model = "videomaev2"
+backbone = "base"
+weights_dataset = "kinetics400"
+repo_id = "vcr-bench/checkpoints-videomaev2"
+filename = "videomaev2_vit_base_p16_kinetics400_mmaction.pth"
+revision = "main"
+local_subdir = "checkpoints/videomaev2"
+
+[checkpoints.videoswin_base_kinetics400]
+model = "videoswin"
+backbone = "base"
+weights_dataset = "kinetics400"
+repo_id = "vcr-bench/checkpoints-videoswin"
+filename = "videoswin_base_p244_kinetics400_mmaction.pth"
+revision = "main"
+local_subdir = "checkpoints/videoswin"
+
+[checkpoints.slowfast_r101_kinetics400]
+model = "slowfast"
+backbone = "r101"
+weights_dataset = "kinetics400"
+repo_id = "vcr-bench/checkpoints-slowfast"
+filename = "slowfast_r101_kinetics400_mmaction.pth"
+revision = "main"
+local_subdir = "checkpoints/slowfast"
+
+[checkpoints.slowonly_r50_kinetics400]
+model = "slowonly"
+backbone = "r50"
+weights_dataset = "kinetics400"
+repo_id = "vcr-bench/checkpoints-slowonly"
+filename = "slowonly_r50_kinetics400_mmaction.pth"
+revision = "main"
+local_subdir = "checkpoints/slowonly"
+
+[checkpoints.mvitv2_base_kinetics400]
+model = "mvitv2"
+backbone = "base"
+weights_dataset = "kinetics400"
+repo_id = "vcr-bench/checkpoints-mvitv2"
+filename = "mvit_base_p244_kinetics400_mmaction.pth"
+revision = "main"
+local_subdir = "checkpoints/mvitv2"
+
+[checkpoints.r2plus1d_r34_kinetics400]
+model = "r2plus1d"
+backbone = "r34"
+weights_dataset = "kinetics400"
+repo_id = "vcr-bench/checkpoints-r2plus1d"
+filename = "r2plus1d_r34_kinetics400_mmaction.pth"
+revision = "main"
+local_subdir = "checkpoints/r2plus1d"
+
+[checkpoints.i3d_r50_kinetics400]
+model = "i3d"
+backbone = "r50"
+weights_dataset = "kinetics400"
+repo_id = "vcr-bench/checkpoints-i3d"
+filename = "i3d_r50_kinetics400_mmaction.pth"
+revision = "main"
+local_subdir = "checkpoints/i3d"
+
+[checkpoints.i3dnonlocal_r50_kinetics400]
+model = "i3dnonlocal"
+backbone = "r50"
+weights_dataset = "kinetics400"
+repo_id = "vcr-bench/checkpoints-i3dnonlocal"
+filename = "i3dnonlocal_r50_kinetics400_mmaction.pth"
+revision = "main"
+local_subdir = "checkpoints/i3dnonlocal"
+
+[checkpoints.tsm_r50_kinetics400]
+model = "tsm"
+backbone = "r50"
+weights_dataset = "kinetics400"
+repo_id = "vcr-bench/checkpoints-tsm"
+filename = "tsm_r50_kinetics400_mmaction.pth"
+revision = "main"
+local_subdir = "checkpoints/tsm"
+
+[checkpoints.tsmnonlocal_r50_kinetics400]
+model = "tsmnonlocal"
+backbone = "r50"
+weights_dataset = "kinetics400"
+repo_id = "vcr-bench/checkpoints-tsmnonlocal"
+filename = "tsmnonlocal_r50_kinetics400_mmaction.pth"
+revision = "main"
+local_subdir = "checkpoints/tsmnonlocal"
+
+[checkpoints.uniformer_base_kinetics400]
+model = "uniformer"
+backbone = "base"
+weights_dataset = "kinetics400"
+repo_id = "vcr-bench/checkpoints-uniformer"
+filename = "uniformer_base_kinetics400_mmaction.pth"
+revision = "main"
+local_subdir = "checkpoints/uniformer"
+
+[checkpoints.uniformerv2_base_kinetics400]
+model = "uniformerv2"
+backbone = "base"
+weights_dataset = "kinetics400"
+repo_id = "vcr-bench/checkpoints-uniformerv2"
+filename = "uniformerv2_base_kinetics400_mmaction.pth"
+revision = "main"
+local_subdir = "checkpoints/uniformerv2"
+
+[checkpoints.actionclip_base_kinetics400]
+model = "actionclip"
+backbone = "base"
+weights_dataset = "kinetics400"
+repo_id = "vcr-bench/checkpoints-actionclip"
+filename = "actionclip_vit_b16_32f_kinetics400_mmaction.pth"
+revision = "main"
+local_subdir = "checkpoints/actionclip"
+
+[checkpoints.internvideo_base_kinetics400]
+model = "internvideo"
+backbone = "base"
+weights_dataset = "kinetics400"
+repo_id = "vcr-bench/checkpoints-internvideo"
+filename = "internvideo_vit_base_p16_kinetics400.bin"
+revision = "main"
+local_subdir = "checkpoints/internvideo"
+
+[checkpoints.amd_vitb_kinetics400]
+model = "amd"
+backbone = "vitb"
+weights_dataset = "kinetics400"
+repo_id = "maxv65/vcr-bench"
+filename = "amd_vitb_k400_finetune_90e.pth"
+revision = "main"
+local_subdir = "checkpoints/amd"
+
+[checkpoints.ila_vit_b16_kinetics400]
+model = "ila"
+backbone = "vit_b16"
+weights_dataset = "kinetics400"
+repo_id = "maxv65/vcr-bench"
+filename = "ila_k400_B_16_8_rel.pth"
+revision = "main"
+local_subdir = "checkpoints/ila"
+
+[checkpoints.internvideo2_vit_1b_p14_kinetics400]
+model = "internvideo2"
+backbone = "vit_1b_p14"
+weights_dataset = "kinetics400"
+repo_id = "maxv65/vcr-bench"
+filename = "internvideo2_1B_ft_k710_ft_k400_f16.pth"
+revision = "main"
+local_subdir = "checkpoints/internvideo2"
+
+[checkpoints.onepeace_vit_l40_kinetics400]
+model = "onepeace"
+backbone = "vit_l40"
+weights_dataset = "kinetics400"
+repo_id = "maxv65/vcr-bench"
+filename = "onepeace_video_k400.pth"
+revision = "main"
+local_subdir = "checkpoints/onepeace"
+
+[checkpoints.tadaformer_large_14_kinetics400]
+model = "tadaformer"
+backbone = "large_14"
+weights_dataset = "kinetics400"
+repo_id = "maxv65/vcr-bench"
+filename = "tadaformer_l14_clip+k710_k400_64f_89.9.pyth"
+revision = "main"
+local_subdir = "checkpoints/tadaformer"
+
+[checkpoints.umt_vit_large_p16_kinetics400]
+model = "umt"
+backbone = "vit_large_p16"
+weights_dataset = "kinetics400"
+repo_id = "maxv65/vcr-bench"
+filename = "umt_l16_ptk710_ftk710_ftk400_f8_res224.pth"
+revision = "main"
+local_subdir = "checkpoints/umt"

@@ -1,0 +1,23 @@
+[paths]
+cache_dir = ".cache/vcr_bench"
+data_dir = "data"
+results_dir = "results"
+remote_results_dir = "remote_results"
+
+[remote]
+default = "main"
+
+[remote.remotes.main]
+ssh_host = "main"
+repo_path = "~/work/vcr-bench"
+git_ref = "origin/main"
+script_root = "scripts"
+attack_results_root = "results/remote_attacks"
+accuracy_results_root = "results/accuracy/remote"
+
+[remote.remotes.main.slurm]
+container_image = ""
+container_mounts = "~/work/vcr-bench:/work"
+
+[artifacts]
+hf_token_env = "HF_TOKEN"

@@ -1,5 +1,9 @@
 *.mp4
-*results*
 *.pyc
 *.pth
-*remote*
+__pycache__/
+.pytest_cache/
+.cache/
+configs/local.toml
+remote_results/
+results/

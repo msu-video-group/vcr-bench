@@ -1,0 +1,25 @@
+[accuracy_suites.default]
+dataset = "kinetics400"
+dataset_subset = "kinetics400_mini_val"
+num_videos = 8
+models = ["x3d", "timesformer", "videomae"]
+
+[attack_suites.default]
+dataset = "kinetics400"
+dataset_subset = "kinetics400_mini_val"
+num_videos = 8
+attack_name = "default_suite"
+results_root = "results/remote_attacks"
+
+[[attack_suites.default.entries]]
+model = "x3d"
+attack = "ifgsm"
+
+[[attack_suites.default.entries]]
+model = "timesformer"
+attack = "mifgsm"
+
+[[attack_suites.default.entries]]
+model = "videomae"
+attack = "square"
+
