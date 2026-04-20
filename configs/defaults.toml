@@ -10,7 +10,7 @@ default = "main"
 [remote.remotes.main]
 ssh_host = "main"
 repo_path = "~/users/29m_pli/vcr-bench"
-git_ref = "origin/main"
+git_ref = "origin/master"
 script_root = "scripts"
 attack_results_root = "results/remote_attacks"
 accuracy_results_root = "results/accuracy/remote"
