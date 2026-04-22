@@ -1,0 +1,43 @@
+{
+  "kind": "defence",
+  "name": "freqpure",
+  "default_variant": "default",
+  "variants": {
+    "default": {
+      "factory_name": "freqpure",
+      "params": {
+        "checkpoint_path": "vcr_bench/defences/freqpure/256x256_diffusion_uncond.pt",
+        "timestep": 100,
+        "amplitude_cut_range": 50.0,
+        "phase_cut_range": 50.0,
+        "delta": 0.6,
+        "forward_noise_steps": 5,
+        "sampling_method": "ddim"
+      }
+    },
+    "strong": {
+      "factory_name": "freqpure",
+      "params": {
+        "checkpoint_path": "vcr_bench/defences/freqpure/256x256_diffusion_uncond.pt",
+        "timestep": 200,
+        "amplitude_cut_range": 50.0,
+        "phase_cut_range": 50.0,
+        "delta": 0.6,
+        "forward_noise_steps": 5,
+        "sampling_method": "ddim"
+      }
+    },
+    "ddpm": {
+      "factory_name": "freqpure",
+      "params": {
+        "checkpoint_path": "vcr_bench/defences/freqpure/256x256_diffusion_uncond.pt",
+        "timestep": 100,
+        "amplitude_cut_range": 50.0,
+        "phase_cut_range": 50.0,
+        "delta": 0.6,
+        "forward_noise_steps": 5,
+        "sampling_method": "ddpm"
+      }
+    }
+  }
+}
