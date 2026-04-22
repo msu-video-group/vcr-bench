@@ -6,12 +6,16 @@ from pathlib import Path
 from typing import Any
 
 from huggingface_hub import HfApi, hf_hub_download
+from huggingface_hub.errors import HfHubHTTPError, RepositoryNotFoundError
 
 from .config import get_path, load_checkpoint_registry, load_dataset_registry, load_settings
 
 
 def _hf_download(*, repo_id: str, filename: str, revision: str, repo_type: str, local_dir: Path) -> Path:
     local_dir.mkdir(parents=True, exist_ok=True)
+    target = local_dir / filename
+    if target.exists():
+        return target
     path = hf_hub_download(
         repo_id=repo_id,
         filename=filename,
@@ -55,18 +59,36 @@ def resolve_checkpoint_artifact(
     target = target_dir / str(entry["filename"])
     if target.exists() or not auto_download:
         return target
-    return _hf_download(
-        repo_id=str(entry["repo_id"]),
-        filename=str(entry["filename"]),
-        revision=str(entry.get("revision", "main")),
-        repo_type="model",
-        local_dir=target_dir,
-    )
+    try:
+        return _hf_download(
+            repo_id=str(entry["repo_id"]),
+            filename=str(entry["filename"]),
+            revision=str(entry.get("revision", "main")),
+            repo_type="model",
+            local_dir=target_dir,
+        )
+    except (HfHubHTTPError, RepositoryNotFoundError):
+        return None
 
 
 def list_dataset_subsets(dataset: str) -> list[str]:
     registry = load_dataset_registry().get(dataset, {})
     return sorted(registry.keys()) if isinstance(registry, dict) else []
+
+
+def default_dataset_subset(dataset: str, split: str = "val") -> str | None:
+    registry = load_dataset_registry().get(dataset, {})
+    if not isinstance(registry, dict):
+        return None
+    split = str(split or "val")
+    matching = [
+        name
+        for name, entry in registry.items()
+        if isinstance(entry, dict) and str(entry.get("split", "val")) == split
+    ]
+    if not matching:
+        return None
+    return sorted(matching, key=lambda name: (0 if name.endswith(f"_{split}") else 1, name))[0]
 
 
 def get_dataset_subset_entry(dataset: str, subset: str) -> dict[str, Any] | None:

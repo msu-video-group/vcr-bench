@@ -84,7 +84,8 @@ class AmdK400Classifier(BaseVideoClassifier):
         rel = spec.get("checkpoint_relpath")
         if rel:
             repo_root = Path(__file__).resolve().parents[2]
-            candidate = repo_root / Path(rel)
+            rel_path = Path(rel)
+            candidate = repo_root / "vcr_bench" / rel_path if rel_path.parts and rel_path.parts[0] == "Classifiers" else repo_root / rel_path
             if candidate.exists():
                 return str(candidate)
         return super()._default_checkpoint_path(backbone, weights_dataset)

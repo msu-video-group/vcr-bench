@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from vcr_bench.artifacts import default_dataset_subset
 from vcr_bench.datasets import create_dataset
 from vcr_bench.models import create_model, get_model_options
 
@@ -19,6 +20,14 @@ class CliResolvedContext:
 
 def build_model_dataset_context(args: Any, *, pipeline_stage_override: str | None = None) -> CliResolvedContext:
     stage = pipeline_stage_override or getattr(args, "pipeline_stage", "test")
+    if (
+        getattr(args, "dataset", None)
+        and getattr(args, "dataset_subset", None) is None
+        and not any(getattr(args, attr, None) for attr in ("video_root", "annotations", "labels"))
+    ):
+        subset = default_dataset_subset(getattr(args, "dataset"), getattr(args, "split", "val"))
+        if subset:
+            setattr(args, "dataset_subset", subset)
     preview_model = create_model(
         args.model,
         checkpoint_path=getattr(args, "checkpoint", None),

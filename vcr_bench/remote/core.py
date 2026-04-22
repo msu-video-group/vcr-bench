@@ -25,6 +25,18 @@ def remote_env_expr(value: str) -> str:
     def dq(inner: str) -> str:
         escaped = inner.replace('"', '\\"')
         return f"\"{escaped}\""
+    def expand_remote_tilde(path: str) -> str:
+        if path == "~":
+            return "$HOME"
+        if path.startswith("~/"):
+            return f"$HOME/{path[2:]}"
+        return path
+    if "," in text and ":" in text:
+        specs = []
+        for spec in text.split(","):
+            left, sep, right = spec.partition(":")
+            specs.append(f"{expand_remote_tilde(left)}{sep}{right}" if sep else expand_remote_tilde(left))
+        return dq(",".join(specs))
     if ":" in text and not text.startswith(("http://", "https://")):
         left, right = text.split(":", 1)
         if left == "~":
@@ -99,7 +111,11 @@ def build_force_sync_command(repo_path: str, git_ref: str, script_root: str) -> 
         f"cd {repo_expr} && "
         "git fetch --all --prune && "
         f"git reset --hard {q(git_ref)} && "
-        "git clean -fd && "
+        "git clean -fd "
+        "-e vcr_bench/Classifiers "
+        "-e vcr_bench/Classifiers/** "
+        "-e vcr_bench/models/*/checkpoints "
+        "-e vcr_bench/models/*/checkpoints/** && "
         f"chmod +x ./{script_root}/batch_attack.sh ./{script_root}/test_models.sh ./{script_root}/batch_prepare.sh || true"
     )
     return f"bash -lc {q(force_sync)}"

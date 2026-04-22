@@ -138,7 +138,10 @@ class BaseVideoClassifier(ABC):
         rel = spec.get("checkpoint_relpath")
         if rel:
             repo_root = Path(__file__).resolve().parents[2]
-            return str(repo_root / Path(rel))
+            rel_path = Path(rel)
+            if rel_path.parts and rel_path.parts[0] == "Classifiers":
+                return str(repo_root / "vcr_bench" / rel_path)
+            return str(repo_root / rel_path)
         return None
 
     @classmethod

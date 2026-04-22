@@ -14,7 +14,7 @@ def decode_video_nthwc(path: str, return_info: bool = False):
     frames = []
     for frame in container.decode(stream):
         arr = frame.to_rgb().to_ndarray()
-        frames.append(torch.frombuffer(arr.tobytes(), dtype=torch.uint8).reshape(arr.shape))
+        frames.append(torch.from_numpy(arr.copy()))
     container.close()
 
     if not frames:

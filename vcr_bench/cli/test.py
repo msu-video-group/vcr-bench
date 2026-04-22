@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from typing import Any
 
 from vcr_bench.cli.common import (
     build_default_resolution_payload,
@@ -13,13 +14,26 @@ from vcr_bench.cli.common import (
 )
 from vcr_bench.datasets import create_dataset
 from vcr_bench.utils.eval import run_accuracy
+from vcr_bench.utils.vram import VramProfileContext, append_vram_profile_csv, profile_model_vram_for_one_video
 from vcr_bench.models import create_model
+from vcr_bench.presets import (
+    apply_run_preset_to_args,
+    first_run_model,
+    parse_overrides,
+    resolve_entity_preset,
+    resolve_run_preset,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="vcr_bench accuracy test (phase 1)")
-    parser.add_argument("--model", required=True)
-    parser.add_argument("--dataset", required=True)
+    parser.add_argument("--model", default=None)
+    parser.add_argument("--dataset", default=None)
+    parser.add_argument("--run-preset", default=None, help="JSON run preset name or path")
+    parser.add_argument("--model-preset", default=None, help="JSON model preset name or path")
+    parser.add_argument("--model-variant", default=None)
+    parser.add_argument("--override", action="append", default=[], help="Preset override: dotted.key=json_value")
+    parser.add_argument("--print-resolved-preset", action="store_true")
     parser.add_argument("--dataset-subset", default=None, help="Named dataset subset manifest to auto-download and resolve")
     parser.add_argument("--video-root", default=None)
     parser.add_argument("--annotations", default=None)
@@ -40,6 +54,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--split", default="val")
     parser.add_argument("--output-json", default=None)
     parser.add_argument("--output-csv", default=None, help="Write one-row summary CSV")
+    parser.add_argument("--vram-profile-csv", default=None, help="Append one-video VRAM profile rows to a separate CSV")
+    parser.add_argument("--vram-profile-index", type=int, default=None, help="Dataset index used for --vram-profile-csv; defaults to seeded random")
     parser.add_argument("--return-full", action="store_true", help="Use rich output internally (debug)")
     parser.add_argument("--no-skip-errors", action="store_true", help="Raise on first per-sample error instead of skipping")
     parser.add_argument("--verbose", action="store_true")
@@ -48,8 +64,42 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _apply_presets(args: argparse.Namespace) -> dict[str, Any]:
+    overrides = parse_overrides(args.override)
+    resolved: dict[str, Any] = {}
+    run = None
+    if args.run_preset:
+        run = resolve_run_preset(args.run_preset, overrides=overrides.get("run") if isinstance(overrides.get("run"), dict) else None)
+        apply_run_preset_to_args(args, run)
+        resolved["run"] = run
+        model_ref = first_run_model(run)
+        if model_ref and not args.model_preset and not args.model:
+            args.model_preset = model_ref.get("preset") or model_ref.get("name")
+            args.model_variant = model_ref.get("variant", args.model_variant)
+    if args.model_preset:
+        model_overrides = overrides.get("model") if isinstance(overrides.get("model"), dict) else None
+        model_spec = resolve_entity_preset("model", args.model_preset, variant=args.model_variant, overrides=model_overrides)
+        resolved["model"] = model_spec
+        args.model = args.model or str(model_spec["factory_name"])
+        for key, value in model_spec.get("params", {}).items():
+            attr = key.replace("-", "_")
+            if hasattr(args, attr):
+                current = getattr(args, attr)
+                if current is None or current is False or (attr == "device" and current == "cuda"):
+                    setattr(args, attr, value)
+    if args.dataset is None:
+        raise SystemExit("--dataset is required unless provided by --run-preset")
+    if args.model is None:
+        raise SystemExit("--model is required unless provided by --model-preset or --run-preset")
+    return resolved
+
+
 def main() -> None:
     args = build_parser().parse_args()
+    resolved_preset = _apply_presets(args)
+    if args.print_resolved_preset:
+        print(json.dumps(resolved_preset, indent=2, sort_keys=True))
+        return
     if args.list_model_options:
         print_model_options_payload(args.model)
         return
@@ -76,6 +126,22 @@ def main() -> None:
         grad_forward_chunk_size=args.grad_forward_chunk_size,
         device=args.device,
     )
+    if args.vram_profile_csv:
+        rows = profile_model_vram_for_one_video(
+            model=model,
+            dataset=dataset,
+            context=VramProfileContext(
+                model_arg=args.model,
+                dataset_arg=args.dataset,
+                dataset_subset=args.dataset_subset,
+                backbone=args.backbone,
+                weights_dataset=args.weights_dataset,
+                pipeline_stage=args.pipeline_stage,
+                seed=args.seed,
+                sample_index=args.vram_profile_index,
+            ),
+        )
+        append_vram_profile_csv(args.vram_profile_csv, rows)
     if args.verbose and hasattr(model, "preprocessed_format"):
         print(f"model={args.model} raw={model.raw_input_format} preprocessed={model.preprocessed_format}")
     summary = run_accuracy(

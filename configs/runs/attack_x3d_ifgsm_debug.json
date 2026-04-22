@@ -1,0 +1,32 @@
+{
+  "kind": "run",
+  "name": "attack_x3d_ifgsm_debug",
+  "task": "attack",
+  "dataset": {
+    "name": "kinetics400",
+    "subset": "k400_val",
+    "num_videos": 8,
+    "split": "val"
+  },
+  "models": [
+    {
+      "preset": "x3d",
+      "variant": "m_k400"
+    }
+  ],
+  "attacks": [
+    {
+      "preset": "ifgsm",
+      "variant": "default"
+    }
+  ],
+  "runtime": {
+    "device": "cuda",
+    "batch_size": 1,
+    "num_workers": 0
+  },
+  "output": {
+    "results_root": "results",
+    "run_name": "attack_x3d_ifgsm_debug"
+  }
+}

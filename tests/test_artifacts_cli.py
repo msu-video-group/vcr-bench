@@ -30,9 +30,3 @@ def test_build_dataset_archive(tmp_path: Path) -> None:
         names = sorted(zf.namelist())
     assert "annotations/val.csv" in names
     assert "videos/sample.mp4" in names
-
-
-def test_vg_videobench_compat_alias_imports() -> None:
-    import vg_videobench  # noqa: F401
-    import vg_videobench.remote.cli  # noqa: F401
-    import vg_videobench.cli.attack  # noqa: F401

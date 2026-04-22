@@ -11,7 +11,7 @@ from ..pipeline_config import PipelineStage
 
 
 def _internvideo1_root() -> Path:
-    return Path(__file__).resolve().parents[3] / "Classifiers" / "InternVideo" / "InternVideo1" / "Pretrain" / "VideoMAE"
+    return Path(__file__).resolve().parents[2] / "Classifiers" / "InternVideo" / "InternVideo1" / "Pretrain" / "VideoMAE"
 
 
 class InternVideoClassifier(BaseVideoClassifier):

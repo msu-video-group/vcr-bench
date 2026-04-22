@@ -12,7 +12,7 @@ from ..pipeline_config import PipelineStage
 
 
 def _tada_root() -> Path:
-    return Path(__file__).resolve().parents[3] / "Classifiers" / "TAdaConv"
+    return Path(__file__).resolve().parents[2] / "Classifiers" / "TAdaConv"
 
 
 class TAdaFormerClassifier(BaseVideoClassifier):

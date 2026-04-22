@@ -28,4 +28,4 @@ vcr-bench-remote = "vcr_bench.remote.cli:main"
 include-package-data = true
 
 [tool.setuptools.packages.find]
-include = ["vcr_bench*", "vg_videobench*"]
+include = ["vcr_bench*"]

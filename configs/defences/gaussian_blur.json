@@ -1,0 +1,14 @@
+{
+  "kind": "defence",
+  "name": "gaussian_blur",
+  "default_variant": "default",
+  "variants": {
+    "default": {
+      "factory_name": "gaussian_blur",
+      "params": {
+        "kernel_size": 5,
+        "sigma": 1.0
+      }
+    }
+  }
+}

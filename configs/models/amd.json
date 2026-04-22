@@ -1,0 +1,16 @@
+{
+  "kind": "model",
+  "name": "amd",
+  "default_variant": "vitb_k400",
+  "variants": {
+    "vitb_k400": {
+      "factory_name": "amd",
+      "params": {
+        "backbone": "vitb",
+        "weights_dataset": "kinetics400",
+        "grad_forward_chunk_size": 3,
+        "device": "cuda"
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "kind": "model",
+  "name": "x3d",
+  "default_variant": "m_k400",
+  "variants": {
+    "m_k400": {
+      "factory_name": "x3d",
+      "params": {
+        "backbone": "m",
+        "weights_dataset": "kinetics400",
+        "device": "cuda"
+      }
+    }
+  }
+}

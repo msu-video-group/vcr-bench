@@ -1,0 +1,22 @@
+{
+  "kind": "attack",
+  "name": "ifgsm",
+  "default_variant": "default",
+  "presets": {
+    "default": {
+      "factory_name": "ifgsm",
+      "params": {
+        "eps": 8.0,
+        "alpha": 1.0,
+        "steps": 10,
+        "random_start": false
+      }
+    },
+    "random_start": {
+      "inherits": "default",
+      "params": {
+        "random_start": true
+      }
+    }
+  }
+}

@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from vcr_bench.benchmarks import expand_accuracy_suite, expand_attack_suite
+from vcr_bench.presets import first_run_attack, first_run_model, parse_overrides, resolve_run_preset
 
 from .config import default_config_path, load_remote_config
 from .core import (
@@ -78,6 +79,11 @@ def build_parser() -> argparse.ArgumentParser:
     attack_suite.add_argument("--model", action="append", default=[])
     attack_suite.add_argument("--attack", action="append", default=[])
     attack_suite.add_argument("--dry-run", action="store_true")
+
+    preset = sub.add_parser("launch-preset")
+    preset.add_argument("--preset", required=True, help="JSON run preset name or path")
+    preset.add_argument("--override", action="append", default=[], help="Preset override: dotted.key=json_value")
+    preset.add_argument("--dry-run", action="store_true")
 
     status = sub.add_parser("job-status")
     status.add_argument("--job-id", type=int, required=True)
@@ -365,6 +371,78 @@ def cmd_launch_attack_suite(args: argparse.Namespace, cfg: dict[str, Any]) -> No
     _emit(payload)
 
 
+def cmd_launch_preset(args: argparse.Namespace, cfg: dict[str, Any]) -> None:
+    overrides = parse_overrides(args.override)
+    run = resolve_run_preset(args.preset, overrides=overrides.get("run") if isinstance(overrides.get("run"), dict) else None)
+    task = str(run.get("task", "accuracy"))
+    dataset = run.get("dataset", {}) if isinstance(run.get("dataset"), dict) else {}
+    runtime = run.get("runtime", {}) if isinstance(run.get("runtime"), dict) else {}
+    output = run.get("output", {}) if isinstance(run.get("output"), dict) else {}
+    model_ref = first_run_model(run)
+    if model_ref is None:
+        raise ValueError(f"Run preset has no models: {args.preset}")
+    model_name = str(model_ref.get("name") or model_ref.get("preset"))
+    if task == "accuracy":
+        launch_args = argparse.Namespace(
+            mode="test",
+            model=model_name,
+            model_spec=[],
+            dataset=str(dataset.get("name", "kinetics400")),
+            dataset_subset=dataset.get("subset"),
+            num_videos=int(dataset.get("num_videos", 8)),
+            device=str(runtime.get("device", "cuda")),
+            backbone=None,
+            weights_dataset=None,
+            checkpoint=None,
+            attack=None,
+            attack_name=str(output.get("run_name", run.get("name", "preset_accuracy"))),
+            eps=None,
+            iter=None,
+            target=False,
+            comment="",
+            results_root=output.get("results_root", cfg["accuracy_results_root"]),
+            dump_freq=None,
+            defence=None,
+            lite_attack=False,
+            save_defence_stages=False,
+            dry_run=bool(args.dry_run),
+        )
+    elif task == "attack":
+        attack_ref = first_run_attack(run)
+        if attack_ref is None:
+            raise ValueError(f"Attack run preset has no attacks: {args.preset}")
+        launch_args = argparse.Namespace(
+            mode="attack",
+            model=model_name,
+            model_spec=[],
+            dataset=str(dataset.get("name", "kinetics400")),
+            dataset_subset=dataset.get("subset"),
+            num_videos=int(dataset.get("num_videos", 8)),
+            device=str(runtime.get("device", "cuda")),
+            backbone=None,
+            weights_dataset=None,
+            checkpoint=None,
+            attack=str(attack_ref.get("name") or attack_ref.get("preset")),
+            attack_name=str(output.get("run_name", run.get("name", "preset_attack"))),
+            eps=None,
+            iter=None,
+            target=bool(run.get("target", False)),
+            comment="",
+            results_root=output.get("results_root", cfg["attack_results_root"]),
+            dump_freq=None,
+            defence=None,
+            lite_attack=bool(run.get("lite_attack", False)),
+            save_defence_stages=bool(run.get("save_defence_stages", False)),
+            dry_run=bool(args.dry_run),
+        )
+    else:
+        raise ValueError(f"Unsupported run preset task: {task}")
+    payload = cmd_launch_job(launch_args, cfg, emit=False)
+    payload["preset"] = args.preset
+    payload["resolved_run"] = run
+    _emit(payload)
+
+
 def cmd_job_status(args: argparse.Namespace, cfg: dict[str, Any]) -> None:
     log_paths = build_remote_log_paths(cfg["repo_path"], args.job_id)
     squeue_cmd = f"squeue -j {int(args.job_id)} -h -o '%T|%N'"
@@ -448,6 +526,8 @@ def main() -> None:
         cmd_launch_accuracy_suite(args, cfg)
     elif args.command == "launch-attack-suite":
         cmd_launch_attack_suite(args, cfg)
+    elif args.command == "launch-preset":
+        cmd_launch_preset(args, cfg)
     elif args.command == "job-status":
         cmd_job_status(args, cfg)
     elif args.command == "fetch-job-artifacts":

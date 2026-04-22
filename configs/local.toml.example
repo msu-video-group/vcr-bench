@@ -7,7 +7,7 @@ repo_path = "~/your/path/vcr-bench"
 git_ref = "origin/main"
 
 [remote.remotes.main.slurm]
-container_image = "~/containers/python.sqsh"
+container_image = "~/users/29m_pli/python.sqsh"
 container_mounts = "~/your/path/vcr-bench:/work"
 
 [paths]
@@ -15,4 +15,3 @@ cache_dir = ".cache/vcr_bench"
 data_dir = "data"
 results_dir = "results"
 remote_results_dir = "remote_results"
-

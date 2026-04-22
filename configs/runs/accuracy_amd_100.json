@@ -1,0 +1,26 @@
+{
+  "kind": "run",
+  "name": "accuracy_amd_100",
+  "task": "accuracy",
+  "dataset": {
+    "name": "kinetics400",
+    "subset": "k400_val",
+    "num_videos": 100,
+    "split": "val"
+  },
+  "models": [
+    {
+      "preset": "amd",
+      "variant": "vitb_k400"
+    }
+  ],
+  "runtime": {
+    "device": "cuda",
+    "batch_size": 1,
+    "num_workers": 0
+  },
+  "output": {
+    "results_root": "results/accuracy",
+    "run_name": "accuracy_amd_100"
+  }
+}

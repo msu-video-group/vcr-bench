@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from typing import Any
 
 from vcr_bench.attacks import create_attack
 from vcr_bench.cli.common import (
@@ -14,7 +15,17 @@ from vcr_bench.cli.common import (
 )
 from vcr_bench.datasets import create_dataset
 from vcr_bench.models import create_model
+from vcr_bench.presets import (
+    apply_run_preset_to_args,
+    first_run_attack,
+    first_run_defence,
+    first_run_model,
+    parse_overrides,
+    resolve_entity_preset,
+    resolve_run_preset,
+)
 from vcr_bench.utils.eval import run_attack
+from vcr_bench.utils.vram import VramProfileContext, append_vram_profile_csv, profile_model_vram_for_one_video
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -23,9 +34,18 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--batch-size", type=int, default=1, help=argparse.SUPPRESS)
     p.add_argument("--num-workers", type=int, default=0, help=argparse.SUPPRESS)
     p.add_argument("--attack-name", type=str, default="attacks", help="name for logging root")
-    p.add_argument("--model", required=True)
-    p.add_argument("--attack", required=True)
-    p.add_argument("--dataset", required=True)
+    p.add_argument("--model", default=None)
+    p.add_argument("--attack", default=None)
+    p.add_argument("--dataset", default=None)
+    p.add_argument("--run-preset", default=None, help="JSON run preset name or path")
+    p.add_argument("--model-preset", default=None, help="JSON model preset name or path")
+    p.add_argument("--model-variant", default=None)
+    p.add_argument("--attack-preset", default=None, help="JSON attack preset name or path")
+    p.add_argument("--attack-variant", default=None)
+    p.add_argument("--defence-preset", default=None, help="JSON defence preset name or path")
+    p.add_argument("--defence-variant", default=None)
+    p.add_argument("--override", action="append", default=[], help="Preset override: dotted.key=json_value")
+    p.add_argument("--print-resolved-preset", action="store_true")
     p.add_argument("--dataset-subset", default=None, help="Named dataset subset manifest to auto-download and resolve")
     p.add_argument("--video-root", default=None)
     p.add_argument("--annotations", default=None)
@@ -97,11 +117,86 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--comment", default="")
     p.add_argument("--results-root", default="results", help="Root folder for attack result CSV/log outputs")
     p.add_argument("--artifacts-root", dest="results_root", help="Deprecated alias for --results-root")
+    p.add_argument("--vram-profile-csv", default=None, help="Append one-video VRAM profile rows to a separate CSV")
+    p.add_argument("--vram-profile-index", type=int, default=None, help="Dataset index used for --vram-profile-csv; defaults to seeded random")
     p.add_argument("--output-json", default=None)
     p.add_argument("--verbose", action="store_true")
     p.add_argument("--print-defaults", action="store_true")
     p.add_argument("--list-model-options", action="store_true", help="Print available backbones/weights datasets for --model and exit")
     return p
+
+
+def _apply_presets(args: argparse.Namespace) -> dict[str, Any]:
+    overrides = parse_overrides(args.override)
+    resolved: dict[str, Any] = {}
+    if args.run_preset:
+        run = resolve_run_preset(args.run_preset, overrides=overrides.get("run") if isinstance(overrides.get("run"), dict) else None)
+        apply_run_preset_to_args(args, run)
+        resolved["run"] = run
+        model_ref = first_run_model(run)
+        attack_ref = first_run_attack(run)
+        defence_ref = first_run_defence(run)
+        if model_ref and not args.model_preset and not args.model:
+            args.model_preset = model_ref.get("preset") or model_ref.get("name")
+            args.model_variant = model_ref.get("variant", args.model_variant)
+        if attack_ref and not args.attack_preset and not args.attack:
+            args.attack_preset = attack_ref.get("preset") or attack_ref.get("name")
+            args.attack_variant = attack_ref.get("variant", args.attack_variant)
+        if defence_ref and not args.defence_preset and not args.defence:
+            args.defence_preset = defence_ref.get("preset") or defence_ref.get("name")
+            args.defence_variant = defence_ref.get("variant", args.defence_variant)
+    if args.model_preset:
+        model_spec = resolve_entity_preset(
+            "model",
+            args.model_preset,
+            variant=args.model_variant,
+            overrides=overrides.get("model") if isinstance(overrides.get("model"), dict) else None,
+        )
+        resolved["model"] = model_spec
+        args.model = args.model or str(model_spec["factory_name"])
+        for key, value in model_spec.get("params", {}).items():
+            attr = key.replace("-", "_")
+            if hasattr(args, attr):
+                current = getattr(args, attr)
+                if current is None or current is False or (attr == "device" and current == "cuda"):
+                    setattr(args, attr, value)
+    if args.attack_preset:
+        attack_spec = resolve_entity_preset(
+            "attack",
+            args.attack_preset,
+            variant=args.attack_variant,
+            overrides=overrides.get("attack") if isinstance(overrides.get("attack"), dict) else None,
+        )
+        resolved["attack"] = attack_spec
+        args.attack = args.attack or str(attack_spec["factory_name"])
+        params = attack_spec.get("params", {})
+        if "steps" in params and args.iter is None:
+            args.iter = params["steps"]
+        for key, value in params.items():
+            attr = key.replace("-", "_")
+            if attr == "steps":
+                continue
+            if hasattr(args, attr):
+                current = getattr(args, attr)
+                if current is None or current is False:
+                    setattr(args, attr, value)
+    if args.defence_preset:
+        defence_spec = resolve_entity_preset(
+            "defence",
+            args.defence_preset,
+            variant=args.defence_variant,
+            overrides=overrides.get("defence") if isinstance(overrides.get("defence"), dict) else None,
+        )
+        resolved["defence"] = defence_spec
+        args.defence = args.defence or str(defence_spec["factory_name"])
+        # Defence params are stored for future factory use; current CLI only supports name.
+    if args.dataset is None:
+        raise SystemExit("--dataset is required unless provided by --run-preset")
+    if args.model is None:
+        raise SystemExit("--model is required unless provided by --model-preset or --run-preset")
+    if args.attack is None:
+        raise SystemExit("--attack is required unless provided by --attack-preset or --run-preset")
+    return resolved
 
 
 def _build_paths(args, model_name: str) -> tuple[Path, Path, Path]:
@@ -127,6 +222,10 @@ def _build_paths(args, model_name: str) -> tuple[Path, Path, Path]:
 
 def main() -> None:
     args = build_parser().parse_args()
+    resolved_preset = _apply_presets(args)
+    if args.print_resolved_preset:
+        print(json.dumps(resolved_preset, indent=2, sort_keys=True))
+        return
     if args.list_model_options:
         print_model_options_payload(args.model)
         return
@@ -262,6 +361,22 @@ def main() -> None:
         grad_forward_chunk_size=args.grad_forward_chunk_size,
         device=args.device,
     )
+    if args.vram_profile_csv:
+        rows = profile_model_vram_for_one_video(
+            model=model,
+            dataset=dataset,
+            context=VramProfileContext(
+                model_arg=args.model,
+                dataset_arg=args.dataset,
+                dataset_subset=args.dataset_subset,
+                backbone=args.backbone,
+                weights_dataset=args.weights_dataset,
+                pipeline_stage=effective_stage,
+                seed=args.seed,
+                sample_index=args.vram_profile_index,
+            ),
+        )
+        append_vram_profile_csv(args.vram_profile_csv, rows)
     save_path, log_path, dump_path = _build_paths(args, getattr(model, "model_name", args.model))
 
     if args.verbose:

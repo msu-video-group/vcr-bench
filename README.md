@@ -34,6 +34,26 @@ Committed defaults live in:
 
 Create `configs/local.toml` from `configs/local.toml.example` to override local paths, remote hosts, and Slurm settings.
 
+## JSON presets
+
+Configurable model, attack, defence, and run presets live under `configs/models/`, `configs/attacks/`, `configs/defences/`, and `configs/runs/`.
+
+Examples:
+
+```bash
+vcr-bench-test --run-preset accuracy_amd_100 --print-resolved-preset
+vcr-bench-attack --run-preset attack_x3d_ifgsm_debug --override attack.params.steps=3
+vcr-bench-attack --attack-preset ifgsm --model-preset amd --dataset kinetics400 --lite-attack
+vcr-bench-remote --remote main launch-preset --preset accuracy_amd_100 --dry-run
+```
+
+Preset overrides use dotted keys and JSON values:
+
+```bash
+--override attack.params.query_budget=2000
+--override runtime.device=\"cpu\"
+```
+
 ## Model checkpoints
 
 Checkpoint resolution now prefers the Hugging Face manifest in `configs/checkpoints.toml`. Explicit `--checkpoint` still overrides manifest resolution.
@@ -54,6 +74,22 @@ vcr-bench-test --model x3d --dataset kinetics400 --dataset-subset kinetics400_mi
 ```
 
 Dataset subset archives are downloaded from Hugging Face, cached locally, then extracted into the configured data directory.
+
+## VRAM profiling
+
+Accuracy and attack CLIs can append a separate one-video CUDA memory profile CSV:
+
+```bash
+vcr-bench-attack \
+  --attack-preset ifgsm \
+  --model-preset amd \
+  --dataset kinetics400 \
+  --num-videos 1 \
+  --lite-attack \
+  --vram-profile-csv results/vram/model_vram.csv
+```
+
+The profiler writes one row for `no_grad_forward` and one row for `with_grad_forward_backward`, including peak allocated/reserved VRAM and deltas over the baseline before that pass.
 
 ## Remote execution
 
