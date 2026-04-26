@@ -12,7 +12,7 @@ from ..pipeline_config import PipelineStage
 
 
 def _tada_root() -> Path:
-    return Path(__file__).resolve().parents[2] / "Classifiers" / "TAdaConv"
+    return Path(__file__).resolve().parent / "vendor"
 
 
 class TAdaFormerClassifier(BaseVideoClassifier):
@@ -26,7 +26,7 @@ class TAdaFormerClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_relpath": "Classifiers/TAdaConv/checkpoint/l14_clip+k710_k400_64f_89.9.pyth",
+                        "checkpoint_filename": "l14_clip+k710_k400_64f_89.9.pyth",
                     }
                 },
             }
@@ -42,6 +42,7 @@ class TAdaFormerClassifier(BaseVideoClassifier):
         grad_forward_chunk_size: int | None = None,
         load_weights: bool | None = None,
         num_classes: int | None = None,
+        auto_download: bool = True,
     ) -> None:
         self.device = torch.device(device if (device != "cuda" or torch.cuda.is_available()) else "cpu")
         self.backbone = backbone or "large_14"
@@ -54,12 +55,19 @@ class TAdaFormerClassifier(BaseVideoClassifier):
         self._active_stage: PipelineStage = "test"  # type: ignore[assignment]
         self._bind_stage_functions("test")
         self.model = self._build_model()
-        self.checkpoint_path = checkpoint_path or self._default_checkpoint_path(self.backbone, self.weights_dataset)
-        should_load = bool(self.checkpoint_path) if load_weights is None else bool(load_weights)
+        should_load = bool(self._default_checkpoint_path(self.backbone, self.weights_dataset) or checkpoint_path) if load_weights is None else bool(load_weights)
         if should_load:
+            self.checkpoint_path = self.resolve_checkpoint_path(
+                self.backbone,
+                self.weights_dataset,
+                checkpoint_path,
+                auto_download=auto_download,
+            )
             if not self.checkpoint_path:
                 raise ValueError("checkpoint_path is required when load_weights=True")
             self._load_checkpoint(self.checkpoint_path)
+        else:
+            self.checkpoint_path = checkpoint_path
         self.model.eval().to(self.device)
         for param in self.model.parameters():
             param.requires_grad = False

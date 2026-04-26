@@ -30,7 +30,8 @@ class I3DNonLocalClassifier(I3DClassifier):
     def _build_backbone(self) -> ResNet3d:
         return ResNet3d(
             depth=50,
-            pretrained2d=False,
+            pretrained2d=True,
+            pretrained="torchvision://resnet50",
             conv1_kernel=(5, 7, 7),
             conv1_stride_t=2,
             pool1_stride_t=2,

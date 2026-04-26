@@ -57,8 +57,8 @@ class SlowFastClassifier(BaseVideoClassifier):
         self.model = Recognizer3D(
             backbone=ResNet3dSlowFast(
                 pretrained=None,
-                resample_rate=4,
-                speed_ratio=4,
+                resample_rate=8,
+                speed_ratio=8,
                 channel_ratio=8,
                 slow_pathway=dict(
                     type="resnet3d",
@@ -71,7 +71,7 @@ class SlowFastClassifier(BaseVideoClassifier):
                     pool1_stride_t=1,
                     inflate=(0, 0, 1, 1),
                     norm_eval=False,
-                    fusion_kernel=7,
+                    fusion_kernel=5,
                 ),
                 fast_pathway=dict(
                     type="resnet3d",

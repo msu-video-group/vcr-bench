@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 import torch
@@ -10,22 +9,13 @@ from ..legacy_imports import import_attr
 from ..pipeline_config import PipelineStage
 
 
-def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[2]
+def _ila_vendor_root():
+    from pathlib import Path
 
-
-def _ila_root() -> Path:
-    return _repo_root() / "Classifiers" / "ILA"
+    return Path(__file__).resolve().parent / "vendor"
 
 
 def _load_labels(num_classes: int) -> list[str]:
-    candidates = (
-        _repo_root() / "mmaction2" / "tools" / "data" / "kinetics" / "label_map_k400.txt",
-        _repo_root() / "Attacks" / "BMTC_TransferAttackVid" / "datasets" / "Kinetics400" / "label_map_k400.txt",
-    )
-    for path in candidates:
-        if path.exists():
-            return [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
     return [f"class_{idx}" for idx in range(num_classes)]
 
 
@@ -40,7 +30,7 @@ class ILAClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_relpath": "Classifiers/ILA/checkpoint/k400_B_16_8_rel.pth",
+                        "checkpoint_filename": "k400_B_16_8_rel.pth",
                     }
                 },
             }
@@ -89,14 +79,14 @@ class ILAClassifier(BaseVideoClassifier):
             param.requires_grad = False
 
     def _build_text_tokens(self) -> torch.Tensor:
-        tokenize = import_attr("clip", "tokenize", _ila_root(), purge_modules=("clip",))
+        tokenize = import_attr("clip", "tokenize", _ila_vendor_root(), purge_modules=("clip",))
         labels = _load_labels(self.num_classes)
         return tokenize(labels)
 
     def _build_model(self, *, load_weights: bool) -> torch.nn.Module:
         if load_weights and self.checkpoint_path:
             return self._load_runtime_model(self.checkpoint_path)
-        xclip_cls = import_attr("models.xclip", "XCLIP", _ila_root(), purge_modules=("models", "clip"))
+        xclip_cls = import_attr("models.xclip", "XCLIP", _ila_vendor_root(), purge_modules=("models", "clip"))
         return xclip_cls(
             512,
             224,
@@ -113,7 +103,7 @@ class ILAClassifier(BaseVideoClassifier):
         )
 
     def _load_runtime_model(self, checkpoint_path: str) -> torch.nn.Module:
-        xclip_load = import_attr("models.xclip", "load", _ila_root(), purge_modules=("models", "clip"))
+        xclip_load = import_attr("models.xclip", "load", _ila_vendor_root(), purge_modules=("models", "clip"))
         return xclip_load(
             model_path=checkpoint_path,
             name="ViT-B/16",

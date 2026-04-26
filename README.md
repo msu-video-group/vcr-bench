@@ -169,6 +169,11 @@ Copy `configs/local.toml.example` to `configs/local.toml` and set your local dat
 
 ## Docs
 
+- [Data formats & pipeline conventions](docs/formats.md)
+- [Adding a model](docs/adding_models.md)
+- [Adding a dataset](docs/adding_datasets.md)
+- [Adding an attack](docs/adding_attacks.md)
+- [Adding a defence](docs/adding_defences.md)
 - [Remote execution & Slurm guide](docs/REMOTE_DEBUGGING.md)
 
 ### Remote execution quick reference

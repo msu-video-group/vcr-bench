@@ -133,9 +133,9 @@ filename = "uniformerv2_base_kinetics400_mmaction.pth"
 revision = "main"
 local_subdir = "checkpoints/uniformerv2"
 
-[checkpoints.actionclip_base_kinetics400]
+[checkpoints.actionclip_vit_b16_kinetics400]
 model = "actionclip"
-backbone = "base"
+backbone = "vit_b16"
 weights_dataset = "kinetics400"
 repo_id = "vcr-bench/checkpoints-actionclip"
 filename = "actionclip_vit_b16_32f_kinetics400_mmaction.pth"
