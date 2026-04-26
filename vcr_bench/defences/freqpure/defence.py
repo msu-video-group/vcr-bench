@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import time
 import urllib.request
 
 import numpy as np
@@ -17,15 +18,43 @@ def _ensure_checkpoint(path: str) -> None:
     if os.path.exists(path):
         return
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-    print(f"[freqpure] Downloading checkpoint to {path} ...")
+    lock_path = f"{path}.lock"
+    tmp_path = f"{path}.tmp"
+    owns_lock = False
+    while not owns_lock:
+        try:
+            fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.close(fd)
+            owns_lock = True
+        except FileExistsError:
+            if os.path.exists(path):
+                return
+            print(f"[freqpure] Waiting for checkpoint download lock: {lock_path}", flush=True)
+            time.sleep(10)
+
+    last_pct = {"value": -1}
+    print(f"[freqpure] Downloading checkpoint to {path} ...", flush=True)
 
     def _progress(count, block_size, total_size):
         if total_size > 0:
             pct = count * block_size * 100 // total_size
-            print(f"\r[freqpure] {pct}%", end="", flush=True)
+            if pct != last_pct["value"]:
+                last_pct["value"] = pct
+                print(f"[freqpure] download {pct}%", flush=True)
 
-    urllib.request.urlretrieve(_CHECKPOINT_URL, path, reporthook=_progress)
-    print()
+    try:
+        urllib.request.urlretrieve(_CHECKPOINT_URL, tmp_path, reporthook=_progress)
+        os.replace(tmp_path, path)
+    finally:
+        try:
+            os.remove(lock_path)
+        except FileNotFoundError:
+            pass
+        if not os.path.exists(path):
+            try:
+                os.remove(tmp_path)
+            except FileNotFoundError:
+                pass
 
 
 def _build_unet() -> UNetModel:
@@ -73,6 +102,7 @@ class FreqPureDefence(BaseVideoDefence):
         delta: float = 0.6,
         forward_noise_steps: int = 5,
         sampling_method: str = "ddim",
+        frame_batch_size: int = 1,
     ) -> None:
         self.checkpoint_path = checkpoint_path
         self.timestep = timestep
@@ -80,6 +110,7 @@ class FreqPureDefence(BaseVideoDefence):
         self.phase_cut_range = phase_cut_range
         self.delta = delta
         self.forward_noise_steps = forward_noise_steps
+        self.frame_batch_size = max(1, int(frame_batch_size))
         assert sampling_method in ("ddim", "ddpm")
         self._eta = 0.0 if sampling_method == "ddim" else 1.0
         self._model: UNetModel | None = None
@@ -234,10 +265,14 @@ class FreqPureDefence(BaseVideoDefence):
         # Convert to diffusion space [-1, 1]
         x_diff = torch.clamp((frames_256 - 0.5) * 2, -1, 1)
 
+        purified_chunks = []
+        seq = list(range(0, self.timestep, max(1, self.timestep // 10)))
         with torch.no_grad():
-            noised = self._get_noised_x(x_diff, self.timestep)
-            seq = list(range(0, self.timestep, max(1, self.timestep // 10)))
-            purified_diff = self._denoise(x_diff, noised, seq)
+            for start in range(0, x_diff.shape[0], self.frame_batch_size):
+                chunk = x_diff[start : start + self.frame_batch_size]
+                noised = self._get_noised_x(chunk, self.timestep)
+                purified_chunks.append(self._denoise(chunk, noised, seq))
+        purified_diff = torch.cat(purified_chunks, dim=0)
 
         # Back to [0, 1], resize to original resolution, scale to [0, 255]
         purified_01 = torch.clamp(purified_diff / 2 + 0.5, 0, 1)

@@ -382,8 +382,8 @@ def run_attack(
                     defence.uninstall(model)
         except Exception as e:
             skipped_error_count += 1
+            print(f"[attack][clean-predict-error] {sample.path}: {type(e).__name__}: {e}", flush=True)
             if verbose:
-                print(f"[attack][clean-predict-error] {sample.path}: {type(e).__name__}: {e}", flush=True)
                 traceback.print_exc()
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
@@ -461,8 +461,8 @@ def run_attack(
                     defence.uninstall(model)
         except Exception as e:
             skipped_error_count += 1
+            print(f"[attack][attack-error] {sample.path}: {type(e).__name__}: {e}", flush=True)
             if verbose:
-                print(f"[attack][attack-error] {sample.path}: {type(e).__name__}: {e}", flush=True)
                 traceback.print_exc()
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()

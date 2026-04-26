@@ -8,3 +8,4 @@ configs/local.toml
 remote_results/
 results/
 data/
+tests/

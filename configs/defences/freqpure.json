@@ -12,7 +12,8 @@
         "phase_cut_range": 50.0,
         "delta": 0.6,
         "forward_noise_steps": 5,
-        "sampling_method": "ddim"
+        "sampling_method": "ddim",
+        "frame_batch_size": 1
       }
     },
     "strong": {
@@ -24,7 +25,8 @@
         "phase_cut_range": 50.0,
         "delta": 0.6,
         "forward_noise_steps": 5,
-        "sampling_method": "ddim"
+        "sampling_method": "ddim",
+        "frame_batch_size": 1
       }
     },
     "ddpm": {
@@ -36,7 +38,8 @@
         "phase_cut_range": 50.0,
         "delta": 0.6,
         "forward_noise_steps": 5,
-        "sampling_method": "ddpm"
+        "sampling_method": "ddpm",
+        "frame_batch_size": 1
       }
     }
   }
