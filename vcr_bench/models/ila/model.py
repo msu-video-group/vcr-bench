@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import torch
@@ -10,12 +11,22 @@ from ..pipeline_config import PipelineStage
 
 
 def _ila_vendor_root():
-    from pathlib import Path
-
     return Path(__file__).resolve().parent / "vendor"
 
 
 def _load_labels(num_classes: int) -> list[str]:
+    repo_root = Path(__file__).resolve().parents[3]
+    candidates = (
+        repo_root / "data" / "kinetics400" / "kinetics400_mini_val" / "k400_val" / "annotations" / "k400_label_map_k400.txt",
+        repo_root / "data" / "kinetics400" / "k400_val" / "k400_val" / "annotations" / "k400_label_map_k400.txt",
+        repo_root / ".cache" / "vcr_bench" / "dataset_archives" / "kinetics400" / "kinetics400_mini_val" / "k400_label_map_k400.txt",
+        repo_root / ".cache" / "vcr_bench" / "dataset_archives" / "kinetics400" / "k400_val" / "k400_label_map_k400.txt",
+    )
+    for path in candidates:
+        if path.exists():
+            labels = [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+            if len(labels) >= num_classes:
+                return labels[:num_classes]
     return [f"class_{idx}" for idx in range(num_classes)]
 
 

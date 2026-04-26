@@ -71,7 +71,7 @@ class SlowFastClassifier(BaseVideoClassifier):
                     pool1_stride_t=1,
                     inflate=(0, 0, 1, 1),
                     norm_eval=False,
-                    fusion_kernel=5,
+                    fusion_kernel=7,
                 ),
                 fast_pathway=dict(
                     type="resnet3d",
