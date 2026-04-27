@@ -5,7 +5,10 @@
       "Bash(python -m vcr_bench.remote.cli --help)",
       "Read(//c/Users/Black/.local/bin/**)",
       "Read(//c/Users/Black/**)",
-      "Bash(python3 -m vcr_bench.remote push-code --stage-all --commit-message \"add full-video flag to launch-job, make --model optional, add vqmt activation\")"
+      "Bash(python3 -m vcr_bench.remote push-code --stage-all --commit-message \"add full-video flag to launch-job, make --model optional, add vqmt activation\")",
+      "Bash(python3 -m vcr_bench.remote sync-remote)",
+      "Bash(python3 -m vcr_bench.remote launch-job --mode attack --attack ifgsm --attack-name test_ifgsm_target --target --num-videos 10 --dump-freq 1 --full-video)",
+      "Bash(python3 -m vcr_bench.remote fetch-job-artifacts --job-id 161801 --attack-name test_ifgsm_target)"
     ]
   }
 }

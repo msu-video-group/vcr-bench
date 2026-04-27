@@ -17,7 +17,7 @@ accuracy_results_root = "results/accuracy/remote"
 
 [remote.remotes.main.slurm]
 container_image = "~/users/29m_pli/python.sqsh"
-container_mounts = "~/users/29m_pli/vcr-bench:/work"
+container_mounts = "~/users/29m_pli/vcr-bench:/work,~/.msu_vqmt:/root/.msu_vqmt"
 
 [artifacts]
 hf_token_env = "HF_TOKEN"

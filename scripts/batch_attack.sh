@@ -296,7 +296,7 @@ for ((i=0; i<${#method_names_local[@]}; i++)); do
     srun_args=(--exclusive --ntasks 1 -G 1)
     [[ -n "${CONTAINER_IMAGE}" ]] && srun_args+=(--container-image "${CONTAINER_IMAGE}")
     [[ -n "${CONTAINER_MOUNTS}" ]] && srun_args+=(--container-mounts "${CONTAINER_MOUNTS}")
-    srun "${srun_args[@]}" bash -lc "python3 -c \"import importlib.util, sys; mods=['transformers','diffusers','yacs','IQA_pytorch','pywt']; missing=[m for m in mods if importlib.util.find_spec(m) is None]; sys.exit(0 if not missing else 1)\" || pip install -q transformers diffusers yacs 'numpy<2' IQA_pytorch PyWavelets; cd /work && vqmt -activate < ./vqmt/config.json && ${cmd_str}" >> "$log_file" 2>&1 &
+    srun "${srun_args[@]}" bash -lc "python3 -c \"import importlib.util, sys; mods=['transformers','diffusers','yacs','IQA_pytorch','pywt']; missing=[m for m in mods if importlib.util.find_spec(m) is None]; sys.exit(0 if not missing else 1)\" || pip install -q transformers diffusers yacs 'numpy<2' IQA_pytorch PyWavelets; cd /work && ls /root/.msu_vqmt/licenses/*.lic >/dev/null 2>&1 || { echo 'WARNING: vqmt licenses not found at /root/.msu_vqmt/licenses/'; }; ${cmd_str}" >> "$log_file" 2>&1 &
 done
 
 wait

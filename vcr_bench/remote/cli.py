@@ -65,6 +65,7 @@ def build_parser() -> argparse.ArgumentParser:
     launch.add_argument("--results-root", default=None)
     launch.add_argument("--dump-freq", type=int, default=None)
     launch.add_argument("--defence", default=None)
+    launch.add_argument("--vmaf", action="store_true", default=False)
     launch.add_argument("--full-video", "--full-videos", action="store_true", dest="full_video")
     launch.add_argument("--lite-attack", action="store_true")
     launch.add_argument("--save-defence-stages", action="store_true")
@@ -258,6 +259,8 @@ def _build_launch_remote_command(args: argparse.Namespace, cfg: dict[str, Any]) 
             sbatch_parts.append("--save-defence-stages")
         if getattr(args, "full_video", False):
             sbatch_parts.append("--full-videos")
+        if getattr(args, "vmaf", False):
+            sbatch_parts.append("--vmaf")
     sbatch_cmd = " ".join(q(part) for part in sbatch_parts)
     chained = f"cd {repo_expr}"
     if exports:
