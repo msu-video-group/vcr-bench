@@ -43,7 +43,7 @@ def metric_attack(
         attacked_flat, _ = flatten_temporal_video(attacked)
         init_flat, _ = flatten_temporal_video(init_tensor)
         current_metric = metric(attacked_flat, init_flat)
-        metric_loss = 0.05 * float(k) * current_metric
+        metric_loss = 0.0025 * float(k) * current_metric
         metric_loss.backward()
         grad = pert.grad + save_grad
         pert.data -= torch.sign(grad)
