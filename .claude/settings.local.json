@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(vcr-bench-remote launch-job *)",
+      "Bash(python -m vcr_bench.remote.cli --help)",
+      "Read(//c/Users/Black/.local/bin/**)",
+      "Read(//c/Users/Black/**)",
+      "Bash(python3 -m vcr_bench.remote push-code --stage-all --commit-message \"add full-video flag to launch-job, make --model optional, add vqmt activation\")"
+    ]
+  }
+}

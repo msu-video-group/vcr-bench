@@ -65,6 +65,7 @@ def build_parser() -> argparse.ArgumentParser:
     launch.add_argument("--results-root", default=None)
     launch.add_argument("--dump-freq", type=int, default=None)
     launch.add_argument("--defence", default=None)
+    launch.add_argument("--full-video", "--full-videos", action="store_true", dest="full_video")
     launch.add_argument("--lite-attack", action="store_true")
     launch.add_argument("--save-defence-stages", action="store_true")
     launch.add_argument("--dry-run", action="store_true")
@@ -215,8 +216,6 @@ def _build_launch_remote_command(args: argparse.Namespace, cfg: dict[str, Any]) 
         model_specs = [str(item).strip() for item in getattr(args, "model_spec", []) if str(item).strip()]
         if not args.attack and not model_specs:
             raise ValueError("--attack is required in attack mode unless --model-spec provides per-entry attacks")
-        if not args.model and not model_specs:
-            raise ValueError("--model or --model-spec is required in attack mode")
         sbatch_parts = [
             "sbatch",
             f"./{script_root}/batch_attack.sh",
@@ -239,7 +238,7 @@ def _build_launch_remote_command(args: argparse.Namespace, cfg: dict[str, Any]) 
             sbatch_parts.extend(["--attack-type", "ifgsm"])
         if model_specs:
             sbatch_parts.extend(["--model", ",".join(model_specs)])
-        else:
+        elif args.model:
             sbatch_parts.extend(["--model", args.model])
         if args.eps is not None:
             sbatch_parts.extend(["--eps", str(args.eps)])
@@ -257,6 +256,8 @@ def _build_launch_remote_command(args: argparse.Namespace, cfg: dict[str, Any]) 
             sbatch_parts.append("--lite-attack")
         if getattr(args, "save_defence_stages", False):
             sbatch_parts.append("--save-defence-stages")
+        if getattr(args, "full_video", False):
+            sbatch_parts.append("--full-videos")
     sbatch_cmd = " ".join(q(part) for part in sbatch_parts)
     chained = f"cd {repo_expr}"
     if exports:
