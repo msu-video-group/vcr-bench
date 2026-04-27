@@ -112,8 +112,6 @@ def build_force_sync_command(repo_path: str, git_ref: str, script_root: str) -> 
         "git fetch --all --prune && "
         f"git reset --hard {q(git_ref)} && "
         "git clean -fd "
-        "-e vcr_bench/Classifiers "
-        "-e vcr_bench/Classifiers/** "
         "-e vcr_bench/models/*/checkpoints "
         "-e vcr_bench/models/*/checkpoints/** && "
         f"chmod +x ./{script_root}/batch_attack.sh ./{script_root}/test_models.sh ./{script_root}/batch_prepare.sh || true"

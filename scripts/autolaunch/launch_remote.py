@@ -139,7 +139,6 @@ def main() -> int:
         "git fetch --all --prune && "
         "git reset --hard origin/master && "
         "git clean -fd "
-        "-e vcr_bench/Classifiers -e 'vcr_bench/Classifiers/**' "
         "-e 'vcr_bench/models/*/checkpoints' -e 'vcr_bench/models/*/checkpoints/**'"
     )
     git_pull_cmd = f"bash -lc {q(force_sync)}"
