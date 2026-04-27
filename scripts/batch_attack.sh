@@ -38,7 +38,7 @@ defence_name=""
 dataset="kinetics400"
 start_id=0
 target_flag=0
-vmaf_flag=0
+vmaf_flag=1
 num_videos=100
 specific_model=""
 specific_models=()
@@ -83,6 +83,7 @@ while [[ "$#" -gt 0 ]]; do
         -s|--start-id) start_id="$2"; shift ;;
         -t|--target) target_flag=1 ;;
         --vmaf) vmaf_flag=1 ;;
+        --no-vmaf) vmaf_flag=0 ;;
         -f|--framewise-metrics) framewise_metrics_flag=1 ;;
         --adaptive) adaptive_flag=1 ;;
         --full-video|--full-videos) full_video_flag=1 ;;
