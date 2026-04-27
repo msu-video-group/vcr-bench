@@ -9,3 +9,5 @@ remote_results/
 results/
 data/
 tests/
+scripts/autolaunch/runtime/
+scripts/autolaunch/logs/

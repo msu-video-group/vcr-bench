@@ -1,0 +1,20 @@
+{
+  "ssh_host": "main",
+  "tmux_session": "29m_pli",
+  "repo_path": "~/users/29m_pli/vcr-bench",
+  "job_name": "29m_pli",
+  "max_simultaneous_jobs": 7,
+  "max_attacks_per_job": 27,
+  "max_failures": 2,
+  "poll_interval_sec": 180,
+  "tracks_config": "scripts/autolaunch/configs/tracks.json",
+  "results_root": "results/remote_attacks",
+  "logs_root": "attack_logs",
+  "test_mode": false,
+  "slurm": {
+    "batch_attack_script": "./scripts/batch_attack.sh",
+    "container_image": "~/users/29m_pli/python.sqsh",
+    "container_mounts": "~/users/29m_pli/vcr-bench:/work,~/.msu_vqmt:/root/.msu_vqmt",
+    "avoid_node_names": []
+  }
+}
