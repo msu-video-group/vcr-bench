@@ -1,8 +1,8 @@
 {
   "tracks": [
     {
-      "name": "test-denoiser",
-      "attack_name": "test_denoiser",
+      "name": "test-denoiser-2",
+      "attack_name": "test_denoiser_2",
       "dataset": "kinetics400",
       "num_videos": 10,
       "save_videos": 1,
