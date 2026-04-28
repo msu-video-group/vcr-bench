@@ -140,6 +140,8 @@ def main() -> int:
         "git reset --hard origin/master && "
         "git clean -fd "
         "-e 'vcr_bench/models/*/checkpoints' -e 'vcr_bench/models/*/checkpoints/**' "
+        "-e 'vcr_bench/defences/freqpure/*.pt' "
+        "-e Defences -e 'Defences/**' "
         "-e vqmt -e 'vqmt/**'"
     )
     git_pull_cmd = f"bash -lc {q(force_sync)}"

@@ -11,3 +11,5 @@ data/ok
 tests/
 scripts/autolaunch/runtime/
 scripts/autolaunch/logs/
+vcr_bench/defences/denoise/videopure/hf-cache/
+vcr_bench/defences/denoise/videopure/core/raft-things.pth

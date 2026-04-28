@@ -1,17 +1,13 @@
 from __future__ import annotations
 
 import os
-import sys
 import threading
 import time
-from pathlib import Path
 
 import torch
 import torch.nn.functional as F
 
 from vcr_bench.defences.base import BaseVideoDefence
-
-_VIDEOPURE_DIR = str(Path(__file__).resolve().parents[3] / "Defences" / "VideoPure")
 
 _denoiser = None
 _denoiser_lock = threading.Lock()
@@ -72,14 +68,11 @@ def _get_denoiser():
 
 
 def _init_denoiser():
-    if _VIDEOPURE_DIR not in sys.path:
-        sys.path.insert(0, _VIDEOPURE_DIR)
-
-    from main import Denoiser  # type: ignore[import]
-    from pipe_defense import Video_Diffpure  # type: ignore[import]
-    from core.raft_arch import RAFT_SR  # type: ignore[import]
-    from flow_net import Flow_models  # type: ignore[import]
-    from predownload_diffuser import DEFAULT_MODEL_ID, DEFAULT_CACHE_DIR, ensure_model_downloaded  # type: ignore[import]
+    from .videopure.main import Denoiser
+    from .videopure.pipe_defense import Video_Diffpure
+    from .videopure.core.raft_arch import RAFT_SR
+    from .videopure.flow_net import Flow_models
+    from .videopure.predownload_diffuser import DEFAULT_MODEL_ID, DEFAULT_CACHE_DIR, ensure_model_downloaded
 
     model_id = os.getenv("VIDEOPURE_MODEL_ID", DEFAULT_MODEL_ID)
     cache_dir = os.getenv("VIDEOPURE_CACHE_DIR", DEFAULT_CACHE_DIR)
