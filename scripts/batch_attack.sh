@@ -222,6 +222,17 @@ fi
 
 mkdir -p logs
 
+FREQPURE_CKPT="${REPO_ROOT}/vcr_bench/defences/freqpure/256x256_diffusion_uncond.pt"
+if [[ ! -f "$FREQPURE_CKPT" ]]; then
+    echo "Downloading freqpure checkpoint to ${FREQPURE_CKPT} ..."
+    mkdir -p "$(dirname "$FREQPURE_CKPT")"
+    wget -q --show-progress -O "${FREQPURE_CKPT}.tmp" \
+        "https://openaipublic.blob.core.windows.net/diffusion/jul-2021/256x256_diffusion_uncond.pt" \
+        && mv "${FREQPURE_CKPT}.tmp" "$FREQPURE_CKPT" \
+        && echo "freqpure checkpoint ready." \
+        || { echo "WARNING: freqpure checkpoint download failed"; rm -f "${FREQPURE_CKPT}.tmp"; }
+fi
+
 for ((i=0; i<${#method_names_local[@]}; i++)); do
     current_model="${method_names_local[$i]}"
     current_attack_type="${attack_types_local[$i]}"
