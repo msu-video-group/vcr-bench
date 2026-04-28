@@ -1,44 +1,25 @@
 {
   "tracks": [
     {
-      "name": "full-benchmark",
-      "attack_name": "benchmark",
+      "name": "test-denoiser",
+      "attack_name": "test_denoiser",
       "dataset": "kinetics400",
-      "num_videos": 1000,
-      "save_videos": 5,
+      "num_videos": 10,
+      "save_videos": 1,
       "models": [
-        "videomaev2", "uniformerv2", "uniformer", "mvitv2", "videomae",
-        "videoswin", "actionclip", "timesformer", "tanet", "x3d",
-        "slowfast", "slowonly", "tsmnonlocal", "tsm", "tsm-surrogate",
-        "r2plus1d", "i3dnonlocal", "c2d", "i3d", "tpn",
-        "tsn", "amd", "ila", "umt", "tadaformer",
-        "internvideo2", "onepeace"
+        "videomaev2", "uniformerv2", "mvitv2", "videomae", "videoswin"
       ],
       "attacks": [
-        {"name": "ifgsm",       "target": true},
-        {"name": "mifgsm",      "target": true},
-        {"name": "amifgsm",     "target": true},
-        {"name": "zhang_ssim",  "target": true},
-        {"name": "zhang_lpips", "target": true},
-        {"name": "zhang_dists", "target": true},
-        {"name": "korhonen",    "target": true},
-        {"name": "stadv",       "target": true},
-        {"name": "ssah",        "target": true}
+        {"name": "ifgsm", "target": true}
       ],
       "defences": [
-        {"name": "no_defence",       "adaptive": false},
-        {"name": "temporal_median",  "adaptive": false},
-        {"name": "shuffle",          "adaptive": false},
-        {"name": "blur",             "adaptive": false},
-        {"name": "flip",             "adaptive": false},
-        {"name": "crop",             "adaptive": false},
-        {"name": "rotate",           "adaptive": false},
-        {"name": "temporal_median",  "adaptive": true},
-        {"name": "shuffle",          "adaptive": true},
-        {"name": "blur",             "adaptive": true},
-        {"name": "flip",             "adaptive": true},
-        {"name": "crop",             "adaptive": true},
-        {"name": "rotate",           "adaptive": true}
+        {"name": "no_defence",      "adaptive": false},
+        {"name": "denoise",         "adaptive": false},
+        {"name": "denoise",         "adaptive": true},
+        {"name": "freqpure",        "adaptive": false},
+        {"name": "freqpure",        "adaptive": true},
+        {"name": "temporal_median", "adaptive": false},
+        {"name": "temporal_median", "adaptive": true}
       ],
       "extra_args": ["--full-videos"]
     }

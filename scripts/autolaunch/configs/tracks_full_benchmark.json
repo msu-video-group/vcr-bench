@@ -1,0 +1,46 @@
+{
+  "tracks": [
+    {
+      "name": "full-benchmark",
+      "attack_name": "benchmark",
+      "dataset": "kinetics400",
+      "num_videos": 1000,
+      "save_videos": 5,
+      "models": [
+        "videomaev2", "uniformerv2", "uniformer", "mvitv2", "videomae",
+        "videoswin", "actionclip", "timesformer", "tanet", "x3d",
+        "slowfast", "slowonly", "tsmnonlocal", "tsm", "tsm-surrogate",
+        "r2plus1d", "i3dnonlocal", "c2d", "i3d", "tpn",
+        "tsn", "amd", "ila", "umt", "tadaformer",
+        "internvideo2", "onepeace"
+      ],
+      "attacks": [
+        {"name": "ifgsm",       "target": true},
+        {"name": "mifgsm",      "target": true},
+        {"name": "amifgsm",     "target": true},
+        {"name": "zhang_ssim",  "target": true},
+        {"name": "zhang_lpips", "target": true},
+        {"name": "zhang_dists", "target": true},
+        {"name": "korhonen",    "target": true},
+        {"name": "stadv",       "target": true},
+        {"name": "ssah",        "target": true}
+      ],
+      "defences": [
+        {"name": "no_defence",       "adaptive": false},
+        {"name": "temporal_median",  "adaptive": false},
+        {"name": "shuffle",          "adaptive": false},
+        {"name": "blur",             "adaptive": false},
+        {"name": "flip",             "adaptive": false},
+        {"name": "crop",             "adaptive": false},
+        {"name": "rotate",           "adaptive": false},
+        {"name": "temporal_median",  "adaptive": true},
+        {"name": "shuffle",          "adaptive": true},
+        {"name": "blur",             "adaptive": true},
+        {"name": "flip",             "adaptive": true},
+        {"name": "crop",             "adaptive": true},
+        {"name": "rotate",           "adaptive": true}
+      ],
+      "extra_args": ["--full-videos"]
+    }
+  ]
+}
