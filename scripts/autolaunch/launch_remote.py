@@ -137,12 +137,7 @@ def main() -> int:
     force_sync = (
         f"cd {repo_path_remote} && "
         "git fetch --all --prune && "
-        "git reset --hard origin/master && "
-        "git clean -fd "
-        "-e 'vcr_bench/models/*/checkpoints' -e 'vcr_bench/models/*/checkpoints/**' "
-        "-e 'vcr_bench/defences/freqpure/*.pt' "
-        "-e Defences -e 'Defences/**' "
-        "-e vqmt -e 'vqmt/**'"
+        "git reset --hard origin/master"
     )
     git_pull_cmd = f"bash -lc {q(force_sync)}"
     ensure_exec_bits = (
