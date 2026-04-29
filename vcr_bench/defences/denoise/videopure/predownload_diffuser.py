@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import argparse
 import os
 from contextlib import contextmanager
@@ -39,7 +40,11 @@ def ensure_model_downloaded(model_id=DEFAULT_MODEL_ID, cache_dir=DEFAULT_CACHE_D
 
     with _download_lock():
         try:
-            local_path = snapshot_download(repo_id=model_id, cache_dir=cache_dir, local_files_only=True)
+            local_path = snapshot_download(
+                repo_id=model_id,
+                cache_dir=cache_dir,
+                local_files_only=True,
+            )
             if not quiet:
                 print(f"[VideoPure] Cache hit for {model_id}")
                 print(f"[VideoPure] Snapshot path: {local_path}")
@@ -48,7 +53,11 @@ def ensure_model_downloaded(model_id=DEFAULT_MODEL_ID, cache_dir=DEFAULT_CACHE_D
             if not quiet:
                 print(f"[VideoPure] Cache miss for {model_id}. Downloading...")
                 print(f"[VideoPure] Cache dir: {cache_dir}")
-            path = snapshot_download(repo_id=model_id, cache_dir=cache_dir, local_files_only=False)
+            path = snapshot_download(
+                repo_id=model_id,
+                cache_dir=cache_dir,
+                local_files_only=False,
+            )
             if not quiet:
                 print(f"[VideoPure] Download complete. Snapshot path: {path}")
             return path, True
@@ -56,12 +65,24 @@ def ensure_model_downloaded(model_id=DEFAULT_MODEL_ID, cache_dir=DEFAULT_CACHE_D
 
 def main():
     parser = argparse.ArgumentParser(description="Predownload VideoPure diffusers weights to local cache.")
-    parser.add_argument("--model-id", default=os.getenv("VIDEOPURE_MODEL_ID", DEFAULT_MODEL_ID))
-    parser.add_argument("--cache-dir", default=os.getenv("VIDEOPURE_CACHE_DIR", DEFAULT_CACHE_DIR))
+    parser.add_argument(
+        "--model-id",
+        default=os.getenv("VIDEOPURE_MODEL_ID", DEFAULT_MODEL_ID),
+        help="Hugging Face model repo id",
+    )
+    parser.add_argument(
+        "--cache-dir",
+        default=os.getenv("VIDEOPURE_CACHE_DIR", DEFAULT_CACHE_DIR),
+        help="Optional custom HF cache directory",
+    )
     args = parser.parse_args()
+
     print(f"[VideoPure] Ensuring local snapshot: {args.model_id}")
     _, downloaded = ensure_model_downloaded(model_id=args.model_id, cache_dir=args.cache_dir, quiet=False)
-    print("[VideoPure] Status:", "downloaded" if downloaded else "already present")
+    if downloaded:
+        print("[VideoPure] Status: downloaded")
+    else:
+        print("[VideoPure] Status: already present")
 
 
 if __name__ == "__main__":
