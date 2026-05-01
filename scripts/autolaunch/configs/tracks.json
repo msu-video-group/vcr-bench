@@ -39,7 +39,6 @@
       ],
       "attacks": [
         {"name": "amifgsm",        "target": true},
-        {"name": "flickering",     "target": true},
         {"name": "ifgsm",          "target": true},
         {"name": "korhonen_et_al", "target": true},
         {"name": "mifgsm",         "target": true},
@@ -56,12 +55,14 @@
         {"name": "rotate",               "adaptive": false},
         {"name": "shuffle",              "adaptive": false},
         {"name": "temporal_median",      "adaptive": false},
+        {"name": "freqpure",             "adaptive": false},
         {"name": "crop_resize",          "adaptive": true},
         {"name": "flip",                 "adaptive": true},
         {"name": "gaussian_blur",        "adaptive": true},
         {"name": "rotate",               "adaptive": true},
         {"name": "shuffle",              "adaptive": true},
-        {"name": "temporal_median",      "adaptive": true}
+        {"name": "temporal_median",      "adaptive": true},
+        {"name": "freqpure",             "adaptive": true}
       ],
       "extra_args": ["--full-videos"]
     }
