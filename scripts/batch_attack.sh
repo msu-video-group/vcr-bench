@@ -60,6 +60,7 @@ batch_size=1
 num_workers=0
 verbose_flag=0
 results_root="results"
+logs_root="attack_logs"
 video_root=""
 annotations=""
 labels=""
@@ -114,6 +115,7 @@ while [[ "$#" -gt 0 ]]; do
         --batch-size) batch_size="$2"; shift ;;
         --num-workers) num_workers="$2"; shift ;;
         --results-root) results_root="$2"; shift ;;
+        --logs-root) logs_root="$2"; shift ;;
         --video-root) video_root="$2"; shift ;;
         --annotations) annotations="$2"; shift ;;
         --labels) labels="$2"; shift ;;
@@ -252,7 +254,7 @@ for ((i=0; i<${#method_names_local[@]}; i++)); do
     comment_label="${comment_label//\//_}"
     log_subdir="${current_attack_type}_${attack_type_label}_${defence_label}_${defence_type_label}"
     [[ -n "$comment_label" ]] && log_subdir="${log_subdir}_${comment_label}"
-    log_dir="${results_root}/${attack_name}/${log_subdir}"
+    log_dir="${logs_root}/${attack_name}/${log_subdir}"
     mkdir -p "$log_dir"
     log_file="${log_dir}/${current_model}.log"
     : > "$log_file"
@@ -268,6 +270,7 @@ for ((i=0; i<${#method_names_local[@]}; i++)); do
         --batch-size "$batch_size"
         --num-workers "$num_workers"
         --results-root "$results_root"
+        --logs-root "$logs_root"
         --split "$split"
         --pipeline-stage "$pipeline_stage"
         --dump-freq "$dump_freq"

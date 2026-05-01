@@ -7,6 +7,7 @@ __pycache__/
 configs/local.toml
 remote_results/
 results/
+attack_logs/
 data/ok
 tests/
 scripts/autolaunch/runtime/

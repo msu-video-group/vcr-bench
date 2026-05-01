@@ -21,7 +21,7 @@
         {"name": "temporal_median", "adaptive": false},
         {"name": "temporal_median", "adaptive": true}
       ],
-      "extra_args": ["--full-videos"]
+      "extra_args": ["--full-videos", "--separate-logs"]
     },
     {
       "name": "full-white-box",
@@ -30,7 +30,7 @@
       "num_videos": 100,
       "save_videos": 5,
       "models": [
-        "actionclip", "amd", "c2d", "c3d", "csn", "i3d", "i3dnonlocal",
+        "actionclip", "amd", "c2d", "c3d", "i3d", "i3dnonlocal",
         "ila", "internvideo", "internvideo2", "mvitv2", "onepeace",
         "r2plus1d", "slowfast", "slowonly", "tadaformer", "tanet",
         "timesformer", "tin", "tpn", "trn", "tsm", "tsmnonlocal",
@@ -42,13 +42,13 @@
         {"name": "ifgsm",          "target": true},
         {"name": "korhonen_et_al", "target": true},
         {"name": "mifgsm",         "target": true},
-        {"name": "ssah",           "target": true},
         {"name": "stadv",          "target": true},
         {"name": "zhang_dists",    "target": true},
         {"name": "zhang_lpips",    "target": true},
         {"name": "zhang_ssim",     "target": true}
       ],
       "defences": [
+        {"name": "no_defence",           "adaptive": false},
         {"name": "crop_resize",          "adaptive": false},
         {"name": "flip",                 "adaptive": false},
         {"name": "gaussian_blur",        "adaptive": false},
@@ -64,7 +64,7 @@
         {"name": "temporal_median",      "adaptive": true},
         {"name": "freqpure",             "adaptive": true}
       ],
-      "extra_args": ["--full-videos"]
+      "extra_args": ["--full-videos", "--separate-logs"]
     }
   ]
 }

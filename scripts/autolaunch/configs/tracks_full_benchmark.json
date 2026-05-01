@@ -40,7 +40,7 @@
         {"name": "crop",             "adaptive": true},
         {"name": "rotate",           "adaptive": true}
       ],
-      "extra_args": ["--full-videos"]
+      "extra_args": ["--full-videos", "--separate-logs"]
     }
   ]
 }

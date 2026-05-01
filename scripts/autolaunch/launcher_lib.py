@@ -142,13 +142,18 @@ def _effective_results_root(combo, main_cfg):
     return combo.get("results_root") or main_cfg["results_root"]
 
 
+def _effective_logs_root(combo, main_cfg):
+    return combo.get("logs_root") or main_cfg.get("logs_root", "attack_logs")
+
+
 def expected_paths(combo, main_cfg):
     attack_folder = attack_folder_name(
         combo["attack"], combo["target"], combo["defence"], combo["adaptive"], combo["comment"]
     )
     results_root = _effective_results_root(combo, main_cfg)
+    logs_root = _effective_logs_root(combo, main_cfg)
     csv_path = os.path.join(results_root, combo["attack_root"], attack_folder, f"{combo['model']}.csv")
-    log_path = os.path.join(results_root, combo["attack_root"], attack_folder, f"{combo['model']}.log")
+    log_path = os.path.join(logs_root, combo["attack_root"], attack_folder, f"{combo['model']}.log")
     return csv_path, log_path, attack_folder
 
 
@@ -157,12 +162,20 @@ def candidate_log_paths(combo, main_cfg, attack_folder=None):
         attack_folder = attack_folder_name(
             combo["attack"], combo["target"], combo["defence"], combo["adaptive"], combo["comment"]
         )
-    results_root = _effective_results_root(combo, main_cfg)
+    logs_root = _effective_logs_root(combo, main_cfg)
     attack_root = combo["attack_root"]
-    per_model_log = os.path.join(results_root, attack_root, attack_folder, f"log_{combo['model']}.csv")
-    merged_log = os.path.join(results_root, attack_root, attack_folder, f"log_{attack_folder}.csv")
-    shared_log = os.path.join(results_root, attack_root, f"log_{attack_root}.csv")
-    return [per_model_log, merged_log, shared_log]
+    separate_combo_log = os.path.join(logs_root, attack_root, attack_folder, f"log_{attack_folder}.csv")
+    shared_log = os.path.join(logs_root, attack_root, f"log_{attack_root}.csv")
+    legacy_results_combo_log = os.path.join(_effective_results_root(combo, main_cfg), attack_root, attack_folder, f"log_{attack_folder}.csv")
+    legacy_results_per_model_log = os.path.join(_effective_results_root(combo, main_cfg), attack_root, attack_folder, f"log_{combo['model']}.csv")
+    legacy_results_shared_log = os.path.join(_effective_results_root(combo, main_cfg), attack_root, f"log_{attack_root}.csv")
+    return [
+        separate_combo_log,
+        shared_log,
+        legacy_results_combo_log,
+        legacy_results_per_model_log,
+        legacy_results_shared_log,
+    ]
 
 
 def is_completed(csv_path, expected_rows=None):

@@ -115,7 +115,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--adaptive", action="store_true", help="Apply defence adaptively (before attack gradient computation)")
     p.add_argument("--separate-logs", action="store_true")
     p.add_argument("--comment", default="")
-    p.add_argument("--results-root", default="results", help="Root folder for attack result CSV/log outputs")
+    p.add_argument("--results-root", default="results", help="Root folder for attack result CSV outputs")
+    p.add_argument("--logs-root", default="attack_logs", help="Root folder for attack summary CSV/stdout logs")
     p.add_argument("--artifacts-root", dest="results_root", help="Deprecated alias for --results-root")
     p.add_argument("--vram-profile-csv", default=None, help="Append one-video VRAM profile rows to a separate CSV")
     p.add_argument("--vram-profile-index", type=int, default=None, help="Dataset index used for --vram-profile-csv; defaults to seeded random")
@@ -189,7 +190,7 @@ def _apply_presets(args: argparse.Namespace) -> dict[str, Any]:
         )
         resolved["defence"] = defence_spec
         args.defence = args.defence or str(defence_spec["factory_name"])
-        # Defence params are stored for future factory use; current CLI only supports name.
+        args.defence_params = dict(defence_spec.get("params", {}) or {})
     if args.dataset is None:
         raise SystemExit("--dataset is required unless provided by --run-preset")
     if args.model is None:
@@ -210,13 +211,14 @@ def _build_paths(args, model_name: str) -> tuple[Path, Path, Path]:
         safe_comment = comment.replace(" ", "_").replace("/", "_").replace("\\", "_")
         save_attack_name = f"{save_attack_name}_{safe_comment}"
 
-    root = Path(args.results_root)
-    save_path = root / attack_root_name / save_attack_name / f"{model_name}.csv"
+    results_root = Path(args.results_root)
+    logs_root = Path(args.logs_root)
+    save_path = results_root / attack_root_name / save_attack_name / f"{model_name}.csv"
     if args.separate_logs:
-        log_path = root / attack_root_name / save_attack_name / f"log_{model_name}.csv"
+        log_path = logs_root / attack_root_name / save_attack_name / f"log_{save_attack_name}.csv"
     else:
-        log_path = root / attack_root_name / f"log_{attack_root_name}.csv"
-    dump_path = root / "attacked_videos" / attack_root_name / save_attack_name / model_name
+        log_path = logs_root / attack_root_name / f"log_{attack_root_name}.csv"
+    dump_path = results_root / "attacked_videos" / attack_root_name / save_attack_name / model_name
     return save_path, log_path, dump_path
 
 
@@ -350,7 +352,7 @@ def main() -> None:
     defence = None
     if args.defence is not None:
         from vcr_bench.defences import create_defence
-        defence = create_defence(args.defence)
+        defence = create_defence(args.defence, **dict(getattr(args, "defence_params", {}) or {}))
 
     dataset = create_dataset(args.dataset, **dataset_kwargs)
     model = create_model(

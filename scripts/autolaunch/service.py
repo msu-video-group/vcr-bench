@@ -152,6 +152,7 @@ def build_batch_attack_multi_sbatch_cmd(main_cfg, combos):
     script = str(slurm_cfg.get("batch_attack_script", "./scripts/batch_attack.sh"))
     dump_freq = compute_dump_freq(first["num_videos"], first.get("save_videos", 0))
     results_root = first.get("results_root") or main_cfg.get("results_root", "results/remote_attacks")
+    logs_root = first.get("logs_root") or main_cfg.get("logs_root", "attack_logs")
 
     model_specs = _stable_unique([
         "{}:{}:{}:{}:{}".format(
@@ -173,6 +174,7 @@ def build_batch_attack_multi_sbatch_cmd(main_cfg, combos):
         "--model", ",".join(model_specs),
         "--dump-freq", str(dump_freq),
         "--results-root", results_root,
+        "--logs-root", logs_root,
     ]
     if first.get("full_video"):
         cmd.append("--full-videos")
