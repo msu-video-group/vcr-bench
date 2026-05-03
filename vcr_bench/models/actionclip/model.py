@@ -178,7 +178,7 @@ class ActionClipClassifier(BaseVideoClassifier):
         common_loading = {
             "raw_input_format": "NTHWC",
             "sampled_format": "NTHWC",
-            "clip_len": 1,
+            "clip_len": 32,
             "frame_interval": 1,
             "full_videos": False,
         }
@@ -191,10 +191,10 @@ class ActionClipClassifier(BaseVideoClassifier):
             "std": (68.5, 66.632, 70.323),
         }
         loading = {
-            "train": {**common_loading, "num_clips": 32},
-            "val": {**common_loading, "num_clips": 32},
-            "test": {**common_loading, "num_clips": 32},
-            "attack": {**common_loading, "num_clips": 32},
+            "train": {**common_loading, "num_clips": 1},
+            "val": {**common_loading, "num_clips": 1},
+            "test": {**common_loading, "num_clips": 1},
+            "attack": {**common_loading, "num_clips": 1},
         }
         preprocessing = {
             "train": {**common_pre, "spatial_strategy": "center_crop"},
