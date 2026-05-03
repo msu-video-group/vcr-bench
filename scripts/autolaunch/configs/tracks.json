@@ -14,12 +14,29 @@
       ],
       "defences": [
         {"name": "no_defence",      "adaptive": false},
-        {"name": "denoise",         "adaptive": false},
-        {"name": "denoise",         "adaptive": true},
+        {"name": "videopure",       "adaptive": false},
+        {"name": "videopure",       "adaptive": true},
         {"name": "freqpure",        "adaptive": false},
         {"name": "freqpure",        "adaptive": true},
         {"name": "temporal_median", "adaptive": false},
         {"name": "temporal_median", "adaptive": true}
+      ],
+      "extra_args": ["--full-videos", "--separate-logs"]
+    },
+    {
+      "name": "test-videopure-amd-x3d",
+      "attack_name": "test_videopure_amd_x3d",
+      "dataset": "kinetics400",
+      "num_videos": 10,
+      "save_videos": 1,
+      "models": ["amd", "x3d"],
+      "attacks": [
+        {"name": "ifgsm", "target": true}
+      ],
+      "defences": [
+        {"name": "no_defence", "adaptive": false},
+        {"name": "videopure",  "adaptive": false},
+        {"name": "videopure",  "adaptive": true}
       ],
       "extra_args": ["--full-videos", "--separate-logs"]
     },

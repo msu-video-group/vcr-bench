@@ -1,0 +1,28 @@
+{
+  "kind": "defence",
+  "name": "videopure",
+  "default_variant": "default",
+  "variants": {
+    "default": {
+      "factory_name": "videopure",
+      "params": {
+        "neighbor_mode": "auto",
+        "neighbor_radius": 1
+      }
+    },
+    "sample_neighbors": {
+      "factory_name": "videopure",
+      "params": {
+        "neighbor_mode": "sample_neighbors",
+        "neighbor_radius": 1
+      }
+    },
+    "legacy": {
+      "factory_name": "videopure",
+      "params": {
+        "neighbor_mode": "off",
+        "neighbor_radius": 0
+      }
+    }
+  }
+}
