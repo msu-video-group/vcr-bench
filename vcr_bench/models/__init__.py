@@ -1,3 +1,3 @@
-from .registry import create_model, get_model_options
+from .registry import create_model, get_model_class, get_model_options
 
-__all__ = ["create_model", "get_model_options"]
+__all__ = ["create_model", "get_model_class", "get_model_options"]

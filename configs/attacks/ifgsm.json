@@ -1,7 +1,6 @@
 {
   "kind": "attack",
   "name": "ifgsm",
-  "default_variant": "default",
   "presets": {
     "default": {
       "factory_name": "ifgsm",
@@ -18,5 +17,6 @@
         "random_start": true
       }
     }
-  }
+  },
+  "default_preset": "default"
 }

@@ -166,6 +166,30 @@ def _extract_sample_item(x: VideoSampleRef | LoadedDatasetItem) -> tuple[VideoSa
     raise TypeError("Attack runner requires dataset.configure_loading(...) so __getitem__ returns LoadedDatasetItem")
 
 
+def _defence_requires_full_video_context(defence: BaseVideoDefence | None, model: BaseVideoClassifier) -> bool:
+    if defence is None or not hasattr(defence, "requires_full_video_context"):
+        return False
+    try:
+        return bool(defence.requires_full_video_context(model))  # type: ignore[attr-defined]
+    except Exception:
+        return False
+
+
+def _set_defence_context(
+    defence: BaseVideoDefence | None,
+    *,
+    full_tensor: torch.Tensor | None,
+    sampled_frame_ids: torch.Tensor | None,
+) -> None:
+    if defence is not None and hasattr(defence, "set_context"):
+        defence.set_context(full_tensor=full_tensor, sampled_frame_ids=sampled_frame_ids)  # type: ignore[attr-defined]
+
+
+def _clear_defence_context(defence: BaseVideoDefence | None) -> None:
+    if defence is not None and hasattr(defence, "clear_context"):
+        defence.clear_context()  # type: ignore[attr-defined]
+
+
 def run_attack(
     model: BaseVideoClassifier,
     attack: BaseVideoAttack,
@@ -203,6 +227,9 @@ def run_attack(
     # Adaptive defence: permanently install on model so attack gradient flows through it.
     if defence is not None and adaptive:
         defence.install(model)
+
+    if _defence_requires_full_video_context(defence, model) and hasattr(dataset, "full_videos"):
+        setattr(dataset, "full_videos", True)
 
     model.build_data_pipeline(pipeline_stage)
     configured_dataset = dataset.configure_loading(model.build_data_pipeline(pipeline_stage), instant_preprocessing=False)
@@ -362,8 +389,14 @@ def run_attack(
         sample, sampled_video, input_format = _extract_sample_item(item)
         full_video_for_dump = item.full_tensor if isinstance(item, LoadedDatasetItem) else None
         sampled_frame_ids_for_dump = item.sampled_frame_ids if isinstance(item, LoadedDatasetItem) else None
+        _set_defence_context(
+            defence,
+            full_tensor=full_video_for_dump,
+            sampled_frame_ids=sampled_frame_ids_for_dump,
+        )
         if skip_existing and sample.path in skip_paths:
             skipped_existing_count += 1
+            _clear_defence_context(defence)
             if verbose:
                 print(f"[attack][skip-existing] {sample.path}", flush=True)
             continue
@@ -382,6 +415,7 @@ def run_attack(
                     defence.uninstall(model)
         except Exception as e:
             skipped_error_count += 1
+            _clear_defence_context(defence)
             print(f"[attack][clean-predict-error] {sample.path}: {type(e).__name__}: {e}", flush=True)
             if verbose:
                 traceback.print_exc()
@@ -394,6 +428,7 @@ def run_attack(
 
         if (not allow_misclassified) and gt_class >= 0 and clean_label != gt_class:
             skipped_misclassified += 1
+            _clear_defence_context(defence)
             elapsed = time.time() - t0
             skipped_row = {
                 "video_name": sample.path,
@@ -461,6 +496,7 @@ def run_attack(
                     defence.uninstall(model)
         except Exception as e:
             skipped_error_count += 1
+            _clear_defence_context(defence)
             print(f"[attack][attack-error] {sample.path}: {type(e).__name__}: {e}", flush=True)
             if verbose:
                 traceback.print_exc()
@@ -561,6 +597,7 @@ def run_attack(
             _flush_metric_jobs(block=True)
 
         del sampled_video_cpu, attacked_video_cpu, defended_video_cpu, full_video_cpu, sampled_frame_ids_cpu, attacked_video, attacked_probs, clean_probs
+        _clear_defence_context(defence)
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
     _flush_metric_jobs(block=True, drain_all=True)

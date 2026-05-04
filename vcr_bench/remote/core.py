@@ -105,14 +105,17 @@ def tracking_branch(cwd: Path) -> str:
     return result.stdout.strip() if result.returncode == 0 else ""
 
 
-def build_force_sync_command(repo_path: str, git_ref: str, script_root: str) -> str:
+def build_force_sync_command(repo_path: str, git_ref: str, script_root: str, *, strategy: str = "detach") -> str:
     repo_expr = remote_path_expr(repo_path)
-    force_sync = (
-        f"cd {repo_expr} && "
-        "git fetch --all --prune && "
-        f"git reset --hard {q(git_ref)} && "
-        f"chmod +x ./{script_root}/batch_attack.sh ./{script_root}/test_models.sh ./{script_root}/batch_prepare.sh || true"
-    )
+    sync_strategy = str(strategy or "detach").strip().lower()
+    if sync_strategy == "reset-hard":
+        sync_cmd = f"git fetch --all --prune && git reset --hard {q(git_ref)}"
+    elif sync_strategy == "detach":
+        sync_cmd = f"git fetch --all --prune && git checkout --detach {q(git_ref)}"
+    else:
+        raise ValueError(f"Unsupported remote sync strategy: {strategy}")
+    chmod_cmd = f"chmod +x ./{script_root}/batch_attack.sh ./{script_root}/test_models.sh ./{script_root}/batch_prepare.sh || true"
+    force_sync = f"cd {repo_expr} && {sync_cmd} && {chmod_cmd}"
     return f"bash -lc {q(force_sync)}"
 
 

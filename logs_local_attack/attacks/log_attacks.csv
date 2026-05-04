@@ -1,0 +1,2 @@
+model,attack,test_dataset,time,mean_time,mean_iterations,eps,iter,mean_psnr,mean_vmaf,clear_correct,attacked_success,target_success,num_total
+c3d,ifgsm_untarget_no_defence_non-adaptive,UCF101Dataset,3.3653,2.5877,1.0,8.0,20,50.54002991431584,0.0,1,1,0,1

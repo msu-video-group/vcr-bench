@@ -1,0 +1,16 @@
+{
+  "kind": "defence",
+  "name": "rotate",
+  "presets": {
+    "default": {
+      "factory_name": "rotate",
+      "params": {
+        "angle_range": [
+          -30.0,
+          30.0
+        ]
+      }
+    }
+  },
+  "default_preset": "default"
+}

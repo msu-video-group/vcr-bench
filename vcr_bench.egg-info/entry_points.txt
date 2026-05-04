@@ -1,0 +1,7 @@
+[console_scripts]
+vcr-bench-artifacts = vcr_bench.cli.artifacts:main
+vcr-bench-attack = vcr_bench.cli.attack:main
+vcr-bench-classify = vcr_bench.cli.classify:main
+vcr-bench-prepare = vcr_bench.cli.prepare:main
+vcr-bench-remote = vcr_bench.remote.cli:main
+vcr-bench-test = vcr_bench.cli.test:main

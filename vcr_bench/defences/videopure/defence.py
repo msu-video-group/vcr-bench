@@ -219,25 +219,25 @@ class DenoiseDefence(BaseVideoDefence):
     def __init__(
         self,
         *,
-        neighbor_mode: str = "auto",
-        neighbor_radius: int = 1,
+        continuous_mode: str = "continuous",
+        min_continuous_frames: int = 4,
     ) -> None:
-        self.neighbor_mode = str(neighbor_mode).strip().lower()
-        self.neighbor_radius = max(0, int(neighbor_radius))
+        self.continuous_mode = str(continuous_mode).strip().lower()
+        self.min_continuous_frames = max(1, int(min_continuous_frames))
         self._context_full_tensor: torch.Tensor | None = None
         self._context_sampled_frame_ids: torch.Tensor | None = None
-        self._neighbor_mode_active = False
+        self._continuous_mode_active = False
 
     def install(self, model) -> None:
         model_name = str(getattr(model, "model_name", "")).strip().lower().replace("-", "_")
-        self._neighbor_mode_active = self.neighbor_mode == "sample_neighbors" or (
-            self.neighbor_mode == "auto" and model_name == "x3d"
+        self._continuous_mode_active = self.continuous_mode == "continuous" or (
+            self.continuous_mode == "auto" and model_name == "x3d"
         )
         super().install(model)
 
     def requires_full_video_context(self, model) -> bool:
         model_name = str(getattr(model, "model_name", "")).strip().lower().replace("-", "_")
-        return self.neighbor_mode == "sample_neighbors" or (self.neighbor_mode == "auto" and model_name == "x3d")
+        return self.continuous_mode == "continuous" or (self.continuous_mode == "auto" and model_name == "x3d")
 
     def set_context(
         self,
@@ -252,55 +252,60 @@ class DenoiseDefence(BaseVideoDefence):
         self._context_full_tensor = None
         self._context_sampled_frame_ids = None
 
-    def _build_neighbor_sequence(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor] | None:
-        if not self._neighbor_mode_active or self.neighbor_radius <= 0:
+    def _build_continuous_sequence(self, x: torch.Tensor) -> torch.Tensor | None:
+        if not self._continuous_mode_active:
             return None
         full_tensor = self._context_full_tensor
-        sampled_frame_ids = self._context_sampled_frame_ids
-        if full_tensor is None or sampled_frame_ids is None:
-            _vp_log("[VideoPure] Neighbor mode requested but full video context is missing; using sampled clips.")
+        if full_tensor is None:
+            _vp_log("[VideoPure] Continuous mode requested but full video context is missing; using sampled clips.")
             return None
         if full_tensor.ndim != 5 or full_tensor.shape[0] != 1:
-            _vp_log(f"[VideoPure] Neighbor mode context has unsupported full tensor shape: {tuple(full_tensor.shape)}")
-            return None
-        if sampled_frame_ids.numel() != x.shape[0] * x.shape[1]:
-            _vp_log(
-                "[VideoPure] Neighbor mode frame-id count mismatch; "
-                f"x={tuple(x.shape)} ids={tuple(sampled_frame_ids.shape)}"
-            )
+            _vp_log(f"[VideoPure] Continuous mode context has unsupported full tensor shape: {tuple(full_tensor.shape)}")
             return None
 
         N, T, H, W, C = x.shape
         full_thwc = full_tensor[0].to(device=x.device, dtype=x.dtype)
         if tuple(full_thwc.shape[1:]) != (H, W, C):
             _vp_log(
-                "[VideoPure] Neighbor mode spatial/context mismatch; "
+                "[VideoPure] Continuous mode spatial/context mismatch; "
                 f"full={tuple(full_thwc.shape)} sampled={tuple(x.shape)}"
             )
             return None
 
-        ids = sampled_frame_ids.to(device=x.device, dtype=torch.long).reshape(-1)
-        centers = x.reshape(N * T, H, W, C)
         max_frame = max(int(full_thwc.shape[0]) - 1, 0)
-        sequence_frames = []
-        center_positions = []
-        for center_index, frame_id_t in enumerate(ids):
-            frame_id = int(frame_id_t.item())
-            for offset in range(-self.neighbor_radius, self.neighbor_radius + 1):
-                if offset == 0:
-                    sequence_frames.append(centers[center_index])
-                    center_positions.append(len(sequence_frames) - 1)
-                else:
-                    neighbor_id = min(max(frame_id + offset, 0), max_frame)
-                    sequence_frames.append(full_thwc[neighbor_id])
+        total_frames = N * T
+        if T >= self.min_continuous_frames:
+            block_count = N
+            block_len = T
+        else:
+            block_len = self.min_continuous_frames
+            if total_frames % block_len != 0:
+                _vp_log(
+                    "[VideoPure] Continuous mode requires the sampled frame count to be divisible by "
+                    f"{block_len}; got {total_frames}. Using sampled clips."
+                )
+                return None
+            block_count = total_frames // block_len
 
-        sequence = torch.stack(sequence_frames, dim=0).unsqueeze(0).contiguous()
-        keep_positions = torch.tensor(center_positions, device=x.device, dtype=torch.long)
-        _vp_log(
-            "[VideoPure] Neighbor sequence mode: "
-            f"sampled_frames={N * T} radius={self.neighbor_radius} denoise_frames={sequence.shape[1]}"
+        max_start = max(max_frame - block_len + 1, 0)
+        sequence_frames = []
+        starts = torch.randint(0, max_start + 1, (block_count,), device=x.device) if max_start > 0 else torch.zeros(
+            block_count, device=x.device, dtype=torch.long
         )
-        return sequence, keep_positions
+        for start_t in starts.to(dtype=torch.long):
+            start = int(start_t.item())
+            ids = torch.arange(start, start + block_len, device=x.device, dtype=torch.long).clamp(0, max_frame)
+            sequence_frames.append(full_thwc.index_select(0, ids))
+
+        sequence = torch.cat(sequence_frames, dim=0)
+        if sequence.shape[0] != total_frames:
+            sequence = sequence[:total_frames]
+        sequence = sequence.reshape(N, T, H, W, C).contiguous()
+        _vp_log(
+            "[VideoPure] Continuous mode: "
+            f"input_shape={tuple(x.shape)} blocks={block_count} block_len={block_len} starts={starts.detach().cpu().tolist()}"
+        )
+        return sequence
 
     def transform(self, x: torch.Tensor) -> torch.Tensor:
         """Denoise each video in the batch independently.
@@ -316,13 +321,10 @@ class DenoiseDefence(BaseVideoDefence):
         input_device = x.device
         defence_device = torch.device("cuda" if torch.cuda.is_available() else input_device)
 
-        neighbor_sequence = self._build_neighbor_sequence(x)
-        if neighbor_sequence is not None:
-            sequence_nthwc, keep_positions = neighbor_sequence
-            flat_thwc = sequence_nthwc[0].contiguous().to(defence_device).float()
-            keep_positions = keep_positions.to(defence_device)
+        continuous_sequence = self._build_continuous_sequence(x)
+        if continuous_sequence is not None:
+            flat_thwc = continuous_sequence.reshape(N * T, H, W, C).contiguous().to(defence_device).float()
         else:
-            keep_positions = None
             # Flatten [N, T, H, W, C] -> [N*T, H, W, C], matching old benchmark where all
             # clips are passed as one flat [T, H, W, C] sequence to the denoiser.
             flat_thwc = x.reshape(N * T, H, W, C).contiguous().to(defence_device).float()
@@ -353,11 +355,8 @@ class DenoiseDefence(BaseVideoDefence):
         processed_video = _match_spatial_size(processed_video, input_h, input_w)
 
         original_thwc = original_video.permute(1, 2, 3, 0).float()
-        if keep_positions is not None:
-            processed_video = processed_video.index_select(0, keep_positions).reshape(N, T, H, W, C)
-        else:
-            _log_defence_delta(original_thwc, processed_video)
-            processed_video = processed_video.reshape(N, T, H, W, C)
+        _log_defence_delta(original_thwc, processed_video)
+        processed_video = processed_video.reshape(N, T, H, W, C)
         _vp_log(f"[VideoPure] Output video tensor shape: {tuple(processed_video.shape)}")
         torch.cuda.empty_cache()
 

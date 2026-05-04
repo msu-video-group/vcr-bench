@@ -29,7 +29,7 @@ from .core import (
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="vcr_bench remote tools")
     parser.add_argument("--config", default=str(default_config_path()))
-    parser.add_argument("--remote", default=None, help="Named remote from configs/defaults.toml or configs/local.toml")
+    parser.add_argument("--remote", default=None, help="Named remote from your remote config.")
     sub = parser.add_subparsers(dest="command", required=True)
 
     push = sub.add_parser("push-code")
@@ -38,6 +38,7 @@ def build_parser() -> argparse.ArgumentParser:
     push.add_argument("--dry-run", action="store_true")
 
     sync = sub.add_parser("sync-remote")
+    sync.add_argument("--strategy", choices=["detach", "reset-hard"], default=None, help="Override the configured remote sync strategy.")
     sync.add_argument("--dry-run", action="store_true")
 
     launch = sub.add_parser("launch-job")
@@ -160,7 +161,12 @@ def cmd_push_code(args: argparse.Namespace, cfg: dict[str, Any]) -> None:
 
 
 def cmd_sync_remote(args: argparse.Namespace, cfg: dict[str, Any]) -> None:
-    remote_cmd = build_force_sync_command(cfg["repo_path"], cfg["git_ref"], cfg["script_root"])
+    remote_cmd = build_force_sync_command(
+        cfg["repo_path"],
+        cfg["git_ref"],
+        cfg["script_root"],
+        strategy=str(getattr(args, "strategy", None) or cfg.get("sync_strategy", "detach")),
+    )
     if not args.dry_run:
         run_ssh(cfg["ssh_host"], remote_cmd)
     _emit(
@@ -170,6 +176,7 @@ def cmd_sync_remote(args: argparse.Namespace, cfg: dict[str, Any]) -> None:
             "remote_host": cfg["ssh_host"],
             "remote_repo": cfg["repo_path"],
             "git_ref": cfg["git_ref"],
+            "sync_strategy": str(getattr(args, "strategy", None) or cfg.get("sync_strategy", "detach")),
             "remote_command": remote_cmd,
             "dry_run": bool(args.dry_run),
         }
@@ -519,22 +526,28 @@ def cmd_fetch_job_artifacts(args: argparse.Namespace, cfg: dict[str, Any]) -> No
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
-    cfg = load_remote_config(args.config, args.remote)
     if args.command == "push-code":
-        cmd_push_code(args, cfg)
+        cmd_push_code(args, {})
     elif args.command == "sync-remote":
+        cfg = load_remote_config(args.config, args.remote)
         cmd_sync_remote(args, cfg)
     elif args.command == "launch-job":
+        cfg = load_remote_config(args.config, args.remote)
         cmd_launch_job(args, cfg)
     elif args.command == "launch-accuracy-suite":
+        cfg = load_remote_config(args.config, args.remote)
         cmd_launch_accuracy_suite(args, cfg)
     elif args.command == "launch-attack-suite":
+        cfg = load_remote_config(args.config, args.remote)
         cmd_launch_attack_suite(args, cfg)
     elif args.command == "launch-preset":
+        cfg = load_remote_config(args.config, args.remote)
         cmd_launch_preset(args, cfg)
     elif args.command == "job-status":
+        cfg = load_remote_config(args.config, args.remote)
         cmd_job_status(args, cfg)
     elif args.command == "fetch-job-artifacts":
+        cfg = load_remote_config(args.config, args.remote)
         cmd_fetch_job_artifacts(args, cfg)
     else:
         raise ValueError(f"Unsupported command: {args.command}")

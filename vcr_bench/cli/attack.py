@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
-from vcr_bench.attacks import create_attack
+from vcr_bench.attacks import create_attack, get_attack_spec
 from vcr_bench.cli.common import (
     build_default_resolution_payload,
     build_model_dataset_context,
@@ -28,91 +29,53 @@ from vcr_bench.utils.eval import run_attack
 from vcr_bench.utils.vram import VramProfileContext, append_vram_profile_csv, profile_model_vram_for_one_video
 
 
-def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description="vcr_bench attack eval")
+def build_base_parser(*, add_help: bool) -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(description="vcr_bench attack eval", add_help=add_help)
     p.add_argument("--device", default="cuda")
     p.add_argument("--batch-size", type=int, default=1, help=argparse.SUPPRESS)
     p.add_argument("--num-workers", type=int, default=0, help=argparse.SUPPRESS)
-    p.add_argument("--attack-name", type=str, default="attacks", help="name for logging root")
+    p.add_argument("--attack-name", type=str, default="attacks", help="Name for the logging root.")
     p.add_argument("--model", default=None)
     p.add_argument("--attack", default=None)
     p.add_argument("--dataset", default=None)
     p.add_argument("--run-preset", default=None, help="JSON run preset name or path")
     p.add_argument("--model-preset", default=None, help="JSON model preset name or path")
-    p.add_argument("--model-variant", default=None)
+    p.add_argument("--model-preset-name", dest="model_preset_name", default=None)
+    p.add_argument("--model-variant", dest="model_preset_name", default=None, help=argparse.SUPPRESS)
     p.add_argument("--attack-preset", default=None, help="JSON attack preset name or path")
-    p.add_argument("--attack-variant", default=None)
+    p.add_argument("--attack-preset-name", dest="attack_preset_name", default=None)
+    p.add_argument("--attack-variant", dest="attack_preset_name", default=None, help=argparse.SUPPRESS)
     p.add_argument("--defence-preset", default=None, help="JSON defence preset name or path")
-    p.add_argument("--defence-variant", default=None)
+    p.add_argument("--defence-preset-name", dest="defence_preset_name", default=None)
+    p.add_argument("--defence-variant", dest="defence_preset_name", default=None, help=argparse.SUPPRESS)
     p.add_argument("--override", action="append", default=[], help="Preset override: dotted.key=json_value")
     p.add_argument("--print-resolved-preset", action="store_true")
+    p.add_argument("--print-attack-spec", action="store_true", help="Print the resolved attack option schema and exit.")
     p.add_argument("--dataset-subset", default=None, help="Named dataset subset manifest to auto-download and resolve")
     p.add_argument("--video-root", default=None)
     p.add_argument("--annotations", default=None)
     p.add_argument("--labels", default=None)
     p.add_argument("--checkpoint", default=None)
-    p.add_argument("--backbone", default=None, help="Model backbone variant")
-    p.add_argument("--weights-dataset", default=None, help="Weights dataset variant for the selected model/backbone")
+    p.add_argument("--backbone", default=None, help="Model backbone name")
+    p.add_argument("--weights-dataset", default=None, help="Weights dataset name for the selected model/backbone")
     p.add_argument("--grad-forward-chunk-size", type=int, default=None, help="Chunk views during gradient forward to reduce VRAM")
     p.add_argument("--num-videos", type=int, default=25)
     p.add_argument("--target", action="store_true")
-    p.add_argument("--eps", type=float, default=None)
-    p.add_argument("--alpha", type=float, default=None)
-    p.add_argument("--iter", type=int, default=None)
-    p.add_argument("--random-start", dest="random_start", action="store_true", default=None, help="Enable random start when the selected attack supports it")
-    p.add_argument("--no-random-start", dest="random_start", action="store_false", help="Disable random start when the selected attack supports it")
-    p.add_argument("--random-start-trials", type=int, default=None, help="GradEstV2/Square: number of random-start candidates to try before the main loop")
-    p.add_argument("--beta", type=float, default=None, help="TenAd finite-difference smoothing parameter")
-    p.add_argument("--binary-search-steps", type=int, default=None, help="TenAd binary-search refinement steps")
-    p.add_argument("--max-expand-steps", type=int, default=None, help="TenAd geometric expansion steps")
-    p.add_argument("--lambda-init", type=float, default=None, help="TenAd initial lambda for boundary search")
-    p.add_argument("--query-budget", type=int, default=None, help="TenAd/GradEst/Square per-sample query budget")
-    p.add_argument("--max-patch-frac", type=float, default=None, help="Square: cap patch size to this fraction of min(H,W) (default 0.2)")
-    p.add_argument("--scout-queries", type=int, default=None, help="Square: number of coarse scout proposals before the main loop")
-    p.add_argument("--elite-window-count", type=int, default=None, help="Square: number of best proposal windows to keep for reuse")
-    p.add_argument("--elite-candidates-per-step", type=int, default=None, help="Square: number of per-step candidates sampled around elite windows")
-    p.add_argument("--elite-jitter-frac", type=float, default=None, help="Square: relative jitter radius when resampling around elite windows")
-    p.add_argument("--guide-samples", type=int, default=None, help="Square: NES guidance sample pairs per step before patch proposals")
-    p.add_argument("--guide-sigma", type=float, default=None, help="Square: smoothing scale for NES guidance noise")
-    p.add_argument("--guide-patch-prob", type=float, default=None, help="Square: probability of using guidance-derived patch sign instead of random sign")
-    p.add_argument("--guide-momentum", type=float, default=None, help="Square: EMA momentum for the latent guidance field")
-    p.add_argument("--candidates-per-step", type=int, default=None, help="Square: number of candidate patch mutations per early step")
-    p.add_argument("--candidates-per-step-late", type=int, default=None, help="Square: number of candidate patch mutations per late step")
-    p.add_argument("--bootstrap-guide-samples", type=int, default=None, help="Square: NES bootstrap sample pairs before random start")
-    p.add_argument("--bootstrap-guide-sigma", type=float, default=None, help="Square: NES bootstrap smoothing scale")
-    p.add_argument("--bootstrap-primitives", type=int, default=None, help="Square: number of bootstrap-guided primitives in the initial seed")
-    p.add_argument("--eval-batch-size", type=int, default=None, help="Square: GPU eval chunk size for batched candidate queries")
-    p.add_argument("--boost-second", type=float, default=None, help="GradEst/GradEstV2: weight on -CE(second_label) in NES loss (0 = disabled)")
-    p.add_argument("--boost-top2", type=float, default=None, help="GradEstV2/Square: accept/reject bonus weight on improvement of mean top-2 non-primary logits (base weight; ramps to 4x by the final step)")
-    p.add_argument("--boost-top10", type=float, default=None, help="GradEstV2/Square: accept/reject bonus weight on improvement of mean top-10 non-primary logits")
-    p.add_argument("--boost-top5", type=float, default=None, help="Deprecated alias for GradEstV2/Square top-k bonus; used as boost-top10 when boost-top10 is omitted")
-    p.add_argument("--temporal-tiles", type=int, default=None, help="GradEstV2/Square: number of independent temporal groups")
-    p.add_argument("--smooth-scale", type=float, default=None, help="GradEstV2: noise generated at N*smooth_scale resolution, upsampled (0<scale<=1)")
-    p.add_argument("--num-restarts", type=int, default=None, help="TenAd restart count")
-    p.add_argument("--spatial-stride", type=int, default=None, help="TenAd spatial downsampling stride for rank-1 factors (default: auto = min(H,W)//32)")
-    p.add_argument("--bmtc-save-root", default=None, help="BMTC artifacts directory (mixer checkpoint, background frames)")
-    p.add_argument("--n-samples", type=int, default=None, help="StyleFool/query attack: NES samples per step")
-    p.add_argument("--sub-num", type=int, default=None, help="StyleFool: antithetic batch size (must be even, divide n-samples)")
-    p.add_argument("--lr-annealing", action="store_true", default=False, help="StyleFool: enable LR halving when confidence falls")
-    p.add_argument("--style-steps", type=int, default=None, help="StyleFool: neural style transfer steps used during prepare (must match prepare --style-steps)")
-    p.add_argument("--style-content-weight", type=float, default=None, help="StyleFool: content loss weight for neural style transfer")
-    p.add_argument("--style-style-weight", type=float, default=None, help="StyleFool: style loss weight for neural style transfer")
-    p.add_argument("--attack-sample-chunk-size", type=int, default=None, help="Process sampled clips in chunks during attack (memory-saving; disabled by default)")
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--allow-misclassified", action="store_true")
     p.add_argument("--full-videos", action="store_true")
     p.add_argument("--split", default="val")
     p.add_argument("--pipeline-stage", default="test", choices=["train", "val", "test"])
     p.add_argument("--lite-attack", action="store_true", help="Use lite attack pipeline (no three-crop) when model supports it")
-    p.add_argument("--dump-freq", type=int, default=0)  # reserved for compatibility
+    p.add_argument("--dump-freq", type=int, default=0)
     p.add_argument("--save-defence-stages", action="store_true", help="When dumping videos with a defence, also save the pre-defence attacked video and the post-defence defended video separately")
     p.add_argument("--vmaf", dest="vmaf", action="store_true", default=True, help=argparse.SUPPRESS)
     p.add_argument("--no-vmaf", dest="vmaf", action="store_false", help="Disable VMAF metric calculation")
     p.add_argument("--lpips", dest="lpips", action="store_true", default=True, help=argparse.SUPPRESS)
     p.add_argument("--no-lpips", dest="lpips", action="store_false", help="Disable LPIPS metric calculation")
-    p.add_argument("--framewise-metrics", action="store_true")  # reserved for compatibility
-    p.add_argument("--defence", default=None, help="Defence name to apply (e.g. blur, temporal_median, rs)")
-    p.add_argument("--adaptive", action="store_true", help="Apply defence adaptively (before attack gradient computation)")
+    p.add_argument("--framewise-metrics", action="store_true")
+    p.add_argument("--defence", default=None, help="Defence name to apply.")
+    p.add_argument("--adaptive", action="store_true", help="Apply defence adaptively before attack gradient computation.")
     p.add_argument("--separate-logs", action="store_true")
     p.add_argument("--comment", default="")
     p.add_argument("--results-root", default="results", help="Root folder for attack result CSV outputs")
@@ -127,11 +90,46 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
-def _apply_presets(args: argparse.Namespace) -> dict[str, Any]:
+def _add_attack_spec_args(parser: argparse.ArgumentParser, attack_name: str | None) -> None:
+    if not attack_name:
+        return
+    spec = get_attack_spec(attack_name)
+    group = parser.add_argument_group(f"{spec.attack_name} options")
+    for option in spec.options:
+        kwargs: dict[str, Any] = {
+            "dest": option.param_name,
+            "default": None,
+            "help": option.help_text,
+        }
+        if option.boolean:
+            group.add_argument(*option.option_strings, action="store_true", **kwargs)
+            primary = option.option_strings[0]
+            if primary.startswith("--"):
+                group.add_argument(
+                    f"--no-{primary[2:]}",
+                    dest=option.param_name,
+                    default=None,
+                    action="store_false",
+                    help=f"Disable {option.param_name.replace('_', ' ')}.",
+                )
+        else:
+            if option.value_type is not str:
+                kwargs["type"] = option.value_type
+            if option.metavar:
+                kwargs["metavar"] = option.metavar
+            if option.choices:
+                kwargs["choices"] = option.choices
+            group.add_argument(*option.option_strings, **kwargs)
+
+
+def _apply_presets(args: argparse.Namespace, *, require_complete: bool) -> dict[str, Any]:
     overrides = parse_overrides(args.override)
     resolved: dict[str, Any] = {}
     if args.run_preset:
-        run = resolve_run_preset(args.run_preset, overrides=overrides.get("run") if isinstance(overrides.get("run"), dict) else None)
+        run = resolve_run_preset(
+            args.run_preset,
+            overrides=overrides.get("run") if isinstance(overrides.get("run"), dict) else None,
+        )
         apply_run_preset_to_args(args, run)
         resolved["run"] = run
         model_ref = first_run_model(run)
@@ -139,18 +137,18 @@ def _apply_presets(args: argparse.Namespace) -> dict[str, Any]:
         defence_ref = first_run_defence(run)
         if model_ref and not args.model_preset and not args.model:
             args.model_preset = model_ref.get("preset") or model_ref.get("name")
-            args.model_variant = model_ref.get("variant", args.model_variant)
+            args.model_preset_name = model_ref.get("preset_name", model_ref.get("variant", args.model_preset_name))
         if attack_ref and not args.attack_preset and not args.attack:
             args.attack_preset = attack_ref.get("preset") or attack_ref.get("name")
-            args.attack_variant = attack_ref.get("variant", args.attack_variant)
+            args.attack_preset_name = attack_ref.get("preset_name", attack_ref.get("variant", args.attack_preset_name))
         if defence_ref and not args.defence_preset and not args.defence:
             args.defence_preset = defence_ref.get("preset") or defence_ref.get("name")
-            args.defence_variant = defence_ref.get("variant", args.defence_variant)
+            args.defence_preset_name = defence_ref.get("preset_name", defence_ref.get("variant", args.defence_preset_name))
     if args.model_preset:
         model_spec = resolve_entity_preset(
             "model",
             args.model_preset,
-            variant=args.model_variant,
+            preset_name=args.model_preset_name,
             overrides=overrides.get("model") if isinstance(overrides.get("model"), dict) else None,
         )
         resolved["model"] = model_spec
@@ -165,18 +163,14 @@ def _apply_presets(args: argparse.Namespace) -> dict[str, Any]:
         attack_spec = resolve_entity_preset(
             "attack",
             args.attack_preset,
-            variant=args.attack_variant,
+            preset_name=args.attack_preset_name,
             overrides=overrides.get("attack") if isinstance(overrides.get("attack"), dict) else None,
         )
         resolved["attack"] = attack_spec
         args.attack = args.attack or str(attack_spec["factory_name"])
         params = attack_spec.get("params", {})
-        if "steps" in params and args.iter is None:
-            args.iter = params["steps"]
         for key, value in params.items():
             attr = key.replace("-", "_")
-            if attr == "steps":
-                continue
             if hasattr(args, attr):
                 current = getattr(args, attr)
                 if current is None or current is False:
@@ -185,22 +179,23 @@ def _apply_presets(args: argparse.Namespace) -> dict[str, Any]:
         defence_spec = resolve_entity_preset(
             "defence",
             args.defence_preset,
-            variant=args.defence_variant,
+            preset_name=args.defence_preset_name,
             overrides=overrides.get("defence") if isinstance(overrides.get("defence"), dict) else None,
         )
         resolved["defence"] = defence_spec
         args.defence = args.defence or str(defence_spec["factory_name"])
         args.defence_params = dict(defence_spec.get("params", {}) or {})
-    if args.dataset is None:
-        raise SystemExit("--dataset is required unless provided by --run-preset")
-    if args.model is None:
-        raise SystemExit("--model is required unless provided by --model-preset or --run-preset")
-    if args.attack is None:
-        raise SystemExit("--attack is required unless provided by --attack-preset or --run-preset")
+    if require_complete:
+        if args.dataset is None:
+            raise SystemExit("--dataset is required unless provided by --run-preset")
+        if args.model is None:
+            raise SystemExit("--model is required unless provided by --model-preset or --run-preset")
+        if args.attack is None:
+            raise SystemExit("--attack is required unless provided by --attack-preset or --run-preset")
     return resolved
 
 
-def _build_paths(args, model_name: str) -> tuple[Path, Path, Path]:
+def _build_paths(args: argparse.Namespace, model_name: str) -> tuple[Path, Path, Path]:
     attack_root_name = args.attack_name or args.attack
     attack_type = "target" if args.target else "untarget"
     defence_name = args.defence or "no_defence"
@@ -222,15 +217,64 @@ def _build_paths(args, model_name: str) -> tuple[Path, Path, Path]:
     return save_path, log_path, dump_path
 
 
-def main() -> None:
-    args = build_parser().parse_args()
-    resolved_preset = _apply_presets(args)
+def _build_attack_kwargs(args: argparse.Namespace) -> dict[str, Any]:
+    if args.attack is None:
+        return {}
+    spec = get_attack_spec(args.attack)
+    kwargs: dict[str, Any] = {}
+    for option in spec.options:
+        value = getattr(args, option.param_name, None)
+        if value is not None:
+            kwargs[option.param_name] = value
+    return kwargs
+
+
+def _attack_spec_payload(attack_name: str) -> dict[str, Any]:
+    spec = get_attack_spec(attack_name)
+    return {
+        "attack": spec.attack_name,
+        "class_name": spec.attack_class.__name__,
+        "options": [
+            {
+                "param": option.param_name,
+                "flags": list(option.option_strings),
+                "type": option.value_type.__name__ if hasattr(option.value_type, "__name__") else str(option.value_type),
+                "default": option.default,
+                "boolean": option.boolean,
+                "help": option.help_text,
+            }
+            for option in spec.options
+        ],
+    }
+
+
+def parse_attack_args(argv: list[str] | None = None) -> tuple[argparse.Namespace, dict[str, Any]]:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    pre_parser = build_base_parser(add_help=False)
+    pre_args, _ = pre_parser.parse_known_args(argv)
+    _apply_presets(pre_args, require_complete=False)
+    parser = build_base_parser(add_help=True)
+    _add_attack_spec_args(parser, getattr(pre_args, "attack", None))
+    args = parser.parse_args(argv)
+    require_complete = not bool(getattr(args, "print_attack_spec", False))
+    resolved = _apply_presets(args, require_complete=require_complete)
+    return args, resolved
+
+
+def main(argv: list[str] | None = None) -> None:
+    args, resolved_preset = parse_attack_args(argv)
     if args.print_resolved_preset:
         print(json.dumps(resolved_preset, indent=2, sort_keys=True))
+        return
+    if args.print_attack_spec:
+        if args.attack is None:
+            raise SystemExit("--attack or --attack-preset is required for --print-attack-spec")
+        print(json.dumps(_attack_spec_payload(args.attack), indent=2, sort_keys=True))
         return
     if args.list_model_options:
         print_model_options_payload(args.model)
         return
+
     effective_stage = "attack" if args.lite_attack else args.pipeline_stage
     ctx = build_model_dataset_context(args, pipeline_stage_override=effective_stage)
     preview_model = ctx.preview_model
@@ -238,120 +282,28 @@ def main() -> None:
 
     if args.print_defaults:
         save_path, log_path, dump_path = _build_paths(args, getattr(preview_model, "model_name", args.model))
-        print_defaults_payload(
-            build_default_resolution_payload(
-                args=args,
-                preview_model=preview_model,
-                dataset_kwargs=dataset_kwargs,
-                extra_resolved={
-                    "save_path": str(save_path),
-                    "log_path": str(log_path),
-                    "dump_path": str(dump_path),
-                    "pipeline_stage": effective_stage,
-                    "lite_attack": bool(args.lite_attack),
-                },
-            )
+        payload = build_default_resolution_payload(
+            args=args,
+            preview_model=preview_model,
+            dataset_kwargs=dataset_kwargs,
+            extra_resolved={
+                "save_path": str(save_path),
+                "log_path": str(log_path),
+                "dump_path": str(dump_path),
+                "pipeline_stage": effective_stage,
+                "lite_attack": bool(args.lite_attack),
+                "attack_kwargs": _build_attack_kwargs(args),
+            },
         )
+        print_defaults_payload(payload)
         return
 
-    attack_kwargs = {}
-    if args.eps is not None:
-        attack_kwargs["eps"] = args.eps
-    if args.alpha is not None:
-        attack_kwargs["alpha"] = args.alpha
-    if args.iter is not None:
-        attack_kwargs["steps"] = args.iter
-    if getattr(args, "random_start", None) is not None and str(args.attack).strip().lower().replace("-", "_") in ("ifgsm", "gradest", "gradestv2", "square"):
-        attack_kwargs["random_start"] = bool(args.random_start)
-    if args.attack_sample_chunk_size is not None:
-        attack_kwargs["sample_chunk_size"] = args.attack_sample_chunk_size
-    if getattr(args, "n_samples", None) is not None:
-        attack_kwargs["n_samples"] = args.n_samples
-    if getattr(args, "sub_num", None) is not None:
-        attack_kwargs["sub_num"] = args.sub_num
-    if getattr(args, "lr_annealing", False):
-        attack_kwargs["lr_annealing"] = True
-    if getattr(args, "style_steps", None) is not None:
-        attack_kwargs["style_steps"] = args.style_steps
-    if getattr(args, "style_content_weight", None) is not None:
-        attack_kwargs["style_content_weight"] = args.style_content_weight
-    if getattr(args, "style_style_weight", None) is not None:
-        attack_kwargs["style_style_weight"] = args.style_style_weight
-    if str(args.attack).strip().lower().replace("-", "_") == "bmtc":
-        if getattr(args, "bmtc_save_root", None) is not None:
-            attack_kwargs["save_root"] = args.bmtc_save_root
-    if str(args.attack).strip().lower().replace("-", "_") == "square":
-        if args.query_budget is not None:
-            attack_kwargs["query_budget"] = args.query_budget
-        if getattr(args, "max_patch_frac", None) is not None:
-            attack_kwargs["max_patch_frac"] = args.max_patch_frac
-        if getattr(args, "scout_queries", None) is not None:
-            attack_kwargs["scout_queries"] = args.scout_queries
-        if getattr(args, "elite_window_count", None) is not None:
-            attack_kwargs["elite_window_count"] = args.elite_window_count
-        if getattr(args, "elite_candidates_per_step", None) is not None:
-            attack_kwargs["elite_candidates_per_step"] = args.elite_candidates_per_step
-        if getattr(args, "elite_jitter_frac", None) is not None:
-            attack_kwargs["elite_jitter_frac"] = args.elite_jitter_frac
-        if getattr(args, "guide_samples", None) is not None:
-            attack_kwargs["guide_samples"] = args.guide_samples
-        if getattr(args, "guide_sigma", None) is not None:
-            attack_kwargs["guide_sigma"] = args.guide_sigma
-        if getattr(args, "guide_patch_prob", None) is not None:
-            attack_kwargs["guide_patch_prob"] = args.guide_patch_prob
-        if getattr(args, "guide_momentum", None) is not None:
-            attack_kwargs["guide_momentum"] = args.guide_momentum
-        if getattr(args, "candidates_per_step", None) is not None:
-            attack_kwargs["candidates_per_step"] = args.candidates_per_step
-        if getattr(args, "candidates_per_step_late", None) is not None:
-            attack_kwargs["candidates_per_step_late"] = args.candidates_per_step_late
-        if getattr(args, "bootstrap_guide_samples", None) is not None:
-            attack_kwargs["bootstrap_guide_samples"] = args.bootstrap_guide_samples
-        if getattr(args, "bootstrap_guide_sigma", None) is not None:
-            attack_kwargs["bootstrap_guide_sigma"] = args.bootstrap_guide_sigma
-        if getattr(args, "bootstrap_primitives", None) is not None:
-            attack_kwargs["bootstrap_primitives"] = args.bootstrap_primitives
-        if getattr(args, "eval_batch_size", None) is not None:
-            attack_kwargs["eval_batch_size"] = args.eval_batch_size
-    if str(args.attack).strip().lower().replace("-", "_") in ("gradest", "gradestv2"):
-        if args.query_budget is not None:
-            attack_kwargs["query_budget"] = args.query_budget
-        if getattr(args, "boost_second", None) is not None:
-            attack_kwargs["boost_second"] = args.boost_second
-    if str(args.attack).strip().lower().replace("-", "_") in ("gradestv2", "square"):
-        if getattr(args, "random_start_trials", None) is not None:
-            attack_kwargs["random_start_trials"] = args.random_start_trials
-        if getattr(args, "boost_top2", None) is not None:
-            attack_kwargs["boost_top2"] = args.boost_top2
-        if getattr(args, "boost_top10", None) is not None:
-            attack_kwargs["boost_top10"] = args.boost_top10
-        if getattr(args, "boost_top5", None) is not None:
-            attack_kwargs["boost_top5"] = args.boost_top5
-        if getattr(args, "temporal_tiles", None) is not None:
-            attack_kwargs["temporal_tiles"] = args.temporal_tiles
-    if str(args.attack).strip().lower().replace("-", "_") == "gradestv2":
-        if getattr(args, "smooth_scale", None) is not None:
-            attack_kwargs["smooth_scale"] = args.smooth_scale
-    if str(args.attack).strip().lower().replace("-", "_") == "tenad":
-        if args.beta is not None:
-            attack_kwargs["beta"] = args.beta
-        if args.binary_search_steps is not None:
-            attack_kwargs["binary_search_steps"] = args.binary_search_steps
-        if args.max_expand_steps is not None:
-            attack_kwargs["max_expand_steps"] = args.max_expand_steps
-        if args.lambda_init is not None:
-            attack_kwargs["lambda_init"] = args.lambda_init
-        if args.query_budget is not None:
-            attack_kwargs["query_budget"] = args.query_budget
-        if args.num_restarts is not None:
-            attack_kwargs["num_restarts"] = args.num_restarts
-        if args.spatial_stride is not None:
-            attack_kwargs["spatial_stride"] = args.spatial_stride
-    attack = create_attack(args.attack, **attack_kwargs)
+    attack = create_attack(args.attack, **_build_attack_kwargs(args))
 
     defence = None
     if args.defence is not None:
         from vcr_bench.defences import create_defence
+
         defence = create_defence(args.defence, **dict(getattr(args, "defence_params", {}) or {}))
 
     dataset = create_dataset(args.dataset, **dataset_kwargs)
@@ -379,6 +331,7 @@ def main() -> None:
             ),
         )
         append_vram_profile_csv(args.vram_profile_csv, rows)
+
     save_path, log_path, dump_path = _build_paths(args, getattr(model, "model_name", args.model))
 
     if args.verbose:

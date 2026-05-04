@@ -1,0 +1,19 @@
+{
+  "kind": "attack",
+  "name": "flickering",
+  "presets": {
+    "default": {
+      "factory_name": "flickering",
+      "params": {
+        "eps": 100.0,
+        "steps": 200,
+        "beta_1": 0.5,
+        "lambda_reg": 0.1,
+        "lr": 0.1,
+        "target_conf": 0.5,
+        "sample_chunk_size": null
+      }
+    }
+  },
+  "default_preset": "default"
+}

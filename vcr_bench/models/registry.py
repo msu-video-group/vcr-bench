@@ -23,6 +23,31 @@ def _load_model_module(name: str):
         raise
 
 
+def get_model_class(name: str) -> type[BaseVideoClassifier]:
+    key = _module_key(name)
+    try:
+        module = _load_model_module(key)
+    except ValueError:
+        factory = MODEL_REGISTRY.get(key)
+        if factory is None:
+            raise
+        model = factory(device="cpu", load_weights=False)
+        if not isinstance(model, BaseVideoClassifier):
+            raise TypeError(f"Model factory returned unexpected type: {type(model)}")
+        return type(model)
+
+    cls = getattr(module, "MODEL_CLASS", None)
+    if isinstance(cls, type) and issubclass(cls, BaseVideoClassifier):
+        return cls
+    if hasattr(module, "create"):
+        model = module.create(device="cpu", load_weights=False)
+        if isinstance(model, BaseVideoClassifier):
+            return type(model)
+    raise ValueError(
+        f"Model module vcr_bench.models.{key}.model must expose create() or MODEL_CLASS"
+    )
+
+
 def get_model_options(name: str) -> dict:
     module = _load_model_module(name)
     if hasattr(module, "get_model_options"):

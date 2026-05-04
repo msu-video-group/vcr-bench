@@ -1,0 +1,14 @@
+{
+  "kind": "model",
+  "name": "uniformerv2",
+  "presets": {
+    "base_kinetics400": {
+      "factory_name": "uniformerv2",
+      "params": {
+        "backbone": "base",
+        "weights_dataset": "kinetics400"
+      }
+    }
+  },
+  "default_preset": "base_kinetics400"
+}

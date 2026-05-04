@@ -1,0 +1,21 @@
+{
+  "model_name": "amd",
+  "dataset_name": "Kinetics400Dataset",
+  "attack_name": "ifgsm_untarget_gaussian_blur_non-adaptive",
+  "targeted": false,
+  "processed": 6,
+  "clear_correct": 12,
+  "attacked_success": 7,
+  "target_success": 0,
+  "total_seen": 18,
+  "skipped_misclassified": 2,
+  "skipped_existing": 0,
+  "skipped_errors": 0,
+  "mean_time": 35.74896812438965,
+  "mean_iterations": 3.1666666666666665,
+  "mean_psnr": 52.44613771323227,
+  "mean_vmaf": 0.0,
+  "save_path": "results\\attacks\\ifgsm_untarget_gaussian_blur_non-adaptive\\amd.csv",
+  "log_path": "attack_logs\\attacks\\log_attacks.csv",
+  "dump_path": "results\\attacked_videos\\attacks\\ifgsm_untarget_gaussian_blur_non-adaptive\\amd"
+}

@@ -1,8 +1,7 @@
 {
   "kind": "model",
   "name": "x3d",
-  "default_variant": "m_k400",
-  "variants": {
+  "presets": {
     "m_k400": {
       "factory_name": "x3d",
       "params": {
@@ -11,5 +10,6 @@
         "device": "cuda"
       }
     }
-  }
+  },
+  "default_preset": "m_k400"
 }

@@ -1,0 +1,13 @@
+{
+  "kind": "defence",
+  "name": "jpeg_compression",
+  "presets": {
+    "default": {
+      "factory_name": "jpeg_compression",
+      "params": {
+        "quality": 75
+      }
+    }
+  },
+  "default_preset": "default"
+}

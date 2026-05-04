@@ -135,13 +135,15 @@ Then run `vcr-bench-prepare --attack myattack --dataset kinetics400` before atta
 
 ## 2. Create the preset config
 
+This step is now optional. If `configs/attacks/<name>.json` is missing, `vcr-bench` synthesizes a default preset from the attack constructor signature so the attack is still configurable through presets and the CLI.
+
 ```json
 // configs/attacks/myattack.json
 {
   "kind": "attack",
   "name": "myattack",
-  "default_variant": "default",
-  "variants": {
+  "default_preset": "default",
+  "presets": {
     "default": {
       "factory_name": "myattack",
       "params": {
@@ -163,11 +165,13 @@ Then run `vcr-bench-prepare --attack myattack --dataset kinetics400` before atta
 }
 ```
 
-`"inherits"` merges the named variant's params as a base, then the current `"params"` override on top.
+`"inherits"` merges the named preset entry's params as a base, then the current `"params"` override on top.
 
-## 3. Expose CLI flags (optional)
+## 3. Expose CLI flags
 
-If your attack has extra hyperparameters you want configurable from the CLI without a preset, add them to `vcr_bench/cli/attack.py` in the parser section alongside the existing per-attack blocks.
+You do not need to edit `vcr_bench/cli/attack.py` for normal attack parameters anymore. The attack CLI now inspects the attack constructor signature and automatically exposes typed flags for those parameters. For example, a constructor argument named `query_budget` becomes `--query-budget`, and `steps` is available as both `--steps` and the legacy alias `--iter`.
+
+If you need richer flag metadata, keep the constructor parameter names stable and prefer adding defaults and type annotations there first.
 
 ## 4. Verify
 
@@ -180,7 +184,7 @@ vcr-bench-attack \
   --lite-attack
 
 # With preset
-vcr-bench-attack --attack-preset myattack --attack-variant strong \
+vcr-bench-attack --attack-preset myattack --attack-preset-name strong \
   --model x3d --dataset kinetics400 --num-videos 8
 ```
 

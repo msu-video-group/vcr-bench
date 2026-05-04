@@ -1,0 +1,14 @@
+{
+  "kind": "model",
+  "name": "r2plus1d",
+  "presets": {
+    "r34_kinetics400": {
+      "factory_name": "r2plus1d",
+      "params": {
+        "backbone": "r34",
+        "weights_dataset": "kinetics400"
+      }
+    }
+  },
+  "default_preset": "r34_kinetics400"
+}

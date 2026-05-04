@@ -1,0 +1,14 @@
+{
+  "kind": "model",
+  "name": "trn",
+  "presets": {
+    "r50_sthv2": {
+      "factory_name": "trn",
+      "params": {
+        "backbone": "r50",
+        "weights_dataset": "sthv2"
+      }
+    }
+  },
+  "default_preset": "r50_sthv2"
+}

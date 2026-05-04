@@ -1,0 +1,15 @@
+{
+  "kind": "defence",
+  "name": "domain_transform",
+  "presets": {
+    "default": {
+      "factory_name": "domain_transform",
+      "params": {
+        "sigma_r": 0.1,
+        "sigma_t": 2.0,
+        "iterations": 3
+      }
+    }
+  },
+  "default_preset": "default"
+}

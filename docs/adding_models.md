@@ -7,7 +7,7 @@ vcr_bench/models/<name>/
     __init__.py        # empty or re-export
     model.py           # classifier implementation
     checkpoints/       # auto-created, stores downloaded .pth files
-configs/models/<name>.json   # preset (backbone variants + params)
+configs/models/<name>.json   # preset file (named presets + params)
 ```
 
 The registry finds your model by importing `vcr_bench.models.<name>.model` and looking for `create()` or `MODEL_CLASS`.
@@ -168,8 +168,8 @@ def _load_checkpoint(self, checkpoint_path: str) -> None:
 {
   "kind": "model",
   "name": "mymodel",
-  "default_variant": "k400",
-  "variants": {
+  "default_preset": "k400",
+  "presets": {
     "k400": {
       "factory_name": "mymodel",
       "params": {

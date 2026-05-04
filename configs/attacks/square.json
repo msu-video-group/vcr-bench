@@ -1,8 +1,7 @@
 {
   "kind": "attack",
   "name": "square",
-  "default_variant": "default",
-  "variants": {
+  "presets": {
     "default": {
       "factory_name": "square",
       "params": {
@@ -23,5 +22,6 @@
         "guide_momentum": 0.9
       }
     }
-  }
+  },
+  "default_preset": "default"
 }

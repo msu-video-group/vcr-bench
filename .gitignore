@@ -8,8 +8,9 @@ configs/local.toml
 remote_results/
 results/
 attack_logs/
-data/ok
+data/
 tests/
 scripts/autolaunch/runtime/
 scripts/autolaunch/logs/
 vcr_bench/defences/denoise/videopure/hf-cache/
+private_docs/

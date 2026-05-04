@@ -1,0 +1,14 @@
+{
+  "kind": "model",
+  "name": "csn",
+  "presets": {
+    "r50_kinetics400": {
+      "factory_name": "csn",
+      "params": {
+        "backbone": "r50",
+        "weights_dataset": "kinetics400"
+      }
+    }
+  },
+  "default_preset": "r50_kinetics400"
+}

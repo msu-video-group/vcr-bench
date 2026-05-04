@@ -1,0 +1,17 @@
+{
+  "kind": "attack",
+  "name": "korhonen-et-al",
+  "presets": {
+    "default": {
+      "factory_name": "korhonen-et-al",
+      "params": {
+        "eps": 8.0,
+        "alpha": 0.1,
+        "steps": 20,
+        "target_conf": 0.5,
+        "sample_chunk_size": null
+      }
+    }
+  },
+  "default_preset": "default"
+}

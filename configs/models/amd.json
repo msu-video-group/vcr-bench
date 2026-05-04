@@ -1,8 +1,7 @@
 {
   "kind": "model",
   "name": "amd",
-  "default_variant": "vitb_k400",
-  "variants": {
+  "presets": {
     "vitb_k400": {
       "factory_name": "amd",
       "params": {
@@ -12,5 +11,6 @@
         "device": "cuda"
       }
     }
-  }
+  },
+  "default_preset": "vitb_k400"
 }

@@ -1,0 +1,14 @@
+{
+  "kind": "model",
+  "name": "tsm_surrogate",
+  "presets": {
+    "r50_kinetics400": {
+      "factory_name": "tsm_surrogate",
+      "params": {
+        "backbone": "r50",
+        "weights_dataset": "kinetics400"
+      }
+    }
+  },
+  "default_preset": "r50_kinetics400"
+}

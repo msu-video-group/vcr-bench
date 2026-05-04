@@ -1,0 +1,14 @@
+{
+  "kind": "model",
+  "name": "i3d",
+  "presets": {
+    "r50_kinetics400": {
+      "factory_name": "i3d",
+      "params": {
+        "backbone": "r50",
+        "weights_dataset": "kinetics400"
+      }
+    }
+  },
+  "default_preset": "r50_kinetics400"
+}

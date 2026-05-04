@@ -1,0 +1,19 @@
+{
+  "kind": "attack",
+  "name": "stadv",
+  "presets": {
+    "default": {
+      "factory_name": "stadv",
+      "params": {
+        "eps": 0.25,
+        "alpha": 0.01,
+        "steps": 20,
+        "phi": 1.0,
+        "beta": 1e-07,
+        "target_conf": 0.5,
+        "sample_chunk_size": null
+      }
+    }
+  },
+  "default_preset": "default"
+}

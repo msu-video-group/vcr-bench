@@ -1,0 +1,14 @@
+{
+  "kind": "model",
+  "name": "ila",
+  "presets": {
+    "vit_b16_kinetics400": {
+      "factory_name": "ila",
+      "params": {
+        "backbone": "vit_b16",
+        "weights_dataset": "kinetics400"
+      }
+    }
+  },
+  "default_preset": "vit_b16_kinetics400"
+}

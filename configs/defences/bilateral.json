@@ -1,0 +1,15 @@
+{
+  "kind": "defence",
+  "name": "bilateral",
+  "presets": {
+    "default": {
+      "factory_name": "bilateral",
+      "params": {
+        "sigma_color": 5.0,
+        "sigma_time": 0.1,
+        "window_radius": 1
+      }
+    }
+  },
+  "default_preset": "default"
+}

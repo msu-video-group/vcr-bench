@@ -1,0 +1,38 @@
+{
+  "kind": "attack",
+  "name": "gradestv2",
+  "presets": {
+    "default": {
+      "factory_name": "gradestv2",
+      "params": {
+        "eps": 32.0,
+        "alpha": null,
+        "steps": 200,
+        "sigma": 0.2,
+        "sigma_decay": 0.997,
+        "n_samples": 10,
+        "n_samples_late": 5,
+        "spatial_size": 224,
+        "temporal_tiles": 8,
+        "smooth_scale": 0.5,
+        "query_budget": 100000,
+        "momentum": 0.9,
+        "boost_second": 0.0,
+        "boost_top2": 2.0,
+        "boost_top10": 1.0,
+        "boost_top5": null,
+        "batch_noise": false,
+        "plateau_patience": 20,
+        "random_start": true,
+        "random_start_trials": 4,
+        "coarse_to_fine": true,
+        "coarse_spatial_scale": 0.5,
+        "coarse_temporal_scale": 0.5,
+        "reject_alpha_decay": 0.5,
+        "accept_alpha_growth": 1.05,
+        "adaptive_samples": true
+      }
+    }
+  },
+  "default_preset": "default"
+}

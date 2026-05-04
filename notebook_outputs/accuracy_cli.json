@@ -1,0 +1,9 @@
+{
+  "correct": 6,
+  "count": 8,
+  "accuracy": 0.75,
+  "skipped": 0,
+  "elapsed_sec": 240.99732327461243,
+  "model_name": "amd",
+  "dataset_name": "Kinetics400Dataset"
+}

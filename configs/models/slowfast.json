@@ -1,0 +1,14 @@
+{
+  "kind": "model",
+  "name": "slowfast",
+  "presets": {
+    "r101_kinetics400": {
+      "factory_name": "slowfast",
+      "params": {
+        "backbone": "r101",
+        "weights_dataset": "kinetics400"
+      }
+    }
+  },
+  "default_preset": "r101_kinetics400"
+}

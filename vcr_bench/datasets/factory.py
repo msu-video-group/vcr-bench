@@ -5,8 +5,15 @@ import importlib
 from .base import BaseVideoDataset
 
 
+DATASET_ALIASES = {
+    "something-something-v2": "sthv2",
+    "something_something_v2": "sthv2",
+    "somethingsomethingv2": "sthv2",
+}
+
+
 def create_dataset(name: str, **kwargs) -> BaseVideoDataset:
-    key = name.lower()
+    key = DATASET_ALIASES.get(name.lower(), name.lower())
     try:
         module = importlib.import_module(f"vcr_bench.datasets.{key}.data")
     except ModuleNotFoundError as exc:

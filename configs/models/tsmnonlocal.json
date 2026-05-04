@@ -1,0 +1,14 @@
+{
+  "kind": "model",
+  "name": "tsmnonlocal",
+  "presets": {
+    "r50_kinetics400": {
+      "factory_name": "tsmnonlocal",
+      "params": {
+        "backbone": "r50",
+        "weights_dataset": "kinetics400"
+      }
+    }
+  },
+  "default_preset": "r50_kinetics400"
+}

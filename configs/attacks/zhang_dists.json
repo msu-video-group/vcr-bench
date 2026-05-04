@@ -1,0 +1,15 @@
+{
+  "kind": "attack",
+  "name": "zhang-dists",
+  "presets": {
+    "default": {
+      "factory_name": "zhang-dists",
+      "params": {
+        "eps": 8.0,
+        "steps": 20,
+        "sample_chunk_size": null
+      }
+    }
+  },
+  "default_preset": "default"
+}

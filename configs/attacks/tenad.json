@@ -1,0 +1,23 @@
+{
+  "kind": "attack",
+  "name": "tenad",
+  "presets": {
+    "default": {
+      "factory_name": "tenad",
+      "params": {
+        "eps": 255.0,
+        "alpha": 0.2,
+        "steps": 20,
+        "beta": 0.01,
+        "binary_search_steps": 12,
+        "max_expand_steps": 16,
+        "lambda_init": 1.0,
+        "query_budget": 1000,
+        "num_restarts": 1,
+        "spatial_stride": null,
+        "clip_perturbation": false
+      }
+    }
+  },
+  "default_preset": "default"
+}

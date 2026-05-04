@@ -1,0 +1,14 @@
+{
+  "kind": "defence",
+  "name": "shuffle",
+  "presets": {
+    "default": {
+      "factory_name": "shuffle",
+      "params": {
+        "h1": 2,
+        "h2": 4
+      }
+    }
+  },
+  "default_preset": "default"
+}

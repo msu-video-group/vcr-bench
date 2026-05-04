@@ -1,0 +1,21 @@
+{
+  "model_name": "amd",
+  "dataset_name": "Kinetics400Dataset",
+  "attack_name": "ifgsm_untarget_no_defence_non-adaptive",
+  "targeted": false,
+  "processed": 3,
+  "clear_correct": 8,
+  "attacked_success": 8,
+  "target_success": 0,
+  "total_seen": 13,
+  "skipped_misclassified": 0,
+  "skipped_existing": 5,
+  "skipped_errors": 0,
+  "mean_time": 146.96581682562828,
+  "mean_iterations": 6.0,
+  "mean_psnr": 52.139458690220295,
+  "mean_vmaf": 19.077515360620538,
+  "save_path": "results\\attacks\\ifgsm_untarget_no_defence_non-adaptive\\amd.csv",
+  "log_path": "attack_logs\\attacks\\log_attacks.csv",
+  "dump_path": "results\\attacked_videos\\attacks\\ifgsm_untarget_no_defence_non-adaptive\\amd"
+}

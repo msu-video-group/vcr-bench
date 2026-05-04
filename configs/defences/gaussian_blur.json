@@ -1,8 +1,7 @@
 {
   "kind": "defence",
   "name": "gaussian_blur",
-  "default_variant": "default",
-  "variants": {
+  "presets": {
     "default": {
       "factory_name": "gaussian_blur",
       "params": {
@@ -10,5 +9,6 @@
         "sigma": 1.0
       }
     }
-  }
+  },
+  "default_preset": "default"
 }

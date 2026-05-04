@@ -1,0 +1,16 @@
+{
+  "kind": "attack",
+  "name": "uap",
+  "presets": {
+    "default": {
+      "factory_name": "uap",
+      "params": {
+        "eps": 10.0,
+        "alpha": 10.0,
+        "steps": 10,
+        "sample_chunk_size": null
+      }
+    }
+  },
+  "default_preset": "default"
+}

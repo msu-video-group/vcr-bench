@@ -1,0 +1,14 @@
+{
+  "kind": "model",
+  "name": "tadaformer",
+  "presets": {
+    "large_14_kinetics400": {
+      "factory_name": "tadaformer",
+      "params": {
+        "backbone": "large_14",
+        "weights_dataset": "kinetics400"
+      }
+    }
+  },
+  "default_preset": "large_14_kinetics400"
+}

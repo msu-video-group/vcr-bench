@@ -1,0 +1,14 @@
+{
+  "kind": "model",
+  "name": "c3d",
+  "presets": {
+    "c3d_ucf101": {
+      "factory_name": "c3d",
+      "params": {
+        "backbone": "c3d",
+        "weights_dataset": "ucf101"
+      }
+    }
+  },
+  "default_preset": "c3d_ucf101"
+}

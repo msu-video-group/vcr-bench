@@ -9,16 +9,39 @@ def _normalize_key(name: str) -> str:
     return str(name).strip().lower().replace("-", "_")
 
 
-def create_defence(name: str, **kwargs) -> BaseVideoDefence:
+def load_defence_module(name: str):
     key = _normalize_key(name)
     try:
-        module = importlib.import_module(f"vcr_bench.defences.{key}.defence")
+        return importlib.import_module(f"vcr_bench.defences.{key}.defence")
     except ModuleNotFoundError as exc:
         if exc.name in (f"vcr_bench.defences.{key}", f"vcr_bench.defences.{key}.defence"):
             raise ValueError(
                 f"Unknown defence: {name}. "
                 f"Available dynamic plugins under vcr_bench/defences/<name>/defence.py"
             ) from exc
+        raise
+
+
+def get_defence_class(name: str) -> type[BaseVideoDefence]:
+    module = load_defence_module(name)
+    if hasattr(module, "DEFENCE_CLASS"):
+        cls = getattr(module, "DEFENCE_CLASS")
+        if isinstance(cls, type) and issubclass(cls, BaseVideoDefence):
+            return cls
+    if hasattr(module, "create"):
+        defence = module.create()
+        if isinstance(defence, BaseVideoDefence):
+            return type(defence)
+    raise ValueError(
+        f"Defence module vcr_bench.defences.{_normalize_key(name)}.defence must expose create() or DEFENCE_CLASS"
+    )
+
+
+def create_defence(name: str, **kwargs) -> BaseVideoDefence:
+    key = _normalize_key(name)
+    try:
+        module = load_defence_module(key)
+    except ValueError:
         raise
 
     if hasattr(module, "create"):

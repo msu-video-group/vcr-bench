@@ -101,8 +101,8 @@ def transform(self, x: torch.Tensor) -> torch.Tensor:
 {
   "kind": "defence",
   "name": "mydefence",
-  "default_variant": "default",
-  "variants": {
+  "default_preset": "default",
+  "presets": {
     "default": {
       "factory_name": "mydefence",
       "params": {
@@ -136,9 +136,9 @@ vcr-bench-attack \
   --defence mydefence --adaptive \
   --dataset kinetics400 --num-videos 8
 
-# With preset variant
+# With a named preset entry
 vcr-bench-attack --model x3d --attack ifgsm \
-  --defence-preset mydefence --defence-variant strong \
+  --defence-preset mydefence --defence-preset-name strong \
   --dataset kinetics400 --num-videos 8
 ```
 

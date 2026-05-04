@@ -1,28 +1,35 @@
 {
   "kind": "defence",
   "name": "videopure",
-  "default_variant": "default",
-  "variants": {
+  "presets": {
     "default": {
       "factory_name": "videopure",
       "params": {
-        "neighbor_mode": "auto",
-        "neighbor_radius": 1
+        "continuous_mode": "continuous",
+        "min_continuous_frames": 4
       }
     },
-    "sample_neighbors": {
+    "auto": {
       "factory_name": "videopure",
       "params": {
-        "neighbor_mode": "sample_neighbors",
-        "neighbor_radius": 1
+        "continuous_mode": "auto",
+        "min_continuous_frames": 4
+      }
+    },
+    "continuous": {
+      "factory_name": "videopure",
+      "params": {
+        "continuous_mode": "continuous",
+        "min_continuous_frames": 4
       }
     },
     "legacy": {
       "factory_name": "videopure",
       "params": {
-        "neighbor_mode": "off",
-        "neighbor_radius": 0
+        "continuous_mode": "off",
+        "min_continuous_frames": 4
       }
     }
-  }
+  },
+  "default_preset": "default"
 }

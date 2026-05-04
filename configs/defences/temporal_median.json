@@ -1,0 +1,11 @@
+{
+  "kind": "defence",
+  "name": "temporal_median",
+  "presets": {
+    "default": {
+      "factory_name": "temporal_median",
+      "params": {}
+    }
+  },
+  "default_preset": "default"
+}

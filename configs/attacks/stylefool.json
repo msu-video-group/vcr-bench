@@ -1,0 +1,24 @@
+{
+  "kind": "attack",
+  "name": "stylefool",
+  "presets": {
+    "default": {
+      "factory_name": "stylefool",
+      "params": {
+        "eps": 12.75,
+        "alpha": 1.0,
+        "steps": 200,
+        "sigma": null,
+        "n_samples": 64,
+        "sub_num": 4,
+        "step_mult": 8.0,
+        "lr_annealing": true,
+        "query_budget": 300000,
+        "style_steps": 200,
+        "style_content_weight": 1.0,
+        "style_style_weight": 100000.0
+      }
+    }
+  },
+  "default_preset": "default"
+}

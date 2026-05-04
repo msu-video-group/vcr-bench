@@ -1,0 +1,24 @@
+{
+  "kind": "attack",
+  "name": "bmtc",
+  "presets": {
+    "default": {
+      "factory_name": "bmtc",
+      "params": {
+        "eps": 16.0,
+        "alpha": 1.0,
+        "steps": 10,
+        "num_classes": 400,
+        "gamma": 0.8,
+        "w1": 1.0,
+        "w2": 0.3,
+        "num_epochs": 20,
+        "attacked_frames": 16,
+        "enable_btg": true,
+        "btg_gamma": 0.1,
+        "save_root": "bmtc_artifacts"
+      }
+    }
+  },
+  "default_preset": "default"
+}

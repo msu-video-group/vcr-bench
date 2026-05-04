@@ -1,9 +1,14 @@
 from __future__ import annotations
 
 import copy
+import inspect
 import json
 from pathlib import Path
 from typing import Any
+
+from vcr_bench.attacks import get_attack_spec
+from vcr_bench.defences import get_defence_class
+from vcr_bench.models import get_model_options
 
 from .config import config_root, repo_root
 
@@ -72,13 +77,113 @@ def _preset_path(kind: str, name: str) -> Path:
     return PRESET_ROOT / "presets" / f"{kind}s" / f"{name}.json"
 
 
+def _normalize_preset_name(parts: list[str]) -> str:
+    text = "_".join(str(part) for part in parts if str(part))
+    return text.replace("/", "_").replace("-", "_").replace(".", "_").lower()
+
+
+def _constructor_default_params(cls: type[Any]) -> dict[str, Any]:
+    signature = inspect.signature(cls.__init__)
+    params: dict[str, Any] = {}
+    for key, parameter in signature.parameters.items():
+        if key == "self":
+            continue
+        if parameter.kind in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD):
+            continue
+        if parameter.default is inspect._empty:
+            continue
+        params[key] = copy.deepcopy(parameter.default)
+    return params
+
+
+def _synthesize_attack_preset(name: str) -> dict[str, Any]:
+    spec = get_attack_spec(name)
+    return {
+        "kind": "attack",
+        "name": spec.attack_name,
+        "default_preset": "default",
+        "presets": {
+            "default": {
+                "factory_name": spec.attack_name,
+                "params": spec.default_params(),
+            }
+        },
+    }
+
+
+def _synthesize_defence_preset(name: str) -> dict[str, Any]:
+    cls = get_defence_class(name)
+    return {
+        "kind": "defence",
+        "name": str(name),
+        "default_preset": "default",
+        "presets": {
+            "default": {
+                "factory_name": str(name),
+                "params": _constructor_default_params(cls),
+            }
+        },
+    }
+
+
+def _synthesize_model_preset(name: str) -> dict[str, Any]:
+    options = get_model_options(name)
+    backbones = list(options.get("backbones", []) or [])
+    weight_datasets = options.get("weight_datasets", {}) or {}
+
+    presets: dict[str, Any] = {}
+    if backbones:
+        for backbone in backbones:
+            datasets = list(weight_datasets.get(backbone, []) or [])
+            if not datasets:
+                preset_name = _normalize_preset_name([backbone])
+                presets[preset_name] = {
+                    "factory_name": str(name),
+                    "params": {"backbone": backbone},
+                }
+                continue
+            for weights_dataset in datasets:
+                preset_name = _normalize_preset_name([backbone, weights_dataset])
+                presets[preset_name] = {
+                    "factory_name": str(name),
+                    "params": {
+                        "backbone": backbone,
+                        "weights_dataset": weights_dataset,
+                    },
+                }
+    else:
+        presets["default"] = {"factory_name": str(name), "params": {}}
+
+    default_preset = next(iter(presets))
+    return {
+        "kind": "model",
+        "name": str(name),
+        "default_preset": default_preset,
+        "presets": presets,
+    }
+
+
+def _synthesize_preset(kind: str, name: str) -> dict[str, Any]:
+    if kind == "attack":
+        return _synthesize_attack_preset(name)
+    if kind == "defence":
+        return _synthesize_defence_preset(name)
+    if kind == "model":
+        return _synthesize_model_preset(name)
+    raise FileNotFoundError(f"Preset not found: kind={kind!r} name={name!r}")
+
+
 def load_preset(kind: str, name: str) -> dict[str, Any]:
     path = _preset_path(kind, name)
-    data = _load_json(path)
+    if path.exists():
+        data = _load_json(path)
+        data["_preset_path"] = str(path)
+    else:
+        data = _synthesize_preset(kind, name)
+        data["_preset_path"] = f"<generated:{kind}:{name}>"
     actual_kind = data.get("kind")
     if actual_kind != kind:
         raise ValueError(f"Preset {path} has kind={actual_kind!r}, expected {kind!r}")
-    data["_preset_path"] = str(path)
     return data
 
 
@@ -86,41 +191,44 @@ def resolve_entity_preset(
     kind: str,
     name: str,
     *,
-    variant: str | None = None,
+    preset_name: str | None = None,
+    legacy_variant: str | None = None,
     overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     preset = load_preset(kind, name)
-    variants = preset.get("variants", preset.get("presets", {}))
-    if not isinstance(variants, dict) or not variants:
-        raise ValueError(f"{kind} preset has no variants: {name}")
-    variant_name = variant or str(preset.get("default_variant") or next(iter(variants)))
-    if variant_name not in variants:
-        raise ValueError(f"Unknown variant {variant_name!r} for {kind} preset {name!r}")
-    resolved_variant = _resolve_variant(variants, variant_name)
+    presets = preset.get("presets", preset.get("variants", {}))
+    if not isinstance(presets, dict) or not presets:
+        raise ValueError(f"{kind} preset has no presets: {name}")
+    selected_preset = preset_name or legacy_variant or str(
+        preset.get("default_preset") or preset.get("default_variant") or next(iter(presets))
+    )
+    if selected_preset not in presets:
+        raise ValueError(f"Unknown preset {selected_preset!r} for {kind} preset {name!r}")
+    resolved_preset = _resolve_preset_entry(presets, selected_preset)
     resolved = {
         "kind": kind,
         "name": preset.get("name", name),
-        "variant": variant_name,
-        "factory_name": resolved_variant.get("factory_name", preset.get("factory_name", preset.get("name", name))),
-        "params": resolved_variant.get("params", {}),
-        "metadata": {k: v for k, v in preset.items() if k not in {"variants", "presets", "default_variant"}},
+        "preset_name": selected_preset,
+        "factory_name": resolved_preset.get("factory_name", preset.get("factory_name", preset.get("name", name))),
+        "params": resolved_preset.get("params", {}),
+        "metadata": {k: v for k, v in preset.items() if k not in {"variants", "presets", "default_variant", "default_preset"}},
     }
     if overrides:
         resolved = _merge_dicts(resolved, overrides)
     return resolved
 
 
-def _resolve_variant(variants: dict[str, Any], variant_name: str, seen: set[str] | None = None) -> dict[str, Any]:
+def _resolve_preset_entry(presets: dict[str, Any], preset_name: str, seen: set[str] | None = None) -> dict[str, Any]:
     seen = set() if seen is None else seen
-    if variant_name in seen:
-        raise ValueError(f"Cycle in preset variant inheritance: {variant_name}")
-    seen.add(variant_name)
-    raw = variants[variant_name]
+    if preset_name in seen:
+        raise ValueError(f"Cycle in preset inheritance: {preset_name}")
+    seen.add(preset_name)
+    raw = presets[preset_name]
     if not isinstance(raw, dict):
-        raise ValueError(f"Invalid variant {variant_name}: expected object")
+        raise ValueError(f"Invalid preset entry {preset_name}: expected object")
     parent_name = raw.get("inherits")
     if parent_name:
-        parent = _resolve_variant(variants, str(parent_name), seen)
+        parent = _resolve_preset_entry(presets, str(parent_name), seen)
         return _merge_dicts(parent, {k: v for k, v in raw.items() if k != "inherits"})
     return copy.deepcopy(raw)
 

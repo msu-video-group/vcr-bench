@@ -5,9 +5,13 @@ default = "main"
 ssh_host = "your-host"
 repo_path = "~/your/path/vcr-bench"
 git_ref = "origin/main"
+script_root = "scripts"
+attack_results_root = "results/remote_attacks"
+accuracy_results_root = "results/accuracy/remote"
+sync_strategy = "detach"
 
 [remote.remotes.main.slurm]
-container_image = "~/users/29m_pli/python.sqsh"
+container_image = "~/containers/python.sqsh"
 container_mounts = "~/your/path/vcr-bench:/work"
 
 [paths]

@@ -13,9 +13,18 @@ class GaussianBlurDefence(BaseVideoDefence):
 
     def __init__(
         self,
+        sigma: float | None = None,
+        kernel_size: int | None = None,
         sigma_range: tuple[float, float] = (5.0, 25.0),
         kernel_size_range: tuple[int, int] = (3, 11),
     ):
+        # Preserve compatibility with older presets that specify fixed sigma/kernel_size.
+        if sigma is not None:
+            sigma_value = float(sigma)
+            sigma_range = (sigma_value, sigma_value)
+        if kernel_size is not None:
+            kernel_value = int(kernel_size)
+            kernel_size_range = (kernel_value, kernel_value)
         self.sigma_range = sigma_range
         self.kernel_size_range = kernel_size_range
 

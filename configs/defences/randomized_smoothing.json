@@ -1,0 +1,16 @@
+{
+  "kind": "defence",
+  "name": "randomized_smoothing",
+  "presets": {
+    "default": {
+      "factory_name": "randomized_smoothing",
+      "params": {
+        "sigma_range": [
+          5.0,
+          25.0
+        ]
+      }
+    }
+  },
+  "default_preset": "default"
+}

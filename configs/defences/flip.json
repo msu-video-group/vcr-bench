@@ -1,0 +1,13 @@
+{
+  "kind": "defence",
+  "name": "flip",
+  "presets": {
+    "default": {
+      "factory_name": "flip",
+      "params": {
+        "flip_prob": 1.0
+      }
+    }
+  },
+  "default_preset": "default"
+}

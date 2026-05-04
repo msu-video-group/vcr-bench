@@ -1,0 +1,14 @@
+{
+  "kind": "model",
+  "name": "videoswin",
+  "presets": {
+    "base_p244_w877_kinetics400": {
+      "factory_name": "videoswin",
+      "params": {
+        "backbone": "base_p244_w877",
+        "weights_dataset": "kinetics400"
+      }
+    }
+  },
+  "default_preset": "base_p244_w877_kinetics400"
+}

@@ -11,7 +11,7 @@
   "models": [
     {
       "preset": "amd",
-      "variant": "vitb_k400"
+      "preset_name": "vitb_k400"
     }
   ],
   "runtime": {

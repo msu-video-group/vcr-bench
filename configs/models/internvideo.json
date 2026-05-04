@@ -1,0 +1,14 @@
+{
+  "kind": "model",
+  "name": "internvideo",
+  "presets": {
+    "vit_base_p16_kinetics400": {
+      "factory_name": "internvideo",
+      "params": {
+        "backbone": "vit_base_p16",
+        "weights_dataset": "kinetics400"
+      }
+    }
+  },
+  "default_preset": "vit_base_p16_kinetics400"
+}

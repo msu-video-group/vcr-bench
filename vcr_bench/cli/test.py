@@ -31,7 +31,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--dataset", default=None)
     parser.add_argument("--run-preset", default=None, help="JSON run preset name or path")
     parser.add_argument("--model-preset", default=None, help="JSON model preset name or path")
-    parser.add_argument("--model-variant", default=None)
+    parser.add_argument("--model-preset-name", dest="model_preset_name", default=None)
+    parser.add_argument("--model-variant", dest="model_preset_name", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--override", action="append", default=[], help="Preset override: dotted.key=json_value")
     parser.add_argument("--print-resolved-preset", action="store_true")
     parser.add_argument("--dataset-subset", default=None, help="Named dataset subset manifest to auto-download and resolve")
@@ -39,8 +40,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--annotations", default=None)
     parser.add_argument("--labels", default=None)
     parser.add_argument("--checkpoint", default=None, help="Path to model checkpoint")
-    parser.add_argument("--backbone", default=None, help="Model backbone variant")
-    parser.add_argument("--weights-dataset", default=None, help="Weights dataset variant for the selected model/backbone")
+    parser.add_argument("--backbone", default=None, help="Model backbone name")
+    parser.add_argument("--weights-dataset", default=None, help="Weights dataset name for the selected model/backbone")
     parser.add_argument("--grad-forward-chunk-size", type=int, default=None, help="Chunk views during gradient forward to reduce VRAM (mainly attacks)")
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--num-videos", type=int, default=25)
@@ -75,10 +76,10 @@ def _apply_presets(args: argparse.Namespace) -> dict[str, Any]:
         model_ref = first_run_model(run)
         if model_ref and not args.model_preset and not args.model:
             args.model_preset = model_ref.get("preset") or model_ref.get("name")
-            args.model_variant = model_ref.get("variant", args.model_variant)
+            args.model_preset_name = model_ref.get("preset_name", model_ref.get("variant", args.model_preset_name))
     if args.model_preset:
         model_overrides = overrides.get("model") if isinstance(overrides.get("model"), dict) else None
-        model_spec = resolve_entity_preset("model", args.model_preset, variant=args.model_variant, overrides=model_overrides)
+        model_spec = resolve_entity_preset("model", args.model_preset, preset_name=args.model_preset_name, overrides=model_overrides)
         resolved["model"] = model_spec
         args.model = args.model or str(model_spec["factory_name"])
         for key, value in model_spec.get("params", {}).items():

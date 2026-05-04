@@ -10,6 +10,10 @@ A benchmark for adversarial robustness of video classification models — run at
 # 1. Install
 pip install -e .
 
+# Optional: install broader research dependencies used by
+# additional models, attacks, and defences
+pip install -e ".[research]"
+
 # 2. Pull the model checkpoint and a mini dataset subset
 vcr-bench-artifacts list-checkpoints --model x3d
 
@@ -28,9 +32,23 @@ Results land in `results/` by default.
 |---|---|
 | `vcr-bench-attack` | Run an adversarial attack against a model |
 | `vcr-bench-test` | Measure clean accuracy (baseline) |
+| `vcr-bench-classify` | Classify an arbitrary folder with videos and save predictions |
 | `vcr-bench-artifacts` | Download / inspect checkpoints and dataset archives |
 | `vcr-bench-prepare` | Prepare video data and model inputs |
 | `vcr-bench-remote` | Launch and monitor jobs on a remote Slurm cluster |
+
+### `vcr-bench-classify` example
+
+```bash
+vcr-bench-classify \
+  --model x3d \
+  --video-dir /path/to/videos \
+  --recursive \
+  --labels data/kinetics400/k400_val/k400_val/annotations/k400_label_map_k400.txt \
+  --output-csv results/classify/x3d_predictions.csv
+```
+
+The command always writes a full JSON report. If `--output-json` is omitted, it is created automatically under `results/classify/`.
 
 ### `vcr-bench-attack` key flags
 
@@ -163,7 +181,9 @@ configs/
   runs/               # complete run presets
 ```
 
-Copy `configs/local.toml.example` to `configs/local.toml` and set your local data paths, remote SSH target, and Slurm partition.
+Copy `configs/local.toml.example` to `configs/local.toml` and set your local data paths. The `[remote]` section is optional and only needed if you use `vcr-bench-remote`.
+
+If a model, attack, or defence does not have a checked-in JSON preset yet, `vcr-bench` now synthesizes a default preset from the component signature/capabilities so it remains configurable through the same preset system.
 
 ---
 
@@ -183,25 +203,25 @@ Copy `configs/local.toml.example` to `configs/local.toml` and set your local dat
 vcr-bench-remote push-code --commit-message "my change"
 
 # 2. Sync the remote checkout
-vcr-bench-remote sync-remote --remote main
+vcr-bench-remote --config configs/local.toml --remote main sync-remote
 
 # 3. Launch a single focused job
-vcr-bench-remote launch-job --remote main --mode attack \
+vcr-bench-remote --config configs/local.toml --remote main launch-job --mode attack \
   --model x3d --attack ifgsm --dataset kinetics400 \
   --dataset-subset kinetics400_mini_val --num-videos 8 \
   --attack-name debug_ifgsm
 
 # 4. Launch the full benchmark suites
-vcr-bench-remote launch-accuracy-suite --remote main --suite default
-vcr-bench-remote launch-attack-suite   --remote main --suite default
+vcr-bench-remote --config configs/local.toml --remote main launch-accuracy-suite --suite default
+vcr-bench-remote --config configs/local.toml --remote main launch-attack-suite   --suite default
 
 # 5. Check status and fetch results
-vcr-bench-remote job-status          --remote main --job-id 123456
-vcr-bench-remote fetch-job-artifacts --remote main --job-id 123456 \
+vcr-bench-remote --config configs/local.toml --remote main job-status          --job-id 123456
+vcr-bench-remote --config configs/local.toml --remote main fetch-job-artifacts --job-id 123456 \
   --attack-name default_suite
 ```
 
-Add `--dry-run` to any command to print what would be executed without contacting the cluster.
+Add `--dry-run` to any command to print what would be executed without contacting the cluster. By default, remote sync now uses a non-destructive detached checkout strategy; pass `sync-remote --strategy reset-hard` only if you explicitly want the old behavior.
 
 ### VRAM profiling
 
@@ -224,6 +244,12 @@ vcr-bench-artifacts list-checkpoints --model x3d
 vcr-bench-artifacts build-dataset-archive \
   --dataset kinetics400 --subset kinetics400_mini_val \
   --source-dir /path/to/subset
+
+# Upload remote checkpoint files to one HF repo without logging in on the remote
+HF_TOKEN=... python scripts/upload_remote_checkpoints_to_hf.py \
+  --target-repo maxv65/vcr-bench \
+  --skip-existing \
+  --update-manifest
 ```
 
 ---

@@ -11,13 +11,13 @@
   "models": [
     {
       "preset": "x3d",
-      "variant": "m_k400"
+      "preset_name": "m_k400"
     }
   ],
   "attacks": [
     {
       "preset": "ifgsm",
-      "variant": "default"
+      "preset_name": "default"
     }
   ],
   "runtime": {

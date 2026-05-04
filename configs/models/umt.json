@@ -1,0 +1,14 @@
+{
+  "kind": "model",
+  "name": "umt",
+  "presets": {
+    "vit_large_p16_kinetics400": {
+      "factory_name": "umt",
+      "params": {
+        "backbone": "vit_large_p16",
+        "weights_dataset": "kinetics400"
+      }
+    }
+  },
+  "default_preset": "vit_large_p16_kinetics400"
+}
