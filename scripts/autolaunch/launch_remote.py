@@ -30,33 +30,6 @@ def run_local(cmd: list[str], cwd: Path, check: bool = True) -> subprocess.Compl
     return result
 
 
-def open_source_control(cwd: Path) -> None:
-    candidates = []
-    for name in ["code", "code.cmd", "cursor", "cursor.cmd"]:
-        resolved = shutil.which(name)
-        if resolved:
-            candidates.append(resolved)
-    localapp = Path.home() / "AppData" / "Local" / "Programs" / "Microsoft VS Code" / "bin"
-    for p in [localapp / "code.cmd", localapp / "code"]:
-        if p.exists():
-            candidates.append(str(p))
-    for exe in candidates:
-        try:
-            subprocess.Popen([exe, "--reuse-window", str(cwd)], cwd=str(cwd))
-            time.sleep(1.2)
-            exe_name = Path(exe).name.lower()
-            if "cursor" in exe_name:
-                subprocess.Popen(["cmd", "/c", "start", "", "cursor://command/workbench.view.scm"], cwd=str(cwd))
-            else:
-                subprocess.Popen(["cmd", "/c", "start", "", "vscode://command/workbench.view.scm"], cwd=str(cwd))
-            log(f"opened Source Control via: {exe}")
-            return
-        except FileNotFoundError:
-            continue
-    run_local(["cmd", "/c", "start", "", str(cwd)], cwd=cwd, check=False)
-    log("VS Code CLI not found. Open Source Control manually.")
-
-
 def run_ssh(host: str, remote_cmd: str, check: bool = True) -> subprocess.CompletedProcess:
     log(f"ssh host={host} cmd={remote_cmd}")
     result = subprocess.run(
@@ -163,10 +136,8 @@ def main() -> int:
             status = run_local(["git", "status", "--porcelain"], cwd=repo_root_local)
             if status.stdout.strip():
                 if not args.commit_message:
-                    log("local changes found and --commit-message missing; opening VS Code Source Control")
-                    open_source_control(repo_root_local)
-                    print("Local changes detected. Commit manually, then rerun.")
-                    return 2
+                    log("local changes found and --commit-message missing; skipping VS Code opening")
+                    args.commit_message = "Auto-launch commit"
                 run_local(["git", "add", "-A"], cwd=repo_root_local)
                 run_local(["git", "commit", "--no-verify", "-m", args.commit_message], cwd=repo_root_local)
             else:
