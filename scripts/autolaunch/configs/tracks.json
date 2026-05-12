@@ -47,12 +47,11 @@
       "num_videos": 100,
       "save_videos": 5,
       "models": [
-        "actionclip", "amd", "c2d", "c3d", "i3d", "i3dnonlocal",
-        "ila", "internvideo", "internvideo2", "mvitv2", "onepeace",
-        "r2plus1d", "slowfast", "slowonly", "tadaformer", "tanet",
-        "timesformer", "tin", "tpn", "trn", "tsm", "tsmnonlocal",
-        "tsm_surrogate", "tsn", "umt", "uniformer", "uniformerv2",
-        "videomae", "videomaev2", "videoswin", "x3d"
+        "amd", "c2d", "c3d", "i3d", "i3dnonlocal",
+        "ila", "internvideo2", "mvitv2", "onepeace", "r2plus1d",
+        "slowfast", "slowonly", "tadaformer", "tanet", "timesformer", 
+        "tpn", "tsm", "tsmnonlocal", "tsm_surrogate", "tsn", "umt",
+        "uniformer", "uniformerv2", "videomae", "videomaev2", "videoswin", "x3d"
       ],
       "attacks": [
         {"name": "amifgsm",        "target": true},

@@ -93,7 +93,7 @@ def build_parser() -> argparse.ArgumentParser:
     status.add_argument("--dry-run", action="store_true")
 
     fetch = sub.add_parser("fetch-job-artifacts")
-    fetch.add_argument("--job-id", type=int, required=True)
+    fetch.add_argument("--job-id", type=int, default=None)
     fetch.add_argument("--attack-name", default=None)
     fetch.add_argument("--result-subdir", default=None)
     fetch.add_argument("--dry-run", action="store_true")
@@ -496,28 +496,42 @@ def cmd_job_status(args: argparse.Namespace, cfg: dict[str, Any]) -> None:
 
 
 def cmd_fetch_job_artifacts(args: argparse.Namespace, cfg: dict[str, Any]) -> None:
-    local_root = Path(cfg["local_results_dir"]).resolve() / cfg["name"] / f"job_{int(args.job_id)}"
+    job_id = args.job_id
+    if job_id is None and not args.attack_name:
+        raise ValueError("Provide --job-id, --attack-name, or both.")
+    if job_id is not None:
+        local_subdir = f"job_{int(job_id)}"
+    else:
+        local_subdir = str(args.attack_name)
+    local_root = Path(cfg["local_results_dir"]).resolve() / cfg["name"] / local_subdir
     local_root.mkdir(parents=True, exist_ok=True)
     repo = cfg["repo_path"].rstrip("/")
-    rsync_cmds: list[list[str]] = [
-        ["rsync", "-avz", f"{cfg['ssh_host']}:{repo}/logs/job_{int(args.job_id)}.log", str(local_root / "attack_job.log")],
-        ["rsync", "-avz", f"{cfg['ssh_host']}:{repo}/logs/job_{int(args.job_id)}.err", str(local_root / "attack_job.err")],
-        ["rsync", "-avz", f"{cfg['ssh_host']}:{repo}/logs/test_job_{int(args.job_id)}.log", str(local_root / "test_job.log")],
-        ["rsync", "-avz", f"{cfg['ssh_host']}:{repo}/logs/test_job_{int(args.job_id)}.err", str(local_root / "test_job.err")],
-    ]
+    fetch_cmds: list[list[str]] = []
+    if job_id is not None:
+        fetch_cmds.extend([
+            ["scp", f"{cfg['ssh_host']}:{repo}/logs/job_{int(job_id)}.log", str(local_root / "attack_job.log")],
+            ["scp", f"{cfg['ssh_host']}:{repo}/logs/job_{int(job_id)}.err", str(local_root / "attack_job.err")],
+            ["scp", f"{cfg['ssh_host']}:{repo}/logs/test_job_{int(job_id)}.log", str(local_root / "test_job.log")],
+            ["scp", f"{cfg['ssh_host']}:{repo}/logs/test_job_{int(job_id)}.err", str(local_root / "test_job.err")],
+        ])
     if args.attack_name:
         remote_dir = f"{repo}/{args.result_subdir}" if args.result_subdir else f"{repo}/{cfg['attack_results_root']}/{args.attack_name}"
-        rsync_cmds.append(["rsync", "-avz", f"{cfg['ssh_host']}:{remote_dir}", str(local_root / "results")])
+        results_local = str(local_root / "results")
+        fetch_cmds.append(["scp", "-r", f"{cfg['ssh_host']}:{remote_dir}", results_local])
+        attack_logs_root = cfg.get("attack_logs_root", "attack_logs")
+        remote_logs_dir = f"{repo}/{attack_logs_root}/{args.attack_name}"
+        fetch_cmds.append(["scp", "-r", f"{cfg['ssh_host']}:{remote_logs_dir}", str(local_root / "logs")])
     if not args.dry_run:
-        for cmd in rsync_cmds:
+        for cmd in fetch_cmds:
             run_local(cmd, check=False)
     _emit(
         {
             "command": "fetch-job-artifacts",
-            "job_id": int(args.job_id),
+            "job_id": job_id,
+            "attack_name": args.attack_name,
             "remote_name": cfg["name"],
             "local_dir": str(local_root),
-            "commands": [" ".join(q(part) for part in cmd) for cmd in rsync_cmds],
+            "commands": [" ".join(q(part) for part in cmd) for cmd in fetch_cmds],
             "dry_run": bool(args.dry_run),
         }
     )
