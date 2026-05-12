@@ -135,14 +135,11 @@ def main() -> int:
             log("checking local git status")
             status = run_local(["git", "status", "--porcelain"], cwd=repo_root_local)
             if status.stdout.strip():
-                if not args.commit_message:
-                    log("local changes found and --commit-message missing; skipping VS Code opening")
-                    args.commit_message = "Auto-launch commit"
-                run_local(["git", "add", "-A"], cwd=repo_root_local)
-                run_local(["git", "commit", "--no-verify", "-m", args.commit_message], cwd=repo_root_local)
+                log("UNCOMMITED CHANGES DETECTED - stopping launch_remote")
+                print("Local changes detected. Please commit or stash before running launch_remote.")
+                return 1
             else:
                 log("no local changes")
-            run_local(["git", "push"], cwd=repo_root_local)
 
         log("force-syncing remote repo")
         run_ssh(ssh_host, git_pull_cmd)

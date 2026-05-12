@@ -14,3 +14,4 @@ scripts/autolaunch/runtime/
 scripts/autolaunch/logs/
 vcr_bench/defences/denoise/videopure/hf-cache/
 private_docs/
+notebook_outputs/

@@ -1,2 +1,0 @@
-video_name,gt_label,gt_class,clear_label,clear_class,clear_conf,target_label,target_class,attacked_label,attacked_class,attacked_conf,benign_conf,psnr,ssim,mse,lpips,vmaf,time,iter_count,query_count
-/mnt/c/Users/Black/Desktop/videolab/VCR_BENCHMARK/vcr-bench/data/ucf101/videos/BoxingPunchingBag/v_BoxingPunchingBag_g04_c05.avi,BoxingPunchingBag,16,BoxingPunchingBag,16,0.6453327536582947,unknown,-1,BlowDryHair,12,0.6359132528305054,6.213395408849465e-06,50.54002991431584,0.9968746081309876,0.57421875,0.0,0.0,2.587672472000122,1,0
