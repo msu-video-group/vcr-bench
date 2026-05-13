@@ -44,6 +44,13 @@ _CSV_FIELDS = [
 ]
 
 
+class VramProfiledCallError(RuntimeError):
+    def __init__(self, original: BaseException, row: dict[str, Any]) -> None:
+        super().__init__(str(original))
+        self.original = original
+        self.row = row
+
+
 @dataclass
 class VramProfileContext:
     model_arg: str
@@ -141,6 +148,93 @@ def profile_model_vram_for_one_video(
     del sampled_video
     torch.cuda.empty_cache()
     return rows
+
+
+def profile_cuda_call(
+    *,
+    model: BaseVideoClassifier,
+    context: VramProfileContext,
+    sample: VideoSampleRef,
+    sample_index: int,
+    x: torch.Tensor,
+    input_format: str,
+    pass_type: str,
+    run_fn: Callable[[], Any],
+) -> tuple[Any, dict[str, Any]]:
+    timestamp = time.strftime("%Y-%m-%dT%H:%M:%S%z")
+    row = {
+        "timestamp": timestamp,
+        "model": context.model_arg,
+        "model_name": getattr(model, "model_name", "unknown"),
+        "backbone": context.backbone,
+        "weights_dataset": context.weights_dataset,
+        "dataset": context.dataset_arg,
+        "dataset_subset": context.dataset_subset,
+        "pipeline_stage": context.pipeline_stage,
+        "sample_index": sample_index,
+        "video_path": sample.path,
+        "pass_type": pass_type,
+        "device": str(x.device),
+        "input_shape": "x".join(str(v) for v in tuple(x.shape)),
+        "input_dtype": str(x.dtype).replace("torch.", ""),
+        "input_mb": _bytes_to_mb(x.numel() * x.element_size()),
+    }
+
+    if not torch.cuda.is_available():
+        result = run_fn()
+        row.update({"status": "skipped_no_cuda"})
+        return result, row
+    if x.device.type != "cuda":
+        result = run_fn()
+        row.update({"status": "skipped_non_cuda_device"})
+        return result, row
+
+    device = x.device
+    row["cuda_device_name"] = torch.cuda.get_device_name(device)
+    result: Any = None
+    error: BaseException | None = None
+    baseline_allocated = 0
+    baseline_reserved = 0
+    start = time.time()
+    try:
+        torch.cuda.empty_cache()
+        torch.cuda.synchronize(device)
+        torch.cuda.reset_peak_memory_stats(device)
+        baseline_allocated = torch.cuda.memory_allocated(device)
+        baseline_reserved = torch.cuda.memory_reserved(device)
+        result = run_fn()
+    except BaseException as e:
+        error = e
+    finally:
+        elapsed = time.time() - start
+        try:
+            torch.cuda.synchronize(device)
+            peak_allocated = torch.cuda.max_memory_allocated(device)
+            peak_reserved = torch.cuda.max_memory_reserved(device)
+            row.update(
+                {
+                    "baseline_allocated_mb": _bytes_to_mb(baseline_allocated),
+                    "baseline_reserved_mb": _bytes_to_mb(baseline_reserved),
+                    "peak_allocated_mb": _bytes_to_mb(peak_allocated),
+                    "peak_reserved_mb": _bytes_to_mb(peak_reserved),
+                    "delta_allocated_mb": _bytes_to_mb(peak_allocated - baseline_allocated),
+                    "delta_reserved_mb": _bytes_to_mb(peak_reserved - baseline_reserved),
+                    "elapsed_sec": round(elapsed, 6),
+                    "status": "ok" if error is None else "error",
+                    "error": "" if error is None else f"{type(error).__name__}: {error}",
+                }
+            )
+        except Exception as e:
+            row.update(
+                {
+                    "elapsed_sec": round(elapsed, 6),
+                    "status": "profile_error" if error is None else "error",
+                    "error": f"{type(e).__name__}: {e}" if error is None else f"{type(error).__name__}: {error}",
+                }
+            )
+    if error is not None:
+        raise VramProfiledCallError(error, row) from error
+    return result, row
 
 
 def _choose_sample_index(dataset_len: int, explicit_index: int | None, seed: int) -> int:

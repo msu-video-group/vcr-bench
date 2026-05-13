@@ -70,6 +70,8 @@ backbone=""
 weights_dataset=""
 grad_forward_chunk_size=""
 attack_sample_chunk_size=""
+vram_profile_root=""
+vram_profile_csv=""
 lite_attack_flag=0
 pipeline_stage="test"
 split="val"
@@ -125,6 +127,8 @@ while [[ "$#" -gt 0 ]]; do
         --weights-dataset) weights_dataset="$2"; shift ;;
         --grad-forward-chunk-size) grad_forward_chunk_size="$2"; shift ;;
         --attack-sample-chunk-size) attack_sample_chunk_size="$2"; shift ;;
+        --vram-profile-root) vram_profile_root="$2"; shift ;;
+        --vram-profile-csv) vram_profile_csv="$2"; shift ;;
         --lite-attack) lite_attack_flag=1 ;;
         --pipeline-stage) pipeline_stage="$2"; shift ;;
         --split) split="$2"; shift ;;
@@ -305,13 +309,19 @@ for ((i=0; i<${#method_names_local[@]}; i++)); do
     [[ -n "$backbone" ]] && cmd+=(--backbone "$backbone")
     [[ -n "$weights_dataset" ]] && cmd+=(--weights-dataset "$weights_dataset")
     [[ -n "$grad_forward_chunk_size" ]] && cmd+=(--grad-forward-chunk-size "$grad_forward_chunk_size")
+    if [[ -n "$vram_profile_root" ]]; then
+        mkdir -p "$vram_profile_root"
+        cmd+=(--vram-profile-csv "${vram_profile_root%/}/${current_model}.csv")
+    elif [[ -n "$vram_profile_csv" ]]; then
+        cmd+=(--vram-profile-csv "$vram_profile_csv")
+    fi
 
     printf -v cmd_str '%q ' "${cmd[@]}"
 
     srun_args=(--exclusive --ntasks 1 -G 1)
     [[ -n "${CONTAINER_IMAGE}" ]] && srun_args+=(--container-image "${CONTAINER_IMAGE}")
     [[ -n "${CONTAINER_MOUNTS}" ]] && srun_args+=(--container-mounts "${CONTAINER_MOUNTS}")
-    srun "${srun_args[@]}" bash -lc "python3 -c \"import importlib.util, sys; mods=['transformers','diffusers','yacs','IQA_pytorch','pywt']; missing=[m for m in mods if importlib.util.find_spec(m) is None]; sys.exit(0 if not missing else 1)\" || pip install -q transformers diffusers yacs 'numpy<2' IQA_pytorch PyWavelets; cd /work && ls /root/.msu_vqmt/licenses/*.lic >/dev/null 2>&1 || { echo 'WARNING: vqmt licenses not found at /root/.msu_vqmt/licenses/'; }; ${cmd_str}" >> "$log_file" 2>&1 &
+    srun "${srun_args[@]}" bash -lc "python3 -c \"import importlib.util, sys; mods=['transformers','diffusers','yacs','IQA_pytorch','pywt']; missing=[m for m in mods if importlib.util.find_spec(m) is None]; sys.exit(0 if not missing else 1)\" || pip install -q transformers diffusers yacs 'numpy<2' IQA_pytorch PyWavelets; cd /work && { ffmpeg -hide_banner -filters 2>/dev/null | grep -q ' libvmaf ' || command -v vqmt >/dev/null 2>&1; } || { echo 'WARNING: neither ffmpeg/libvmaf nor vqmt is available; VMAF will be reported as 0.0'; }; ${cmd_str}" >> "$log_file" 2>&1 &
 done
 
 wait

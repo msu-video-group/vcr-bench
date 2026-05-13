@@ -62,7 +62,19 @@ def build_base_parser(*, add_help: bool) -> argparse.ArgumentParser:
     p.add_argument("--num-videos", type=int, default=25)
     p.add_argument("--target", action="store_true")
     p.add_argument("--seed", type=int, default=42)
-    p.add_argument("--allow-misclassified", action="store_true")
+    p.add_argument(
+        "--allow-misclassified",
+        dest="allow_misclassified",
+        action="store_true",
+        default=True,
+        help="Attack all videos, including samples the clean model misclassifies. This is the default.",
+    )
+    p.add_argument(
+        "--skip-misclassified",
+        dest="allow_misclassified",
+        action="store_false",
+        help="Only attack videos that the clean model classifies correctly.",
+    )
     p.add_argument("--full-videos", action="store_true")
     p.add_argument("--split", default="val")
     p.add_argument("--pipeline-stage", default="test", choices=["train", "val", "test"])
@@ -81,7 +93,7 @@ def build_base_parser(*, add_help: bool) -> argparse.ArgumentParser:
     p.add_argument("--results-root", default="results", help="Root folder for attack result CSV outputs")
     p.add_argument("--logs-root", default="attack_logs", help="Root folder for attack summary CSV/stdout logs")
     p.add_argument("--artifacts-root", dest="results_root", help="Deprecated alias for --results-root")
-    p.add_argument("--vram-profile-csv", default=None, help="Append one-video VRAM profile rows to a separate CSV")
+    p.add_argument("--vram-profile-csv", default=None, help="Append VRAM profile rows to a separate CSV, including attack peaks")
     p.add_argument("--vram-profile-index", type=int, default=None, help="Dataset index used for --vram-profile-csv; defaults to seeded random")
     p.add_argument("--output-json", default=None)
     p.add_argument("--verbose", action="store_true")
@@ -315,20 +327,22 @@ def main(argv: list[str] | None = None) -> None:
         grad_forward_chunk_size=args.grad_forward_chunk_size,
         device=args.device,
     )
+    vram_context = None
     if args.vram_profile_csv:
+        vram_context = VramProfileContext(
+            model_arg=args.model,
+            dataset_arg=args.dataset,
+            dataset_subset=args.dataset_subset,
+            backbone=args.backbone,
+            weights_dataset=args.weights_dataset,
+            pipeline_stage=effective_stage,
+            seed=args.seed,
+            sample_index=args.vram_profile_index,
+        )
         rows = profile_model_vram_for_one_video(
             model=model,
             dataset=dataset,
-            context=VramProfileContext(
-                model_arg=args.model,
-                dataset_arg=args.dataset,
-                dataset_subset=args.dataset_subset,
-                backbone=args.backbone,
-                weights_dataset=args.weights_dataset,
-                pipeline_stage=effective_stage,
-                seed=args.seed,
-                sample_index=args.vram_profile_index,
-            ),
+            context=vram_context,
         )
         append_vram_profile_csv(args.vram_profile_csv, rows)
 
@@ -363,6 +377,8 @@ def main(argv: list[str] | None = None) -> None:
         defence=defence,
         adaptive=args.adaptive,
         save_defence_stages=args.save_defence_stages,
+        vram_profile_csv=args.vram_profile_csv,
+        vram_profile_context=vram_context,
     )
     print(json.dumps(summary, indent=2))
     write_json_output(args.output_json, summary)

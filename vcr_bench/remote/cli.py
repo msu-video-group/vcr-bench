@@ -68,6 +68,8 @@ def build_parser() -> argparse.ArgumentParser:
     launch.add_argument("--defence", default=None)
     launch.add_argument("--vmaf", action="store_true", default=False)
     launch.add_argument("--full-video", "--full-videos", action="store_true", dest="full_video")
+    launch.add_argument("--vram-profile-root", default=None)
+    launch.add_argument("--vram-profile-csv", default=None)
     launch.add_argument("--lite-attack", action="store_true")
     launch.add_argument("--save-defence-stages", action="store_true")
     launch.add_argument("--dry-run", action="store_true")
@@ -268,6 +270,10 @@ def _build_launch_remote_command(args: argparse.Namespace, cfg: dict[str, Any]) 
             sbatch_parts.append("--full-videos")
         if getattr(args, "vmaf", False):
             sbatch_parts.append("--vmaf")
+        if getattr(args, "vram_profile_root", None):
+            sbatch_parts.extend(["--vram-profile-root", args.vram_profile_root])
+        if getattr(args, "vram_profile_csv", None):
+            sbatch_parts.extend(["--vram-profile-csv", args.vram_profile_csv])
     sbatch_cmd = " ".join(q(part) for part in sbatch_parts)
     chained = f"cd {repo_expr}"
     if exports:
@@ -322,6 +328,8 @@ def cmd_launch_accuracy_suite(args: argparse.Namespace, cfg: dict[str, Any]) -> 
         results_root=suite.get("results_root", cfg["accuracy_results_root"]),
         dump_freq=None,
         defence=None,
+        vram_profile_root=None,
+        vram_profile_csv=None,
         lite_attack=False,
         save_defence_stages=False,
         dry_run=bool(args.dry_run),
@@ -372,6 +380,8 @@ def cmd_launch_attack_suite(args: argparse.Namespace, cfg: dict[str, Any]) -> No
         results_root=suite.get("results_root", cfg["attack_results_root"]),
         dump_freq=suite.get("dump_freq"),
         defence=None,
+        vram_profile_root=suite.get("vram_profile_root"),
+        vram_profile_csv=suite.get("vram_profile_csv"),
         lite_attack=bool(suite.get("lite_attack", False)),
         save_defence_stages=bool(suite.get("save_defence_stages", False)),
         dry_run=bool(args.dry_run),
@@ -414,6 +424,8 @@ def cmd_launch_preset(args: argparse.Namespace, cfg: dict[str, Any]) -> None:
             results_root=output.get("results_root", cfg["accuracy_results_root"]),
             dump_freq=None,
             defence=None,
+            vram_profile_root=None,
+            vram_profile_csv=None,
             lite_attack=False,
             save_defence_stages=False,
             dry_run=bool(args.dry_run),
@@ -442,6 +454,8 @@ def cmd_launch_preset(args: argparse.Namespace, cfg: dict[str, Any]) -> None:
             results_root=output.get("results_root", cfg["attack_results_root"]),
             dump_freq=None,
             defence=None,
+            vram_profile_root=output.get("vram_profile_root"),
+            vram_profile_csv=output.get("vram_profile_csv"),
             lite_attack=bool(run.get("lite_attack", False)),
             save_defence_stages=bool(run.get("save_defence_stages", False)),
             dry_run=bool(args.dry_run),

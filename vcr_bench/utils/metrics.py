@@ -21,6 +21,7 @@ import os
 import av
 import csv
 import io
+import json
 import subprocess
 import time
 import shutil
@@ -272,37 +273,133 @@ def save_video(tensor, path, fps=30):
     container.close()
 
 
+def _parse_ffmpeg_vmaf_log(log_path):
+    with open(log_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    pooled = data.get("pooled_metrics", {})
+    vmaf_metric = pooled.get("vmaf", {})
+    if isinstance(vmaf_metric, dict):
+        mean = vmaf_metric.get("mean")
+        if mean is not None:
+            return float(mean)
+
+    scores = []
+    for frame in data.get("frames", []):
+        metrics = frame.get("metrics", {})
+        if "vmaf" in metrics:
+            scores.append(float(metrics["vmaf"]))
+    return float(np.mean(scores)) if scores else 0.0
+
+
+_FFMPEG_LIBVMAF_AVAILABLE = None
+
+
+def _ffmpeg_supports_libvmaf(ffmpeg):
+    global _FFMPEG_LIBVMAF_AVAILABLE
+    if _FFMPEG_LIBVMAF_AVAILABLE is not None:
+        return _FFMPEG_LIBVMAF_AVAILABLE
+    try:
+        result = subprocess.run(
+            [ffmpeg, "-hide_banner", "-filters"],
+            shell=False,
+            capture_output=True,
+            timeout=10,
+            text=True,
+        )
+        _FFMPEG_LIBVMAF_AVAILABLE = result.returncode == 0 and " libvmaf " in result.stdout
+    except Exception:
+        _FFMPEG_LIBVMAF_AVAILABLE = False
+    return _FFMPEG_LIBVMAF_AVAILABLE
+
+
+def _run_ffmpeg_vmaf(ffmpeg, ref_video_path, dist_video_path, log_path, timeout_sec):
+    cmd = [
+        ffmpeg,
+        "-hide_banner",
+        "-nostats",
+        "-i",
+        dist_video_path,
+        "-i",
+        ref_video_path,
+        "-lavfi",
+        f"libvmaf=log_path={log_path}:log_fmt=json",
+        "-f",
+        "null",
+        "-",
+    ]
+    result = subprocess.run(cmd, shell=False, capture_output=True, timeout=timeout_sec, text=True)
+    if result.returncode != 0:
+        print(f"VMAF calculation via ffmpeg failed with return code {result.returncode}")
+        if "No such filter: 'libvmaf'" in result.stderr:
+            print("VMAF calculation error: ffmpeg was built without libvmaf support")
+        return None
+    return _parse_ffmpeg_vmaf_log(log_path)
+
+
+def _run_vqmt_vmaf(vqmt, ref_video_path, dist_video_path, csv_path, timeout_sec):
+    cmd = [vqmt, "-metr", "vmaf", "-orig", ref_video_path, "-in", dist_video_path, "-csv-file", csv_path]
+    result = subprocess.run(cmd, shell=False, capture_output=True, timeout=timeout_sec, text=True)
+    if result.returncode != 0:
+        print(f"VMAF calculation via vqmt failed with return code {result.returncode}")
+        return None
+    with open(csv_path, 'r') as f:
+        reader = csv.DictReader(f)
+        scores = []
+        for row in reader:
+            try:
+                if 'vmaf' in row:
+                    scores.append(float(row['vmaf']))
+                if 'Netflix VMAF_VMAF061_float' in row:
+                    scores.append(float(row['Netflix VMAF_VMAF061_float']))
+            except (ValueError, TypeError):
+                pass
+    return float(np.mean(scores)) if scores else 0.0
+
+
 def VMAF(x, y):
     start_time = time.time()
-    timeout_sec = int(os.getenv("VQMT_TIMEOUT_SEC", "120"))
+    timeout_sec = int(os.getenv("VMAF_TIMEOUT_SEC", os.getenv("VQMT_TIMEOUT_SEC", "120")))
+    backend = os.getenv("VMAF_BACKEND", "auto").strip().lower()
+    if backend not in {"auto", "ffmpeg", "vqmt"}:
+        print(f"Unknown VMAF_BACKEND={backend!r}; expected auto, ffmpeg, or vqmt")
+        return 0.0
     ref_np = to_numpy(x).astype(np.uint8)
     dist_np = to_numpy(y).astype(np.uint8)
-    _ = shutil.which("vqmt")
+    ffmpeg = shutil.which(os.getenv("FFMPEG_BIN", "ffmpeg"))
+    vqmt = shutil.which(os.getenv("VQMT_BIN", "vqmt"))
     ref_video = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False)
     dist_video = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False)
     save_video(ref_np, ref_video.name)
     save_video(dist_np, dist_video.name)
+    log_file = tempfile.NamedTemporaryFile(suffix='.json', delete=False)
     csv_file = tempfile.NamedTemporaryFile(suffix='.csv', delete=False)
+    log_file.close()
+    csv_file.close()
     try:
-        cmd = ["vqmt", "-metr", "vmaf", "-orig", ref_video.name, "-in", dist_video.name, "-csv-file", csv_file.name]
-        result = subprocess.run(cmd, shell=False, capture_output=True, timeout=timeout_sec, text=True)
-        if result.returncode != 0:
-            print(f"VMAF calculation failed with return code {result.returncode}")
+        attempts = []
+        if backend in {"auto", "ffmpeg"}:
+            if ffmpeg is not None and _ffmpeg_supports_libvmaf(ffmpeg):
+                attempts.append(("ffmpeg", lambda: _run_ffmpeg_vmaf(ffmpeg, ref_video.name, dist_video.name, log_file.name, timeout_sec)))
+            elif backend == "ffmpeg":
+                print("VMAF calculation error: ffmpeg/libvmaf is not available")
+        if backend in {"auto", "vqmt"}:
+            if vqmt is not None:
+                attempts.append(("vqmt", lambda: _run_vqmt_vmaf(vqmt, ref_video.name, dist_video.name, csv_file.name, timeout_sec)))
+            elif backend == "vqmt":
+                print("VMAF calculation error: vqmt executable not found")
+        if not attempts:
+            print("VMAF calculation error: neither ffmpeg/libvmaf nor vqmt is available")
             mean_vmaf = 0.0
         else:
-            with open(csv_file.name, 'r') as f:
-                reader = csv.DictReader(f)
-                scores = []
-                for row in reader:
-                    try:
-                        if 'vmaf' in row:
-                            scores.append(float(row['vmaf']))
-                        if 'Netflix VMAF_VMAF061_float' in row:
-                            scores.append(float(row['Netflix VMAF_VMAF061_float']))
-                    except (ValueError, TypeError):
-                        # Handle error
-                        pass
-                mean_vmaf = np.mean(scores) if scores else 0.0
+            mean_vmaf = 0.0
+            for name, attempt in attempts:
+                value = attempt()
+                if value is not None:
+                    mean_vmaf = value
+                    break
+                if backend != "auto":
+                    break
     except subprocess.TimeoutExpired:
         print(f"VMAF calculation timed out after {time.time() - start_time:.2f}s (timeout={timeout_sec}s)")
         mean_vmaf = 0.0
@@ -313,6 +410,7 @@ def VMAF(x, y):
         try:
             os.unlink(ref_video.name)
             os.unlink(dist_video.name)
+            os.unlink(log_file.name)
             os.unlink(csv_file.name)
         except:
             pass

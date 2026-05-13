@@ -66,7 +66,7 @@ The command always writes a full JSON report. If `--output-json` is omitted, it 
 --device cuda|cpu              Compute device              [default: cuda]
 --results-root <dir>           Output directory            [default: results/]
 --output-json <file>           Write a JSON summary
---vram-profile-csv <file>      Append VRAM profiling row
+--vram-profile-csv <file>      Append VRAM profiling rows, including attack peak
 --lite-attack                  Optimised single-pass pipeline
 
 # Preset shortcuts
@@ -232,7 +232,7 @@ vcr-bench-attack \
   --vram-profile-csv results/vram/x3d_ifgsm.csv
 ```
 
-The CSV gets one row for `no_grad_forward` and one for `with_grad_forward_backward`, with peak allocated/reserved VRAM and deltas over baseline.
+The CSV gets rows for `no_grad_forward`, `with_grad_forward_backward`, and each profiled `attack` call, with peak allocated/reserved VRAM and deltas over baseline. For a run-wide attack peak, take the max `peak_allocated_mb` among rows where `pass_type=attack`.
 
 ### Artifact management
 
@@ -265,3 +265,17 @@ HF_TOKEN=... python scripts/upload_remote_checkpoints_to_hf.py \
    - Add a JSON preset under `configs/models/`, `configs/attacks/`, or `configs/defences/`.
    - If you have VRAM numbers, fill in the system requirements table above.
 6. Open a PR with a short description of what changed and why.
+
+## Acknowledgements
+
+- [MMAction2](https://github.com/open-mmlab/mmaction2)
+- [VideoPure](https://github.com/deep-kaixun/VideoPure)
+- [Background Mixup-induced Temporal Consistency (BMTC)](https://github.com/mlvccn/BMTC_TransferAttackVid)
+- [Temporal Shuffling for Defending Deep Action Recognition Models against Adversarial Attacks](https://arxiv.org/abs/2112.07921)
+- [ActionCLIP](https://github.com/sallymmx/ActionCLIP)
+- [Asymmetric Masked Distillation (AMD)](https://github.com/MCG-NJU/AMD)
+- [X-CLIP](https://github.com/microsoft/VideoX/tree/master/X-CLIP)
+- [InternVideo / InternVideo2](https://github.com/OpenGVLab/InternVideo)
+- [ONE-PEACE](https://github.com/OFA-Sys/ONE-PEACE)
+- [TAdaConv / TAdaFormer](https://github.com/alibaba-mmai-research/TAdaConv)
+- [Unmasked Teacher (UMT)](https://github.com/OpenGVLab/unmasked_teacher)

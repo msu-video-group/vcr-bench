@@ -27,6 +27,12 @@ from vcr_bench.utils.eval.attack_logging import (
 )
 from vcr_bench.utils.metrics import PSNR, MSE, SSIM, VMAF, LPIPS
 from vcr_bench.utils.metrics import write_frame_metrics_csv_attack as _write_frame_metrics_csv
+from vcr_bench.utils.vram import (
+    VramProfileContext,
+    VramProfiledCallError,
+    append_vram_profile_csv,
+    profile_cuda_call,
+)
 from vcr_bench.utils.video_dump import (
     probe_video_fps,
     save_video_lossless_like_original,
@@ -201,7 +207,7 @@ def run_attack(
     num_videos: int,
     seed: int = 42,
     target: bool = False,
-    allow_misclassified: bool = False,
+    allow_misclassified: bool = True,
     pipeline_stage: str = "test",
     instant_preprocessing: bool = False,
     skip_existing: bool = True,
@@ -216,6 +222,8 @@ def run_attack(
     defence: BaseVideoDefence | None = None,
     adaptive: bool = False,
     save_defence_stages: bool = False,
+    vram_profile_csv: str | Path | None = None,
+    vram_profile_context: VramProfileContext | None = None,
 ) -> dict:
     if instant_preprocessing:
         raise ValueError("Attack runner requires sampled non-preprocessed input; use --instant-preprocessing off")
@@ -301,6 +309,8 @@ def run_attack(
     skipped_misclassified = 0
     skipped_existing_count = 0
     skipped_error_count = 0
+    attack_peak_allocated_mb = 0.0
+    attack_peak_reserved_mb = 0.0
 
     def _flush_metric_jobs(*, block: bool, drain_all: bool = False) -> None:
         nonlocal all_rows, skip_paths
@@ -470,23 +480,64 @@ def run_attack(
 
         query_counter = {"count": 0}
         try:
-            if isinstance(attack, BaseQueryVideoAttack):
-                attacked_video = attack.attack_query(
-                    model,
-                    sampled_video_on_device,
-                    query_label=lambda video: _predict_label_counted(
+            def _run_attack_call() -> torch.Tensor:
+                if isinstance(attack, BaseQueryVideoAttack):
+                    return attack.attack_query(
                         model,
-                        video,
+                        sampled_video_on_device,
+                        query_label=lambda video: _predict_label_counted(
+                            model,
+                            video,
+                            input_format=input_format,
+                            counter=query_counter,
+                        ),
                         input_format=input_format,
-                        counter=query_counter,
-                    ),
-                    input_format=input_format,
-                    y=y,
-                    targeted=target,
-                    video_path=sample.path,
-                )
+                        y=y,
+                        targeted=target,
+                        video_path=sample.path,
+                    )
+                return attack(model, sampled_video_on_device, input_format=input_format, y=y, targeted=target)
+
+            if vram_profile_csv is not None and vram_profile_context is not None:
+                try:
+                    attacked_video, vram_row = profile_cuda_call(
+                        model=model,
+                        context=vram_profile_context,
+                        sample=sample,
+                        sample_index=idx,
+                        x=sampled_video_on_device,
+                        input_format=input_format,
+                        pass_type="attack",
+                        run_fn=_run_attack_call,
+                    )
+                except VramProfiledCallError as e:
+                    append_vram_profile_csv(vram_profile_csv, [e.row])
+                    try:
+                        attack_peak_allocated_mb = max(
+                            attack_peak_allocated_mb,
+                            float(e.row.get("peak_allocated_mb") or 0.0),
+                        )
+                        attack_peak_reserved_mb = max(
+                            attack_peak_reserved_mb,
+                            float(e.row.get("peak_reserved_mb") or 0.0),
+                        )
+                    except Exception:
+                        pass
+                    raise e.original from e
+                append_vram_profile_csv(vram_profile_csv, [vram_row])
+                try:
+                    attack_peak_allocated_mb = max(
+                        attack_peak_allocated_mb,
+                        float(vram_row.get("peak_allocated_mb") or 0.0),
+                    )
+                    attack_peak_reserved_mb = max(
+                        attack_peak_reserved_mb,
+                        float(vram_row.get("peak_reserved_mb") or 0.0),
+                    )
+                except Exception:
+                    pass
             else:
-                attacked_video = attack(model, sampled_video_on_device, input_format=input_format, y=y, targeted=target)
+                attacked_video = _run_attack_call()
             if defence is not None and not adaptive:
                 defence.install(model)
             try:
@@ -626,6 +677,8 @@ def run_attack(
         "skipped_misclassified": skipped_misclassified,
         "skipped_existing": skipped_existing_count,
         "skipped_errors": skipped_error_count,
+        "attack_peak_allocated_mb": attack_peak_allocated_mb,
+        "attack_peak_reserved_mb": attack_peak_reserved_mb,
         "mean_time": mean_time,
         "mean_iterations": mean_iter,
         "mean_psnr": mean_psnr,
