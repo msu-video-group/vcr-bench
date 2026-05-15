@@ -2,6 +2,7 @@ av>=12.0.0
 huggingface_hub>=0.24.0
 numpy>=1.26.0
 opencv-python-headless>=4.9.0
+pandas>=2.0.0
 scikit-image>=0.22.0
 torch>=2.1.0
 torchvision>=0.16.0
@@ -18,7 +19,7 @@ ruff>=0.6.0
 [remote]
 
 [research]
-IQA-pytorch>=0.1.8
+IQA-pytorch>=0.1
 Pillow>=10.0.0
 diffusers>=0.30.0
 pyiqa>=0.1.8

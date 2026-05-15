@@ -239,3 +239,7 @@ def main() -> None:
         cmd_upload_dataset_archive(args)
     else:
         raise ValueError(f"Unsupported command: {args.command}")
+
+
+if __name__ == "__main__":
+    main()

@@ -21,7 +21,7 @@
         {"name": "temporal_median", "adaptive": false},
         {"name": "temporal_median", "adaptive": true}
       ],
-      "extra_args": ["--full-videos", "--separate-logs"]
+      "extra_args": ["--full-videos", "--separate-logs", "--allow-misclassified"]
     },
     {
       "name": "test-videopure-amd-x3d",
@@ -38,7 +38,7 @@
         {"name": "videopure",  "adaptive": false},
         {"name": "videopure",  "adaptive": true}
       ],
-      "extra_args": ["--full-videos", "--separate-logs"]
+      "extra_args": ["--full-videos", "--separate-logs", "--allow-misclassified"]
     },
     {
       "name": "full-white-box",
@@ -80,7 +80,7 @@
         {"name": "temporal_median",      "adaptive": true},
         {"name": "freqpure",             "adaptive": true}
       ],
-      "extra_args": ["--full-videos", "--separate-logs"]
+      "extra_args": ["--full-videos", "--separate-logs", "--allow-misclassified"]
     }
   ]
 }

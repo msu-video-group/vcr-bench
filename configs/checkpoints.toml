@@ -5,7 +5,7 @@ weights_dataset = "ucf101"
 repo_id = "maxv65/vcr-bench"
 filename = "c3d_ucf101_mmaction.pth"
 revision = "main"
-local_subdir = "checkpoints/c3d"
+local_subdir = "vcr_bench/models/c3d/checkpoints"
 
 [checkpoints.x3d_m_kinetics400]
 model = "x3d"
@@ -14,7 +14,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "x3d_m_kinetics400_mmaction.pth"
 revision = "main"
-local_subdir = "checkpoints/x3d"
+local_subdir = "vcr_bench/models/x3d/checkpoints"
 
 [checkpoints.timesformer_base_kinetics400]
 model = "timesformer"
@@ -23,7 +23,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "timesformer_vit_base_p16_kinetics400_mmaction.pth"
 revision = "main"
-local_subdir = "checkpoints/timesformer"
+local_subdir = "vcr_bench/models/timesformer/checkpoints"
 
 [checkpoints.videomae_base_kinetics400]
 model = "videomae"
@@ -32,7 +32,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "videomae_vit_base_p16_kinetics400_mmaction.pth"
 revision = "main"
-local_subdir = "checkpoints/videomae"
+local_subdir = "vcr_bench/models/videomae/checkpoints"
 
 [checkpoints.videomaev2_base_kinetics400]
 model = "videomaev2"
@@ -41,7 +41,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "videomaev2_vit_base_p16_kinetics400_mmaction.pth"
 revision = "main"
-local_subdir = "checkpoints/videomaev2"
+local_subdir = "vcr_bench/models/videomaev2/checkpoints"
 
 [checkpoints.videoswin_base_kinetics400]
 model = "videoswin"
@@ -50,7 +50,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "videoswin_base_p244_kinetics400_mmaction.pth"
 revision = "main"
-local_subdir = "checkpoints/videoswin"
+local_subdir = "vcr_bench/models/videoswin/checkpoints"
 
 [checkpoints.slowfast_r101_kinetics400]
 model = "slowfast"
@@ -59,7 +59,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "slowfast_r101_kinetics400_mmaction.pth"
 revision = "main"
-local_subdir = "checkpoints/slowfast"
+local_subdir = "vcr_bench/models/slowfast/checkpoints"
 
 [checkpoints.slowonly_r50_kinetics400]
 model = "slowonly"
@@ -68,7 +68,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "slowonly_r50_kinetics400_mmaction.pth"
 revision = "main"
-local_subdir = "checkpoints/slowonly"
+local_subdir = "vcr_bench/models/slowonly/checkpoints"
 
 [checkpoints.mvitv2_base_kinetics400]
 model = "mvitv2"
@@ -77,7 +77,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "mvit_base_p244_kinetics400_mmaction.pth"
 revision = "main"
-local_subdir = "checkpoints/mvitv2"
+local_subdir = "vcr_bench/models/mvitv2/checkpoints"
 
 [checkpoints.r2plus1d_r34_kinetics400]
 model = "r2plus1d"
@@ -86,7 +86,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "r2plus1d_r34_kinetics400_mmaction.pth"
 revision = "main"
-local_subdir = "checkpoints/r2plus1d"
+local_subdir = "vcr_bench/models/r2plus1d/checkpoints"
 
 [checkpoints.i3d_r50_kinetics400]
 model = "i3d"
@@ -95,7 +95,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "i3d_r50_kinetics400_mmaction.pth"
 revision = "main"
-local_subdir = "checkpoints/i3d"
+local_subdir = "vcr_bench/models/i3d/checkpoints"
 
 [checkpoints.i3dnonlocal_r50_kinetics400]
 model = "i3dnonlocal"
@@ -104,7 +104,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "i3dnonlocal_r50_kinetics400_mmaction.pth"
 revision = "main"
-local_subdir = "checkpoints/i3dnonlocal"
+local_subdir = "vcr_bench/models/i3dnonlocal/checkpoints"
 
 [checkpoints.tsm_r50_kinetics400]
 model = "tsm"
@@ -113,7 +113,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "tsm_r50_kinetics400_mmaction.pth"
 revision = "main"
-local_subdir = "checkpoints/tsm"
+local_subdir = "vcr_bench/models/tsm/checkpoints"
 
 [checkpoints.tsmnonlocal_r50_kinetics400]
 model = "tsmnonlocal"
@@ -122,7 +122,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "tsmnonlocal_r50_kinetics400_mmaction.pth"
 revision = "main"
-local_subdir = "checkpoints/tsmnonlocal"
+local_subdir = "vcr_bench/models/tsmnonlocal/checkpoints"
 
 [checkpoints.uniformer_base_kinetics400]
 model = "uniformer"
@@ -131,7 +131,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "uniformer_base_kinetics400_mmaction.pth"
 revision = "main"
-local_subdir = "checkpoints/uniformer"
+local_subdir = "vcr_bench/models/uniformer/checkpoints"
 
 [checkpoints.uniformerv2_base_kinetics400]
 model = "uniformerv2"
@@ -140,7 +140,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "uniformerv2_base_kinetics400_mmaction.pth"
 revision = "main"
-local_subdir = "checkpoints/uniformerv2"
+local_subdir = "vcr_bench/models/uniformerv2/checkpoints"
 
 [checkpoints.actionclip_vit_b16_kinetics400]
 model = "actionclip"
@@ -149,7 +149,7 @@ weights_dataset = "kinetics400"
 repo_id = "vcr-bench/checkpoints-actionclip"
 filename = "actionclip_vit_b16_32f_kinetics400_mmaction.pth"
 revision = "main"
-local_subdir = "checkpoints/actionclip"
+local_subdir = "vcr_bench/models/actionclip/checkpoints"
 
 [checkpoints.internvideo_base_kinetics400]
 model = "internvideo"
@@ -158,7 +158,7 @@ weights_dataset = "kinetics400"
 repo_id = "vcr-bench/checkpoints-internvideo"
 filename = "internvideo_vit_base_p16_kinetics400.bin"
 revision = "main"
-local_subdir = "checkpoints/internvideo"
+local_subdir = "vcr_bench/models/internvideo/checkpoints"
 
 [checkpoints.amd_vitb_kinetics400]
 model = "amd"
@@ -167,7 +167,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "amd_vitb_k400_finetune_90e.pth"
 revision = "main"
-local_subdir = "checkpoints/amd"
+local_subdir = "vcr_bench/models/amd/checkpoints"
 
 [checkpoints.ila_vit_b16_kinetics400]
 model = "ila"
@@ -176,7 +176,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "ila_k400_B_16_8_rel.pth"
 revision = "main"
-local_subdir = "checkpoints/ila"
+local_subdir = "vcr_bench/models/ila/checkpoints"
 
 [checkpoints.internvideo2_vit_1b_p14_kinetics400]
 model = "internvideo2"
@@ -185,7 +185,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "internvideo2_1B_ft_k710_ft_k400_f16.pth"
 revision = "main"
-local_subdir = "checkpoints/internvideo2"
+local_subdir = "vcr_bench/models/internvideo2/checkpoints"
 
 [checkpoints.onepeace_vit_l40_kinetics400]
 model = "onepeace"
@@ -194,7 +194,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "onepeace_video_k400.pth"
 revision = "main"
-local_subdir = "checkpoints/onepeace"
+local_subdir = "vcr_bench/models/onepeace/checkpoints"
 
 [checkpoints.tadaformer_large_14_kinetics400]
 model = "tadaformer"
@@ -203,7 +203,7 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "tadaformer_l14_clip+k710_k400_64f_89.9.pyth"
 revision = "main"
-local_subdir = "checkpoints/tadaformer"
+local_subdir = "vcr_bench/models/tadaformer/checkpoints"
 
 [checkpoints.umt_vit_large_p16_kinetics400]
 model = "umt"
@@ -212,4 +212,4 @@ weights_dataset = "kinetics400"
 repo_id = "maxv65/vcr-bench"
 filename = "umt_l16_ptk710_ftk710_ftk400_f8_res224.pth"
 revision = "main"
-local_subdir = "checkpoints/umt"
+local_subdir = "vcr_bench/models/umt/checkpoints"

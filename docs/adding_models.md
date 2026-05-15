@@ -193,7 +193,7 @@ weights_dataset = "kinetics400"
 repo_id = "your-hf-org/checkpoints-mymodel"
 filename = "mymodel_k400.pth"
 revision = "main"
-local_subdir = "checkpoints/mymodel"
+local_subdir = "vcr_bench/models/mymodel/checkpoints"
 ```
 
 ## 4. Verify

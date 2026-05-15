@@ -8,6 +8,7 @@ Requires-Dist: av>=12.0.0
 Requires-Dist: huggingface_hub>=0.24.0
 Requires-Dist: numpy>=1.26.0
 Requires-Dist: opencv-python-headless>=4.9.0
+Requires-Dist: pandas>=2.0.0
 Requires-Dist: scikit-image>=0.22.0
 Requires-Dist: torch>=2.1.0
 Requires-Dist: torchvision>=0.16.0
@@ -18,7 +19,7 @@ Requires-Dist: mypy>=1.10.0; extra == "dev"
 Requires-Dist: pytest>=8.0.0; extra == "dev"
 Requires-Dist: ruff>=0.6.0; extra == "dev"
 Provides-Extra: research
-Requires-Dist: IQA-pytorch>=0.1.8; extra == "research"
+Requires-Dist: IQA-pytorch>=0.1; extra == "research"
 Requires-Dist: Pillow>=10.0.0; extra == "research"
 Requires-Dist: diffusers>=0.30.0; extra == "research"
 Requires-Dist: pyiqa>=0.1.8; extra == "research"

@@ -8,7 +8,7 @@ from typing import Any
 from huggingface_hub import HfApi, hf_hub_download
 from huggingface_hub.errors import HfHubHTTPError, RepositoryNotFoundError
 
-from .config import get_path, load_checkpoint_registry, load_dataset_registry, load_settings
+from .config import get_path, load_checkpoint_registry, load_dataset_registry, load_settings, repo_root
 
 
 def _hf_download(*, repo_id: str, filename: str, revision: str, repo_type: str, local_dir: Path) -> Path:
@@ -55,7 +55,10 @@ def resolve_checkpoint_artifact(
     entry = get_checkpoint_artifact(model, backbone, weights_dataset)
     if not entry:
         return None
-    target_dir = get_path("cache_dir") / str(entry.get("local_subdir", f"checkpoints/{model}"))
+    local_subdir = str(entry.get("local_subdir", f"vcr_bench/models/{model}/checkpoints"))
+    target_dir = Path(local_subdir)
+    if not target_dir.is_absolute():
+        target_dir = repo_root() / target_dir
     target = target_dir / str(entry["filename"])
     if target.exists() or not auto_download:
         return target

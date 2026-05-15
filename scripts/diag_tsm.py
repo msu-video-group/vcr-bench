@@ -4,7 +4,7 @@ import sys
 sys.path.insert(0, "/work")
 
 # Inspect tsmnonlocal checkpoint keys
-ckpt_path = "/work/.cache/vcr_bench/checkpoints/tsmnonlocal/tsmnonlocal_r50_kinetics400_mmaction.pth"
+ckpt_path = "/work/vcr_bench/models/tsmnonlocal/checkpoints/tsmnonlocal_r50_kinetics400_mmaction.pth"
 ckpt = torch.load(ckpt_path, map_location="cpu")
 if isinstance(ckpt, dict):
     for root_key in ("state_dict", "model_state_dict", "model", "module"):
