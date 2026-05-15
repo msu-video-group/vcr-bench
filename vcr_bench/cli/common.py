@@ -18,8 +18,7 @@ class CliResolvedContext:
     dataset_kwargs: dict[str, Any]
 
 
-def build_model_dataset_context(args: Any, *, pipeline_stage_override: str | None = None) -> CliResolvedContext:
-    stage = pipeline_stage_override or getattr(args, "pipeline_stage", "test")
+def apply_default_dataset_subset(args: Any) -> None:
     if (
         getattr(args, "dataset", None)
         and getattr(args, "dataset_subset", None) is None
@@ -28,17 +27,11 @@ def build_model_dataset_context(args: Any, *, pipeline_stage_override: str | Non
         subset = default_dataset_subset(getattr(args, "dataset"), getattr(args, "split", "val"))
         if subset:
             setattr(args, "dataset_subset", subset)
-    preview_model = create_model(
-        args.model,
-        checkpoint_path=getattr(args, "checkpoint", None),
-        backbone=getattr(args, "backbone", None),
-        weights_dataset=getattr(args, "weights_dataset", None),
-        grad_forward_chunk_size=getattr(args, "grad_forward_chunk_size", None),
-        device="cpu",
-        load_weights=False,
-    )
-    model_pipeline = preview_model.build_data_pipeline(stage)
-    dataset_kwargs = dict(
+
+
+def build_dataset_kwargs_from_pipeline(args: Any, model_pipeline: Any) -> dict[str, Any]:
+    apply_default_dataset_subset(args)
+    return dict(
         video_root=getattr(args, "video_root", None),
         annotations_csv=getattr(args, "annotations", None),
         labels_txt=getattr(args, "labels", None),
@@ -49,6 +42,28 @@ def build_model_dataset_context(args: Any, *, pipeline_stage_override: str | Non
         frame_interval=getattr(model_pipeline, "frame_interval", 1),
         full_videos=bool(getattr(args, "full_videos", False)),
     )
+
+
+def build_dataset_kwargs_for_model(args: Any, model: Any, *, pipeline_stage_override: str | None = None) -> tuple[Any, dict[str, Any]]:
+    stage = pipeline_stage_override or getattr(args, "pipeline_stage", "test")
+    model_pipeline = model.build_data_pipeline(stage)
+    return model_pipeline, build_dataset_kwargs_from_pipeline(args, model_pipeline)
+
+
+def build_model_dataset_context(args: Any, *, pipeline_stage_override: str | None = None) -> CliResolvedContext:
+    stage = pipeline_stage_override or getattr(args, "pipeline_stage", "test")
+    apply_default_dataset_subset(args)
+    preview_model = create_model(
+        args.model,
+        checkpoint_path=getattr(args, "checkpoint", None),
+        backbone=getattr(args, "backbone", None),
+        weights_dataset=getattr(args, "weights_dataset", None),
+        grad_forward_chunk_size=getattr(args, "grad_forward_chunk_size", None),
+        device="cpu",
+        load_weights=False,
+    )
+    model_pipeline = preview_model.build_data_pipeline(stage)
+    dataset_kwargs = build_dataset_kwargs_from_pipeline(args, model_pipeline)
     return CliResolvedContext(preview_model=preview_model, model_pipeline=model_pipeline, dataset_kwargs=dataset_kwargs)
 
 

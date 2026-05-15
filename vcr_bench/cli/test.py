@@ -5,6 +5,7 @@ import json
 from typing import Any
 
 from vcr_bench.cli.common import (
+    build_dataset_kwargs_for_model,
     build_default_resolution_payload,
     build_model_dataset_context,
     print_model_options_payload,
@@ -104,11 +105,11 @@ def main() -> None:
     if args.list_model_options:
         print_model_options_payload(args.model)
         return
-    ctx = build_model_dataset_context(args)
-    preview_model = ctx.preview_model
-    dataset_kwargs = ctx.dataset_kwargs
 
     if args.print_defaults:
+        ctx = build_model_dataset_context(args)
+        preview_model = ctx.preview_model
+        dataset_kwargs = ctx.dataset_kwargs
         print_defaults_payload(
             build_default_resolution_payload(
                 args=args,
@@ -118,7 +119,6 @@ def main() -> None:
         )
         return
 
-    dataset = create_dataset(args.dataset, **dataset_kwargs)
     model = create_model(
         args.model,
         checkpoint_path=args.checkpoint,
@@ -127,6 +127,8 @@ def main() -> None:
         grad_forward_chunk_size=args.grad_forward_chunk_size,
         device=args.device,
     )
+    _, dataset_kwargs = build_dataset_kwargs_for_model(args, model)
+    dataset = create_dataset(args.dataset, **dataset_kwargs)
     if args.vram_profile_csv:
         rows = profile_model_vram_for_one_video(
             model=model,
