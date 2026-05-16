@@ -45,6 +45,16 @@ def to_numpy(x):
         return x.reshape(-1, *x.shape[-3:])
     return x if len(x.shape) == 4 else x[np.newaxis]
 
+
+def to_uint8_video(x):
+    x = to_numpy(x)
+    if x.dtype == np.uint8:
+        return np.ascontiguousarray(x)
+    x = x.astype(np.float32, copy=False)
+    if x.size and float(np.nanmax(x)) <= 1.5:
+        x = x * 255.0
+    return np.ascontiguousarray(np.clip(np.rint(x), 0, 255).astype(np.uint8))
+
 def PSNR(x, y):
     return peak_signal_noise_ratio(to_numpy(x), to_numpy(y), data_range=255)
 
@@ -262,7 +272,8 @@ def save_video(tensor, path, fps=30):
     stream = container.add_stream('libx264', rate=fps)
     stream.width = w
     stream.height = h
-    stream.pix_fmt = 'yuv420p'
+    stream.pix_fmt = 'yuv444p'
+    stream.options = {'crf': '0', 'preset': 'veryslow'}
     for frame in tensor:
         frame_rgb = frame if frame.dtype == np.uint8 else (frame * 255).astype(np.uint8)
         av_frame = av.VideoFrame.from_ndarray(frame_rgb, format='rgb24')
@@ -295,6 +306,33 @@ def _parse_ffmpeg_vmaf_log(log_path):
 _FFMPEG_LIBVMAF_AVAILABLE = None
 
 
+def _subprocess_path(executable, path):
+    path = str(path)
+    if os.name != "nt" and str(executable).lower().endswith(".exe"):
+        try:
+            result = subprocess.run(
+                ["wslpath", "-w", path],
+                shell=False,
+                capture_output=True,
+                timeout=5,
+                text=True,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                return result.stdout.strip()
+        except Exception:
+            pass
+    return path
+
+
+def _ffmpeg_filter_path(executable, path):
+    path = _subprocess_path(executable, path)
+    if os.name != "nt" and str(executable).lower().endswith(".exe"):
+        path = path.replace("\\", "/")
+        if len(path) >= 2 and path[1] == ":":
+            path = f"{path[0]}\\\\:{path[2:]}"
+    return path
+
+
 def _ffmpeg_supports_libvmaf(ffmpeg):
     global _FFMPEG_LIBVMAF_AVAILABLE
     if _FFMPEG_LIBVMAF_AVAILABLE is not None:
@@ -313,22 +351,70 @@ def _ffmpeg_supports_libvmaf(ffmpeg):
     return _FFMPEG_LIBVMAF_AVAILABLE
 
 
-def _run_ffmpeg_vmaf(ffmpeg, ref_video_path, dist_video_path, log_path, timeout_sec):
-    cmd = [
-        ffmpeg,
-        "-hide_banner",
-        "-nostats",
-        "-i",
-        dist_video_path,
-        "-i",
-        ref_video_path,
-        "-lavfi",
-        f"libvmaf=log_path={log_path}:log_fmt=json",
-        "-f",
-        "null",
-        "-",
-    ]
-    result = subprocess.run(cmd, shell=False, capture_output=True, timeout=timeout_sec, text=True)
+def _run_ffmpeg_vmaf(ffmpeg, ref_np, dist_np, log_path, timeout_sec):
+    ref_np = np.ascontiguousarray(ref_np)
+    dist_np = np.ascontiguousarray(dist_np)
+    if ref_np.shape != dist_np.shape:
+        raise ValueError(f"VMAF inputs must have the same shape, got {ref_np.shape} and {dist_np.shape}")
+    if ref_np.ndim != 4 or ref_np.shape[-1] != 3:
+        raise ValueError(f"VMAF inputs must be THWC RGB tensors, got {ref_np.shape}")
+
+    _, h, w, _ = ref_np.shape
+    ref_raw = tempfile.NamedTemporaryFile(suffix='.rgb', delete=False)
+    dist_raw = tempfile.NamedTemporaryFile(suffix='.rgb', delete=False)
+    try:
+        ref_raw.write(ref_np.tobytes())
+        dist_raw.write(dist_np.tobytes())
+        ref_raw.close()
+        dist_raw.close()
+
+        raw_input = [
+            "-f",
+            "rawvideo",
+            "-pix_fmt",
+            "rgb24",
+            "-s",
+            f"{w}x{h}",
+            "-r",
+            "30",
+        ]
+        filter_graph = (
+            "[0:v]format=yuv444p[dist];"
+            "[1:v]format=yuv444p[ref];"
+            f"[dist][ref]libvmaf=log_path={_ffmpeg_filter_path(ffmpeg, log_path)}:log_fmt=json"
+        )
+        cmd = [
+            ffmpeg,
+            "-hide_banner",
+            "-nostats",
+            *raw_input,
+            "-i",
+            _subprocess_path(ffmpeg, dist_raw.name),
+            *raw_input,
+            "-i",
+            _subprocess_path(ffmpeg, ref_raw.name),
+            "-filter_complex",
+            filter_graph,
+            "-f",
+            "null",
+            "-",
+        ]
+        result = subprocess.run(cmd, shell=False, capture_output=True, timeout=timeout_sec, text=True)
+        if result.returncode != 0 and ("Option 'log_path' not found" in result.stderr or "Error applying option" in result.stderr):
+            filter_graph = (
+                "[0:v]format=yuv444p[dist];"
+                "[1:v]format=yuv444p[ref];"
+                f"[dist][ref]libvmaf=log_fmt=json:log_path={_ffmpeg_filter_path(ffmpeg, log_path)}"
+            )
+            cmd[cmd.index("-filter_complex") + 1] = filter_graph
+            result = subprocess.run(cmd, shell=False, capture_output=True, timeout=timeout_sec, text=True)
+    finally:
+        for raw_file in (ref_raw, dist_raw):
+            try:
+                os.unlink(raw_file.name)
+            except Exception:
+                pass
+
     if result.returncode != 0:
         print(f"VMAF calculation via ffmpeg failed with return code {result.returncode}")
         if "No such filter: 'libvmaf'" in result.stderr:
@@ -364,14 +450,12 @@ def VMAF(x, y):
     if backend not in {"auto", "ffmpeg", "vqmt"}:
         print(f"Unknown VMAF_BACKEND={backend!r}; expected auto, ffmpeg, or vqmt")
         return 0.0
-    ref_np = to_numpy(x).astype(np.uint8)
-    dist_np = to_numpy(y).astype(np.uint8)
+    ref_np = to_uint8_video(x)
+    dist_np = to_uint8_video(y)
     ffmpeg = shutil.which(os.getenv("FFMPEG_BIN", "ffmpeg"))
     vqmt = shutil.which(os.getenv("VQMT_BIN", "vqmt"))
-    ref_video = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False)
-    dist_video = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False)
-    save_video(ref_np, ref_video.name)
-    save_video(dist_np, dist_video.name)
+    ref_video = None
+    dist_video = None
     log_file = tempfile.NamedTemporaryFile(suffix='.json', delete=False)
     csv_file = tempfile.NamedTemporaryFile(suffix='.csv', delete=False)
     log_file.close()
@@ -380,11 +464,15 @@ def VMAF(x, y):
         attempts = []
         if backend in {"auto", "ffmpeg"}:
             if ffmpeg is not None and _ffmpeg_supports_libvmaf(ffmpeg):
-                attempts.append(("ffmpeg", lambda: _run_ffmpeg_vmaf(ffmpeg, ref_video.name, dist_video.name, log_file.name, timeout_sec)))
+                attempts.append(("ffmpeg", lambda: _run_ffmpeg_vmaf(ffmpeg, ref_np, dist_np, log_file.name, timeout_sec)))
             elif backend == "ffmpeg":
                 print("VMAF calculation error: ffmpeg/libvmaf is not available")
         if backend in {"auto", "vqmt"}:
             if vqmt is not None:
+                ref_video = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False)
+                dist_video = tempfile.NamedTemporaryFile(suffix='.mp4', delete=False)
+                save_video(ref_np, ref_video.name)
+                save_video(dist_np, dist_video.name)
                 attempts.append(("vqmt", lambda: _run_vqmt_vmaf(vqmt, ref_video.name, dist_video.name, csv_file.name, timeout_sec)))
             elif backend == "vqmt":
                 print("VMAF calculation error: vqmt executable not found")
@@ -407,13 +495,13 @@ def VMAF(x, y):
         print(f"VMAF calculation error: {e}")
         mean_vmaf = 0.0
     finally:
-        try:
-            os.unlink(ref_video.name)
-            os.unlink(dist_video.name)
-            os.unlink(log_file.name)
-            os.unlink(csv_file.name)
-        except:
-            pass
+        for temp_file in (ref_video, dist_video, log_file, csv_file):
+            if temp_file is None:
+                continue
+            try:
+                os.unlink(temp_file.name)
+            except Exception:
+                pass
     return mean_vmaf
 
 

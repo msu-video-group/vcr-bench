@@ -38,7 +38,8 @@ def save_video_sampled(x: torch.Tensor, out_path: Path, fps: int = 16) -> None:
     stream = container.add_stream("libx264", rate=rate)
     stream.width = int(frames.shape[2])
     stream.height = int(frames.shape[1])
-    stream.pix_fmt = "yuv420p"
+    stream.pix_fmt = "yuv444p"
+    stream.options = {"crf": "0", "preset": "veryslow"}
     for frame in frames:
         av_frame = av.VideoFrame.from_ndarray(frame, format="rgb24")
         for packet in stream.encode(av_frame):

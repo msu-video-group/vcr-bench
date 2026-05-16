@@ -4,6 +4,7 @@
 __pycache__/
 .pytest_cache/
 .cache/
+.venv/
 configs/local.toml
 remote_results/
 results/
@@ -15,3 +16,4 @@ scripts/autolaunch/logs/
 vcr_bench/defences/denoise/videopure/hf-cache/
 private_docs/
 notebook_outputs/
+notebook_tools/
