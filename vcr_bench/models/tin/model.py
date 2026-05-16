@@ -14,12 +14,8 @@ class TINClassifier(TSMClassifier):
                 "datasets": {
                     "sthv2": {
                         "num_classes": 174,
-                        "checkpoint_url": (
-                            "https://download.openmmlab.com/mmaction/v1.0/recognition/tin/"
-                            "tin_imagenet-pretrained-r50_8xb6-1x1x8-40e_sthv2-rgb/"
-                            "tin_imagenet-pretrained-r50_8xb6-1x1x8-40e_sthv2-rgb_20220913-84f9b4b0.pth"
-                        ),
-                        "checkpoint_filename": "tin_r50_sthv2_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/tin_r50_sthv2.pth",
+                        "checkpoint_filename": "tin_r50_sthv2.pth",
                     }
                 },
             }

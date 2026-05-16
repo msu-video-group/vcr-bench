@@ -21,11 +21,8 @@ class UniFormerClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": (
-                            "https://download.openmmlab.com/mmaction/v1.0/recognition/uniformerv1/"
-                            "uniformer-base_imagenet1k-pre_32x4x1_kinetics400-rgb_20221219-b776322c.pth"
-                        ),
-                        "checkpoint_filename": "uniformer_base_kinetics400_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/uniformer_base_kinetics400.pth",
+                        "checkpoint_filename": "uniformer_base_kinetics400.pth",
                     }
                 },
             }

@@ -31,12 +31,8 @@ class C3DClassifier(BaseVideoClassifier):
                 "datasets": {
                     "ucf101": {
                         "num_classes": 101,
-                        "checkpoint_url": (
-                            "https://download.openmmlab.com/mmaction/v1.0/recognition/c3d/"
-                            "c3d_sports1m-pretrained_8xb30-16x1x1-45e_ucf101-rgb/"
-                            "c3d_sports1m-pretrained_8xb30-16x1x1-45e_ucf101-rgb_20220811-31723200.pth"
-                        ),
-                        "checkpoint_filename": "c3d_ucf101_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/c3d_ucf101.pth",
+                        "checkpoint_filename": "c3d_ucf101.pth",
                     }
                 },
             }

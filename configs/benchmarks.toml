@@ -1,12 +1,12 @@
 [accuracy_suites.default]
 dataset = "kinetics400"
-dataset_subset = "kinetics400_mini_val"
+dataset_subset = "kinetics400_mini_test"
 num_videos = 8
 models = ["x3d", "timesformer", "videomae"]
 
 [attack_suites.default]
 dataset = "kinetics400"
-dataset_subset = "kinetics400_mini_val"
+dataset_subset = "kinetics400_mini_test"
 num_videos = 8
 attack_name = "default_suite"
 results_root = "results/remote_attacks"
@@ -22,4 +22,3 @@ attack = "mifgsm"
 [[attack_suites.default.entries]]
 model = "videomae"
 attack = "square"
-

@@ -74,7 +74,7 @@ vram_profile_root=""
 vram_profile_csv=""
 lite_attack_flag=0
 pipeline_stage="test"
-split="val"
+split="test"
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in

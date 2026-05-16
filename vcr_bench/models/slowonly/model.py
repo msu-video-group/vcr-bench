@@ -20,12 +20,8 @@ class SlowOnlyClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": (
-                            "https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/"
-                            "slowonly_r50-in1k-pre-nl-embedded-gaussian_8xb16-8x8x1-steplr-150e_kinetics400-rgb/"
-                            "slowonly_r50-in1k-pre-nl-embedded-gaussian_8xb16-8x8x1-steplr-150e_kinetics400-rgb_20220901-df42dc84.pth"
-                        ),
-                        "checkpoint_filename": "slowonly_r50_kinetics400_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/slowonly_r50_kinetics400.pth",
+                        "checkpoint_filename": "slowonly_r50_kinetics400.pth",
                     }
                 },
             }

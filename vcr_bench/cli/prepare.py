@@ -23,7 +23,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--video-root", default=None)
     p.add_argument("--annotations", default=None)
     p.add_argument("--labels", default=None)
-    p.add_argument("--split", default="val")
+    p.add_argument("--split", default="test")
     p.add_argument("--num-videos", type=int, default=100,
                    help="Number of videos to prepare for (same as the attack run)")
     p.add_argument("--seed", type=int, default=42,

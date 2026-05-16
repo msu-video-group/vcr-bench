@@ -20,12 +20,8 @@ class CSNClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": (
-                            "https://download.openmmlab.com/mmaction/v1.0/recognition/csn/"
-                            "ircsn_ig65m-pretrained-r50-bnfrozen_8xb12-32x2x1-58e_kinetics400-rgb/"
-                            "ircsn_ig65m-pretrained-r50-bnfrozen_8xb12-32x2x1-58e_kinetics400-rgb_20220811-44395bae.pth"
-                        ),
-                        "checkpoint_filename": "csn_r50_kinetics400_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/csn_r50_kinetics400.pth",
+                        "checkpoint_filename": "csn_r50_kinetics400.pth",
                     }
                 },
             }

@@ -14,12 +14,8 @@ class TSMNonLocalClassifier(TSMClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": (
-                            "https://download.openmmlab.com/mmaction/v1.0/recognition/tsm/"
-                            "tsm_imagenet-pretrained-r50-nl-embedded-gaussian_8xb16-1x1x8-50e_kinetics400-rgb/"
-                            "tsm_imagenet-pretrained-r50-nl-embedded-gaussian_8xb16-1x1x8-50e_kinetics400-rgb_20220831-35eddb57.pth"
-                        ),
-                        "checkpoint_filename": "tsmnonlocal_r50_kinetics400_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/tsmnonlocal_r50_kinetics400.pth",
+                        "checkpoint_filename": "tsmnonlocal_r50_kinetics400.pth",
                     }
                 },
             }

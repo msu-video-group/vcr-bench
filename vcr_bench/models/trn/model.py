@@ -14,12 +14,8 @@ class TRNClassifier(TSNClassifier):
                 "datasets": {
                     "sthv2": {
                         "num_classes": 174,
-                        "checkpoint_url": (
-                            "https://download.openmmlab.com/mmaction/v1.0/recognition/trn/"
-                            "trn_imagenet-pretrained-r50_8xb16-1x1x8-50e_sthv2-rgb/"
-                            "trn_imagenet-pretrained-r50_8xb16-1x1x8-50e_sthv2-rgb_20220815-e01617db.pth"
-                        ),
-                        "checkpoint_filename": "trn_r50_sthv2_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/trn_r50_sthv2.pth",
+                        "checkpoint_filename": "trn_r50_sthv2.pth",
                     }
                 },
             }

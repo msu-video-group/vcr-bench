@@ -77,7 +77,7 @@ def build_base_parser(*, add_help: bool) -> argparse.ArgumentParser:
         help="Only attack videos that the clean model classifies correctly.",
     )
     p.add_argument("--full-videos", action="store_true")
-    p.add_argument("--split", default="val")
+    p.add_argument("--split", default="test")
     p.add_argument("--pipeline-stage", default="test", choices=["train", "val", "test"])
     p.add_argument("--lite-attack", action="store_true", help="Use lite attack pipeline (no three-crop) when model supports it")
     p.add_argument("--dump-freq", type=int, default=0)
@@ -87,6 +87,7 @@ def build_base_parser(*, add_help: bool) -> argparse.ArgumentParser:
     p.add_argument("--lpips", dest="lpips", action="store_true", default=True, help=argparse.SUPPRESS)
     p.add_argument("--no-lpips", dest="lpips", action="store_false", help="Disable LPIPS metric calculation")
     p.add_argument("--framewise-metrics", action="store_true")
+    p.add_argument("--metric-workers", default="auto", help="Parallel artifact/VMAF workers: auto or a positive integer. Default: auto.")
     p.add_argument("--defence", default=None, help="Defence name to apply.")
     p.add_argument("--adaptive", action="store_true", help="Apply defence adaptively before attack gradient computation.")
     p.add_argument("--separate-logs", action="store_true")
@@ -376,6 +377,7 @@ def main(argv: list[str] | None = None) -> None:
         calc_vmaf=args.vmaf,
         calc_lpips=args.lpips,
         calc_frame_metrics=args.framewise_metrics,
+        metric_workers=args.metric_workers,
         defence=defence,
         adaptive=args.adaptive,
         save_defence_stages=args.save_defence_stages,

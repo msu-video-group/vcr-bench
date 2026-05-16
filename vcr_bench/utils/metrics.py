@@ -326,10 +326,9 @@ def _subprocess_path(executable, path):
 
 def _ffmpeg_filter_path(executable, path):
     path = _subprocess_path(executable, path)
-    if os.name != "nt" and str(executable).lower().endswith(".exe"):
-        path = path.replace("\\", "/")
-        if len(path) >= 2 and path[1] == ":":
-            path = f"{path[0]}\\\\:{path[2:]}"
+    path = path.replace("\\", "/")
+    if len(path) >= 2 and path[1] == ":":
+        path = f"{path[0]}\\\\:{path[2:]}"
     return path
 
 

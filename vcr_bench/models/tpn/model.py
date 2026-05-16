@@ -20,12 +20,8 @@ class TPNClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": (
-                            "https://download.openmmlab.com/mmaction/v1.0/recognition/tpn/"
-                            "tpn-slowonly_r50_8xb8-8x8x1-150e_kinetics400-rgb/"
-                            "tpn-slowonly_r50_8xb8-8x8x1-150e_kinetics400-rgb_20220913-97d0835d.pth"
-                        ),
-                        "checkpoint_filename": "tpn_r50_kinetics400_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/tpn_r50_kinetics400.pth",
+                        "checkpoint_filename": "tpn_r50_kinetics400.pth",
                     }
                 },
             }

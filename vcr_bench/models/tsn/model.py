@@ -40,12 +40,8 @@ class TSNClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": (
-                            "https://download.openmmlab.com/mmaction/v1.0/recognition/tsn/"
-                            "tsn_imagenet-pretrained-r101_8xb32-1x1x8-100e_kinetics400-rgb/"
-                            "tsn_imagenet-pretrained-r101_8xb32-1x1x8-100e_kinetics400-rgb_20220906-23cff032.pth"
-                        ),
-                        "checkpoint_filename": "tsn_r101_kinetics400_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/tsn_r101_kinetics400.pth",
+                        "checkpoint_filename": "tsn_r101_kinetics400.pth",
                     }
                 },
             }

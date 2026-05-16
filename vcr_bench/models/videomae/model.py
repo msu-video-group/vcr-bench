@@ -31,11 +31,8 @@ class VideoMAEClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": (
-                            "https://download.openmmlab.com/mmaction/v1.0/recognition/videomae/"
-                            "vit-base-p16_videomae-k400-pre_16x4x1_kinetics-400_20221013-860a3cd3.pth"
-                        ),
-                        "checkpoint_filename": "videomae_vit_base_p16_kinetics400_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/videomae_vit_base_p16_kinetics400.pth",
+                        "checkpoint_filename": "videomae_vit_base_p16_kinetics400.pth",
                     }
                 },
             }

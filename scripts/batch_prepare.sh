@@ -45,7 +45,7 @@ video_root=""
 annotations=""
 labels=""
 dataset_subset=""
-split="val"
+split="test"
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in

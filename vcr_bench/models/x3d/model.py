@@ -20,11 +20,8 @@ class X3DClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": (
-                            "https://download.openmmlab.com/mmaction/v1.0/recognition/x3d/facebook/"
-                            "x3d_m_16x5x1_facebook-kinetics400-rgb_20201027-3f42382a.pth"
-                        ),
-                        "checkpoint_filename": "x3d_m_kinetics400_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/x3d_m_kinetics400.pth",
+                        "checkpoint_filename": "x3d_m_kinetics400.pth",
                     }
                 },
             }

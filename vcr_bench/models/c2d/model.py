@@ -20,8 +20,8 @@ class C2DClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": "https://download.openmmlab.com/mmaction/v1.0/recognition/c2d/c2d_r50-in1k-pre_8xb32-8x8x1-100e_kinetics400-rgb/c2d_r50-in1k-pre_8xb32-8x8x1-100e_kinetics400-rgb_20221027-3ca304fa.pth",
-                        "checkpoint_filename": "c2d_r50_kinetics400_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/c2d_r50_kinetics400.pth",
+                        "checkpoint_filename": "c2d_r50_kinetics400.pth",
                     }
                 },
             }

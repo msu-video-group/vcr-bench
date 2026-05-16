@@ -20,12 +20,8 @@ class R2Plus1DClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": (
-                            "https://download.openmmlab.com/mmaction/v1.0/recognition/r2plus1d/"
-                            "r2plus1d_r34_8xb8-8x8x1-180e_kinetics400-rgb/"
-                            "r2plus1d_r34_8xb8-8x8x1-180e_kinetics400-rgb_20220812-47cfe041.pth"
-                        ),
-                        "checkpoint_filename": "r2plus1d_r34_kinetics400_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/r2plus1d_r34_kinetics400.pth",
+                        "checkpoint_filename": "r2plus1d_r34_kinetics400.pth",
                     }
                 },
             }

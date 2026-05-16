@@ -53,7 +53,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--full-videos", action="store_true", help="Keep full decoded video tensor in dataset items")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--pipeline-stage", default="test", choices=["train", "val", "test"])
-    parser.add_argument("--split", default="val")
+    parser.add_argument("--split", default="test")
     parser.add_argument("--output-json", default=None)
     parser.add_argument("--output-csv", default=None, help="Write one-row summary CSV")
     parser.add_argument("--vram-profile-csv", default=None, help="Append one-video VRAM profile rows to a separate CSV")

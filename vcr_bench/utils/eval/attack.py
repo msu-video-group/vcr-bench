@@ -196,6 +196,15 @@ def _clear_defence_context(defence: BaseVideoDefence | None) -> None:
         defence.clear_context()  # type: ignore[attr-defined]
 
 
+def _resolve_metric_workers(metric_workers: int | str | None) -> int:
+    if metric_workers is None or (isinstance(metric_workers, str) and metric_workers.strip().lower() == "auto"):
+        metric_workers = os.getenv("VCR_BENCH_METRIC_WORKERS", "1")
+    try:
+        return max(1, int(metric_workers))
+    except (TypeError, ValueError):
+        return 1
+
+
 def run_attack(
     model: BaseVideoClassifier,
     attack: BaseVideoAttack,
@@ -219,6 +228,7 @@ def run_attack(
     calc_lpips: bool = False,
     calc_frame_metrics: bool = False,
     metric_queue_limit: int | None = None,
+    metric_workers: int | str | None = None,
     defence: BaseVideoDefence | None = None,
     adaptive: bool = False,
     save_defence_stages: bool = False,
@@ -241,12 +251,11 @@ def run_attack(
 
     model.build_data_pipeline(pipeline_stage)
     configured_dataset = dataset.configure_loading(model.build_data_pipeline(pipeline_stage), instant_preprocessing=False)
-    metric_executor = ThreadPoolExecutor(max_workers=1)
+    metric_workers = _resolve_metric_workers(metric_workers)
+    metric_executor = ThreadPoolExecutor(max_workers=metric_workers)
     pending_metric_jobs: list[tuple[Future, dict]] = []
     if metric_queue_limit is None:
-        _cpu = os.cpu_count() or 2
-        _workers = min(8, max(1, _cpu // 2))
-        metric_queue_limit = max(1, _workers * 2)
+        metric_queue_limit = max(1, metric_workers * 2)
     else:
         metric_queue_limit = max(1, int(metric_queue_limit))
     append_buffer: list[dict] = []
@@ -276,6 +285,7 @@ def run_attack(
         test_dataset=dataset.__class__.__name__,
         eps=getattr(attack, "eps", None),
         iters=getattr(attack, "steps", None),
+        metric_workers=metric_workers,
     )
 
     all_rows = list(existing_rows)
@@ -320,20 +330,18 @@ def run_attack(
         nonlocal append_buffer
         if not pending_metric_jobs:
             return
-        if block:
-            all_futures = [f for f, _ in pending_metric_jobs]
-            if drain_all:
-                wait(all_futures)
-                done_futures = set(all_futures)
-            else:
-                done_futures, _ = wait(all_futures, return_when=FIRST_COMPLETED)
-                done_futures = set(done_futures)
-                if not done_futures:
-                    return
-        else:
-            done_futures = {f for f, _ in pending_metric_jobs if f.done()}
-            if not done_futures:
-                return
+        if block and drain_all:
+            wait([f for f, _ in pending_metric_jobs])
+        elif block and pending_metric_jobs and not pending_metric_jobs[0][0].done():
+            wait([pending_metric_jobs[0][0]], return_when=FIRST_COMPLETED)
+
+        done_futures = set()
+        for future, _ in pending_metric_jobs:
+            if not future.done():
+                break
+            done_futures.add(future)
+        if not done_futures:
+            return
 
         remaining: list[tuple[Future, dict]] = []
         for future, ctx in pending_metric_jobs:
@@ -361,17 +369,19 @@ def run_attack(
             clean_label = int(ctx["clean_label"])
             attacked_label = int(ctx["attacked_label"])
             target_label = int(ctx["target_label"])
+            clean_is_correct = row_is_clean_correct(row)
             elapsed = float(ctx["elapsed"])
-            clear_correct += 1
-            attacked_success += int(clean_label != attacked_label)
-            target_success += int(ctx["is_targeted"] and attacked_label == target_label)
-            time_sum += elapsed
-            iter_sum += float(row["iter_count"])
-            psnr_v = float(row["psnr"])
-            vmaf_v = float(row["vmaf"])
-            psnr_sum += float(psnr_v if psnr_v != float("inf") else 0.0)
-            vmaf_sum += vmaf_v
-            metrics_num += 1
+            if clean_is_correct:
+                clear_correct += 1
+                attacked_success += int(clean_label != attacked_label)
+                target_success += int(ctx["is_targeted"] and attacked_label == target_label)
+                time_sum += elapsed
+                iter_sum += float(row["iter_count"])
+                psnr_v = float(row["psnr"])
+                vmaf_v = float(row["vmaf"])
+                psnr_sum += float(psnr_v if psnr_v != float("inf") else 0.0)
+                vmaf_sum += vmaf_v
+                metrics_num += 1
             processed_now += 1
 
             if verbose:
@@ -683,6 +693,7 @@ def run_attack(
         "mean_iterations": mean_iter,
         "mean_psnr": mean_psnr,
         "mean_vmaf": mean_vmaf,
+        "metric_workers": metric_workers,
         "save_path": str(save_path),
         "log_path": None if log_path_path is None else str(log_path_path),
         "dump_path": None if dump_path_path is None else str(dump_path_path),

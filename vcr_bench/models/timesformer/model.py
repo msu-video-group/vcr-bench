@@ -31,12 +31,8 @@ class TimeSformerClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": (
-                            "https://download.openmmlab.com/mmaction/v1.0/recognition/timesformer/"
-                            "timesformer_spaceOnly_8xb8-8x32x1-15e_kinetics400-rgb/"
-                            "timesformer_spaceOnly_8xb8-8x32x1-15e_kinetics400-rgb_20220815-78f05367.pth"
-                        ),
-                        "checkpoint_filename": "timesformer_vit_base_p16_kinetics400_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/timesformer_vit_base_p16_kinetics400.pth",
+                        "checkpoint_filename": "timesformer_vit_base_p16_kinetics400.pth",
                     }
                 },
             }

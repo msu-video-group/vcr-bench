@@ -20,12 +20,8 @@ class SlowFastClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": (
-                            "https://download.openmmlab.com/mmaction/v1.0/recognition/slowfast/"
-                            "slowfast_r101-r50_32xb8-4x16x1-256e_kinetics400-rgb/"
-                            "slowfast_r101-r50_32xb8-4x16x1-256e_kinetics400-rgb_20220901-a77ac3ee.pth"
-                        ),
-                        "checkpoint_filename": "slowfast_r101_kinetics400_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/slowfast_r101_kinetics400.pth",
+                        "checkpoint_filename": "slowfast_r101_kinetics400.pth",
                     }
                 },
             }

@@ -20,12 +20,8 @@ class TANETClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": (
-                            "https://download.openmmlab.com/mmaction/v1.0/recognition/tanet/"
-                            "tanet_imagenet-pretrained-r50_8xb8-dense-1x1x8-100e_kinetics400-rgb/"
-                            "tanet_imagenet-pretrained-r50_8xb8-dense-1x1x8-100e_kinetics400-rgb_20220919-a34346bc.pth"
-                        ),
-                        "checkpoint_filename": "tanet_r50_kinetics400_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/tanet_r50_kinetics400.pth",
+                        "checkpoint_filename": "tanet_r50_kinetics400.pth",
                     }
                 },
             }

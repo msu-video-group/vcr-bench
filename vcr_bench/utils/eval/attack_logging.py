@@ -65,6 +65,7 @@ ATTACK_LOG_FIELDNAMES = [
     "attacked_success",
     "target_success",
     "num_total",
+    "metric_workers",
 ]
 
 
@@ -87,6 +88,7 @@ class AttackLogger:
         test_dataset: str,
         eps: float | int | None,
         iters: int | None,
+        metric_workers: int | None = None,
     ) -> None:
         self.log_path = None if log_path is None else Path(log_path)
         self.attack_type = attack_type
@@ -94,6 +96,7 @@ class AttackLogger:
         self.test_dataset = test_dataset
         self.eps = "default" if eps is None else eps
         self.iters = "default" if iters is None else iters
+        self.metric_workers = "" if metric_workers is None else int(metric_workers)
 
     def __call__(
         self,
@@ -157,6 +160,7 @@ class AttackLogger:
             "attacked_success": int(attacked_success),
             "target_success": int(target_success),
             "num_total": int(total),
+            "metric_workers": self.metric_workers,
         }
 
 

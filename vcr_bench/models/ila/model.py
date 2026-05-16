@@ -17,10 +17,10 @@ def _ila_vendor_root():
 def _load_labels(num_classes: int) -> list[str]:
     repo_root = Path(__file__).resolve().parents[3]
     candidates = (
-        repo_root / "data" / "kinetics400" / "kinetics400_mini_val" / "k400_val" / "annotations" / "k400_label_map_k400.txt",
-        repo_root / "data" / "kinetics400" / "k400_val" / "k400_val" / "annotations" / "k400_label_map_k400.txt",
-        repo_root / ".cache" / "vcr_bench" / "dataset_archives" / "kinetics400" / "kinetics400_mini_val" / "k400_label_map_k400.txt",
-        repo_root / ".cache" / "vcr_bench" / "dataset_archives" / "kinetics400" / "k400_val" / "k400_label_map_k400.txt",
+        repo_root / "data" / "kinetics400" / "kinetics400_mini_test" / "k400_test" / "annotations" / "k400_label_map_k400.txt",
+        repo_root / "data" / "kinetics400" / "k400_test" / "k400_test" / "annotations" / "k400_label_map_k400.txt",
+        repo_root / ".cache" / "vcr_bench" / "dataset_archives" / "kinetics400" / "kinetics400_mini_test" / "k400_label_map_k400.txt",
+        repo_root / ".cache" / "vcr_bench" / "dataset_archives" / "kinetics400" / "k400_test" / "k400_label_map_k400.txt",
     )
     for path in candidates:
         if path.exists():

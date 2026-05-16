@@ -31,11 +31,8 @@ class MVITV2Classifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": (
-                            "https://download.openmmlab.com/mmaction/v1.0/recognition/mvit/converted/"
-                            "mvit-base-p244_32x3x1_kinetics400-rgb_20221021-f392cd2d.pth"
-                        ),
-                        "checkpoint_filename": "mvit_base_p244_kinetics400_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/mvit_base_p244_kinetics400.pth",
+                        "checkpoint_filename": "mvit_base_p244_kinetics400.pth",
                     }
                 },
             }

@@ -20,12 +20,8 @@ class VideoSwinClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": (
-                            "https://download.openmmlab.com/mmaction/v1.0/recognition/swin/"
-                            "swin-base-p244-w877_in1k-pre_8xb8-amp-32x2x1-30e_kinetics400-rgb/"
-                            "swin-base-p244-w877_in1k-pre_8xb8-amp-32x2x1-30e_kinetics400-rgb_20220930-182ec6cc.pth"
-                        ),
-                        "checkpoint_filename": "videoswin_base_p244_kinetics400_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/videoswin_base_p244_kinetics400.pth",
+                        "checkpoint_filename": "videoswin_base_p244_kinetics400.pth",
                     }
                 },
             }

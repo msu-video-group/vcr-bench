@@ -4,9 +4,9 @@
   "task": "attack",
   "dataset": {
     "name": "kinetics400",
-    "subset": "k400_val",
+    "subset": "k400_test",
     "num_videos": 8,
-    "split": "val"
+    "split": "test"
   },
   "models": [
     {

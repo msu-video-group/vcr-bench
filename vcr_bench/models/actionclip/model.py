@@ -78,11 +78,8 @@ class ActionClipClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": (
-                            "https://download.openmmlab.com/mmaction/v1.0/projects/actionclip/"
-                            "actionclip_vit-base-p16-res224-clip-pre_1x1x32_k400-rgb/vit-b-16-32f.pth"
-                        ),
-                        "checkpoint_filename": "actionclip_vit_b16_32f_kinetics400_mmaction.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/actionclip_vit_b16_32f_kinetics400.pth",
+                        "checkpoint_filename": "actionclip_vit_b16_32f_kinetics400.pth",
                     }
                 },
             }
