@@ -8,6 +8,13 @@
         "backbone": "base_p244",
         "weights_dataset": "kinetics400"
       }
+    },
+    "large_p244_sthv2": {
+      "factory_name": "mvitv2",
+      "params": {
+        "backbone": "large_p244",
+        "weights_dataset": "sthv2"
+      }
     }
   },
   "default_preset": "base_p244_kinetics400"

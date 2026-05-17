@@ -8,6 +8,13 @@
         "backbone": "r50",
         "weights_dataset": "kinetics400"
       }
+    },
+    "r101_sthv2": {
+      "factory_name": "tsm",
+      "params": {
+        "backbone": "r101",
+        "weights_dataset": "sthv2"
+      }
     }
   },
   "default_preset": "r50_kinetics400"

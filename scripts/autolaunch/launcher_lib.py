@@ -101,11 +101,11 @@ def build_combos(tracks):
         models = track.get("models", [])
         track_results_root = track.get("results_root")
 
-        for model in models:
-            for attack in attacks:
-                attack_name = attack.get("name")
-                target = bool(attack.get("target", False))
-                for defence in defences:
+        for attack in attacks:
+            attack_name = attack.get("name")
+            target = bool(attack.get("target", False))
+            for defence in defences:
+                for model in models:
                     defence_name = _normalize_name(defence.get("name", "no_defence")) or "no_defence"
                     adaptive = bool(defence.get("adaptive", False))
                     combos.append({

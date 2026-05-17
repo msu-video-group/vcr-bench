@@ -35,6 +35,16 @@ class MVITV2Classifier(BaseVideoClassifier):
                         "checkpoint_filename": "mvit_base_p244_kinetics400.pth",
                     }
                 },
+            },
+            "large_p244": {
+                "display_name": "MViT Large p244",
+                "datasets": {
+                    "sthv2": {
+                        "num_classes": 174,
+                        "checkpoint_url": "https://download.openmmlab.com/mmaction/v1.0/recognition/mvit/converted/mvit-large-p244_u40_sthv2-rgb_20221021-61696e07.pth",
+                        "checkpoint_filename": "mvit_large_p244_sthv2.pth",
+                    }
+                },
             }
         }
     }
@@ -51,8 +61,8 @@ class MVITV2Classifier(BaseVideoClassifier):
         auto_download: bool = True,
     ) -> None:
         self.device = torch.device(device if (device != "cuda" or torch.cuda.is_available()) else "cpu")
-        self.backbone = backbone or "base_p244"
         self.weights_dataset = weights_dataset or "kinetics400"
+        self.backbone = backbone or ("large_p244" if self.weights_dataset == "sthv2" else "base_p244")
         if grad_forward_chunk_size is not None:
             self.grad_forward_chunk_size = int(grad_forward_chunk_size)
         weight_spec = self.get_weight_spec(self.backbone, self.weights_dataset)
@@ -60,13 +70,14 @@ class MVITV2Classifier(BaseVideoClassifier):
         self.loading_configs, self.preprocessing_configs = self._build_stage_config_dicts()
         self._active_stage: PipelineStage = "test"  # type: ignore[assignment]
         self._bind_stage_functions("test")
+        mvit_settings = self._mvit_settings()
         self.model = _Recognizer(
             backbone=MViT(
-                arch="base",
-                spatial_size=224,
-                temporal_size=32,
+                arch=mvit_settings["arch"],
+                spatial_size=mvit_settings["spatial_size"],
+                temporal_size=mvit_settings["temporal_size"],
                 out_scales=-1,
-                drop_path_rate=0.3,
+                drop_path_rate=mvit_settings["drop_path_rate"],
                 use_abs_pos_embed=False,
                 rel_pos_embed=True,
                 residual_pooling=True,
@@ -78,7 +89,7 @@ class MVITV2Classifier(BaseVideoClassifier):
                 norm_cfg={"type": "LN", "eps": 1e-6},
                 patch_cfg={"kernel_size": (3, 7, 7), "stride": (2, 4, 4), "padding": (1, 3, 3)},
             ),
-            cls_head=MViTHead(num_classes=self.num_classes, in_channels=768, dropout_ratio=0.5),
+            cls_head=MViTHead(num_classes=self.num_classes, in_channels=mvit_settings["in_channels"], dropout_ratio=0.5),
         )
         should_load = True if load_weights is None else bool(load_weights)
         if should_load:
@@ -95,7 +106,56 @@ class MVITV2Classifier(BaseVideoClassifier):
         for p in self.model.parameters():
             p.requires_grad = False
 
+    def _mvit_settings(self) -> dict[str, Any]:
+        if self.backbone == "base_p244":
+            return {
+                "arch": "base",
+                "spatial_size": 224,
+                "temporal_size": 32,
+                "drop_path_rate": 0.3,
+                "in_channels": 768,
+            }
+        if self.backbone == "large_p244":
+            return {
+                "arch": "large",
+                "spatial_size": 312,
+                "temporal_size": 40,
+                "drop_path_rate": 0.75,
+                "in_channels": 1152,
+            }
+        raise ValueError(f"Unsupported MViTv2 backbone: {self.backbone}")
+
     def _build_stage_config_dicts(self) -> tuple[dict[str, dict], dict[str, dict]]:
+        if self.weights_dataset == "sthv2":
+            common_loading = {
+                "raw_input_format": "NTHWC",
+                "sampled_format": "NTHWC",
+                "clip_len": 40,
+                "frame_interval": 1,
+                "full_videos": False,
+            }
+            common_pre = {
+                "preprocessed_format": "NCTHW",
+                "resize_short": 256,
+                "crop_size": 224,
+                "input_range": 1.0,
+                "mean": (114.75, 114.75, 114.75),
+                "std": (57.375, 57.375, 57.375),
+            }
+            loading = {
+                "train": {**common_loading, "num_clips": 1},
+                "val": {**common_loading, "num_clips": 1},
+                "test": {**common_loading, "num_clips": 3},
+                "attack": {**common_loading, "num_clips": 1},
+            }
+            preprocessing = {
+                "train": {**common_pre, "spatial_strategy": "train_random_crop"},
+                "val": {**common_pre, "spatial_strategy": "center_crop"},
+                "test": {**common_pre, "resize_short": 224, "spatial_strategy": "three_crop"},
+                "attack": {**common_pre, "spatial_strategy": "center_crop"},
+            }
+            return loading, preprocessing
+
         common_loading = {
             "raw_input_format": "NTHWC",
             "sampled_format": "NTHWC",

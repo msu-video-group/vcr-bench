@@ -58,6 +58,7 @@ separate_logs_flag=0
 device="cuda"
 batch_size=1
 num_workers=0
+metric_workers=""
 verbose_flag=0
 results_root="results"
 logs_root="attack_logs"
@@ -116,6 +117,7 @@ while [[ "$#" -gt 0 ]]; do
         --device) device="$2"; shift ;;
         --batch-size) batch_size="$2"; shift ;;
         --num-workers) num_workers="$2"; shift ;;
+        --metric-workers) metric_workers="$2"; shift ;;
         --results-root) results_root="$2"; shift ;;
         --logs-root) logs_root="$2"; shift ;;
         --video-root) video_root="$2"; shift ;;
@@ -279,6 +281,7 @@ for ((i=0; i<${#method_names_local[@]}; i++)); do
         --pipeline-stage "$pipeline_stage"
         --dump-freq "$dump_freq"
     )
+    [[ -n "$metric_workers" ]] && cmd+=(--metric-workers "$metric_workers")
     [[ -n "$eps" ]] && cmd+=(--eps "$eps")
     [[ -n "$alpha" ]] && cmd+=(--alpha "$alpha")
     [[ -n "$iter" ]] && cmd+=(--iter "$iter")
@@ -321,7 +324,7 @@ for ((i=0; i<${#method_names_local[@]}; i++)); do
     srun_args=(--exclusive --ntasks 1 -G 1)
     [[ -n "${CONTAINER_IMAGE}" ]] && srun_args+=(--container-image "${CONTAINER_IMAGE}")
     [[ -n "${CONTAINER_MOUNTS}" ]] && srun_args+=(--container-mounts "${CONTAINER_MOUNTS}")
-    srun "${srun_args[@]}" bash -lc "python3 -c \"import importlib.util, sys; mods=['transformers','diffusers','yacs','IQA_pytorch','pywt']; missing=[m for m in mods if importlib.util.find_spec(m) is None]; sys.exit(0 if not missing else 1)\" || pip install -q transformers diffusers yacs 'numpy<2' IQA_pytorch PyWavelets; cd /work && { ffmpeg -hide_banner -filters 2>/dev/null | grep -q ' libvmaf ' || command -v vqmt >/dev/null 2>&1; } || { echo 'WARNING: neither ffmpeg/libvmaf nor vqmt is available; VMAF will be reported as 0.0'; }; ${cmd_str}" >> "$log_file" 2>&1 &
+    srun "${srun_args[@]}" bash -lc "python3 -c \"import importlib.util, sys; mods=['transformers','diffusers','yacs','IQA_pytorch','pywt']; missing=[m for m in mods if importlib.util.find_spec(m) is None]; sys.exit(0 if not missing else 1)\" || pip install -q transformers diffusers yacs 'numpy<2' IQA_pytorch PyWavelets; cd /work && if [[ \"${vmaf_flag}\" -eq 1 && \"\${VCR_BENCH_BOOTSTRAP_FFMPEG:-1}\" != \"0\" ]]; then if ffmpeg -hide_banner -filters 2>/dev/null | grep -q ' libvmaf '; then export VMAF_BACKEND=\"\${VMAF_BACKEND:-ffmpeg}\"; elif ffmpeg_bin=\"\$(bash ./scripts/ensure_ffmpeg_libvmaf.sh)\"; then export FFMPEG_BIN=\"\${ffmpeg_bin}\"; export VMAF_BACKEND=ffmpeg; export VMAF_TIMEOUT_SEC=\"\${VMAF_TIMEOUT_SEC:-180}\"; echo \"Using FFmpeg/libvmaf: \${FFMPEG_BIN}\"; else echo 'WARNING: unable to bootstrap ffmpeg/libvmaf; VMAF may be reported as 0.0'; fi; fi; { ffmpeg -hide_banner -filters 2>/dev/null | grep -q ' libvmaf ' || [[ -n \"\${FFMPEG_BIN:-}\" ]] || command -v vqmt >/dev/null 2>&1; } || { echo 'WARNING: neither ffmpeg/libvmaf nor vqmt is available; VMAF will be reported as 0.0'; }; ${cmd_str}" >> "$log_file" 2>&1 &
 done
 
 wait

@@ -108,7 +108,14 @@ def get_job_queue_info(tracked_job_ids):
 
 def _extract_batch_attack_passthrough(extra_args):
     allowed_no_value = {"--vmaf", "--no-vmaf", "-f", "--framewise-metrics", "--allow-misclassified", "--separate-logs"}
-    allowed_with_value = {"--eps", "--iter", "--alpha", "--attack-sample-chunk-size", "--grad-forward-chunk-size"}
+    allowed_with_value = {
+        "--eps",
+        "--iter",
+        "--alpha",
+        "--attack-sample-chunk-size",
+        "--grad-forward-chunk-size",
+        "--metric-workers",
+    }
     passthrough = []
     i = 0
     while i < len(extra_args or []):

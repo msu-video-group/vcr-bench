@@ -4,7 +4,7 @@ from typing import Any
 
 import torch
 import torch.nn as nn
-from torchvision.models import resnet50
+from torchvision.models import resnet101, resnet50
 
 from ..base import BaseVideoClassifier
 from ..pipeline_config import PipelineStage
@@ -53,13 +53,19 @@ class _TemporalShift:
 class _TSMResNetBackbone(nn.Module):
     def __init__(
         self,
+        depth: int = 50,
         num_segments: int = 8,
         shift_div: int = 8,
         non_local_stages: tuple[tuple[int, ...], ...] | None = None,
         non_local_cfg: dict | None = None,
     ) -> None:
         super().__init__()
-        base = resnet50(weights=None)
+        if int(depth) == 50:
+            base = resnet50(weights=None)
+        elif int(depth) == 101:
+            base = resnet101(weights=None)
+        else:
+            raise ValueError(f"Unsupported TSM ResNet depth: {depth}")
         self.num_segments = int(num_segments)
         self.shift_div = int(shift_div)
         self.non_local_stages = non_local_stages or tuple()
@@ -143,6 +149,7 @@ class _SimpleTSMRecognizer(nn.Module):
     def __init__(
         self,
         num_classes: int = 400,
+        depth: int = 50,
         num_segments: int = 8,
         shift_div: int = 8,
         non_local_stages: tuple[tuple[int, ...], ...] | None = None,
@@ -150,6 +157,7 @@ class _SimpleTSMRecognizer(nn.Module):
     ) -> None:
         super().__init__()
         self.backbone = _TSMResNetBackbone(
+            depth=depth,
             num_segments=num_segments,
             shift_div=shift_div,
             non_local_stages=non_local_stages,
@@ -186,6 +194,16 @@ class TSMClassifier(BaseVideoClassifier):
                         "checkpoint_filename": "tsm_r50_kinetics400.pth",
                     }
                 },
+            },
+            "r101": {
+                "display_name": "ResNet-101 TSM",
+                "datasets": {
+                    "sthv2": {
+                        "num_classes": 174,
+                        "checkpoint_url": "https://download.openmmlab.com/mmaction/v1.0/recognition/tsm/tsm_imagenet-pretrained-r101_8xb16-1x1x8-50e_sthv2-rgb/tsm_imagenet-pretrained-r101_8xb16-1x1x8-50e_sthv2-rgb_20230320-efcc0d1b.pth",
+                        "checkpoint_filename": "tsm_r101_sthv2.pth",
+                    }
+                },
             }
         }
     }
@@ -202,8 +220,8 @@ class TSMClassifier(BaseVideoClassifier):
         auto_download: bool = True,
     ) -> None:
         self.device = torch.device(device if (device != "cuda" or torch.cuda.is_available()) else "cpu")
-        self.backbone = backbone or "r50"
         self.weights_dataset = weights_dataset or "kinetics400"
+        self.backbone = backbone or ("r101" if self.weights_dataset == "sthv2" else "r50")
         if grad_forward_chunk_size is not None:
             self.grad_forward_chunk_size = int(grad_forward_chunk_size)
         weight_spec = self.get_weight_spec(self.backbone, self.weights_dataset)
@@ -214,6 +232,7 @@ class TSMClassifier(BaseVideoClassifier):
 
         self.model = _SimpleTSMRecognizer(
             num_classes=self.num_classes,
+            depth=self._resnet_depth(),
             num_segments=self._num_segments(),
             shift_div=8,
             non_local_stages=self._non_local_stages(),
@@ -236,7 +255,16 @@ class TSMClassifier(BaseVideoClassifier):
         for p in self.model.parameters():
             p.requires_grad = False
 
+    def _resnet_depth(self) -> int:
+        if self.backbone == "r50":
+            return 50
+        if self.backbone == "r101":
+            return 101
+        raise ValueError(f"Unsupported TSM backbone: {self.backbone}")
+
     def _num_segments(self) -> int:
+        if self.weights_dataset == "sthv2":
+            return 8
         return 16
 
     def _non_local_stages(self) -> tuple[tuple[int, ...], ...] | None:
@@ -261,16 +289,21 @@ class TSMClassifier(BaseVideoClassifier):
             "mean": (123.675, 116.28, 103.53),
             "std": (58.395, 57.12, 57.375),
         }
+        test_num_clips = self._num_segments() * 2 if self.weights_dataset == "sthv2" else self._num_segments()
         loading = {
             "train": {**common_loading, "num_clips": self._num_segments()},
             "val": {**common_loading, "num_clips": self._num_segments()},
-            "test": {**common_loading, "num_clips": self._num_segments()},
+            "test": {**common_loading, "num_clips": test_num_clips},
             "attack": {**common_loading, "num_clips": self._num_segments()},
         }
         preprocessing = {
             "train": {**common_pre, "spatial_strategy": "train_random_crop"},
             "val": {**common_pre, "spatial_strategy": "center_crop"},
-            "test": {**common_pre, "spatial_strategy": "ten_crop"},
+            "test": {
+                **common_pre,
+                "crop_size": 256 if self.weights_dataset == "sthv2" else 224,
+                "spatial_strategy": "three_crop" if self.weights_dataset == "sthv2" else "ten_crop",
+            },
             "attack": {**common_pre, "spatial_strategy": "center_crop"},
         }
         return loading, preprocessing

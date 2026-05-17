@@ -1,46 +1,6 @@
 {
   "tracks": [
     {
-      "name": "test-denoiser-2",
-      "attack_name": "test_denoiser_2",
-      "dataset": "kinetics400",
-      "num_videos": 10,
-      "save_videos": 1,
-      "models": [
-        "videomaev2", "uniformerv2", "mvitv2", "videomae", "videoswin"
-      ],
-      "attacks": [
-        {"name": "ifgsm", "target": true}
-      ],
-      "defences": [
-        {"name": "no_defence",      "adaptive": false},
-        {"name": "videopure",       "adaptive": false},
-        {"name": "videopure",       "adaptive": true},
-        {"name": "freqpure",        "adaptive": false},
-        {"name": "freqpure",        "adaptive": true},
-        {"name": "temporal_median", "adaptive": false},
-        {"name": "temporal_median", "adaptive": true}
-      ],
-      "extra_args": ["--full-videos", "--separate-logs", "--allow-misclassified"]
-    },
-    {
-      "name": "test-videopure-amd-x3d",
-      "attack_name": "test_videopure_amd_x3d",
-      "dataset": "kinetics400",
-      "num_videos": 10,
-      "save_videos": 1,
-      "models": ["amd", "x3d"],
-      "attacks": [
-        {"name": "ifgsm", "target": true}
-      ],
-      "defences": [
-        {"name": "no_defence", "adaptive": false},
-        {"name": "videopure",  "adaptive": false},
-        {"name": "videopure",  "adaptive": true}
-      ],
-      "extra_args": ["--full-videos", "--separate-logs", "--allow-misclassified"]
-    },
-    {
       "name": "full-white-box",
       "attack_name": "full_white_box",
       "dataset": "kinetics400",
@@ -56,12 +16,12 @@
       "attacks": [
         {"name": "amifgsm",        "target": true},
         {"name": "ifgsm",          "target": true},
-        {"name": "korhonen_et_al", "target": true},
         {"name": "mifgsm",         "target": true},
-        {"name": "stadv",          "target": true},
+        {"name": "korhonen_et_al", "target": true},
+        {"name": "zhang_ssim",     "target": true},
         {"name": "zhang_dists",    "target": true},
         {"name": "zhang_lpips",    "target": true},
-        {"name": "zhang_ssim",     "target": true}
+        {"name": "stadv",          "target": true}
       ],
       "defences": [
         {"name": "no_defence",           "adaptive": false},
@@ -80,7 +40,7 @@
         {"name": "temporal_median",      "adaptive": true},
         {"name": "freqpure",             "adaptive": true}
       ],
-      "extra_args": ["--full-videos", "--separate-logs", "--allow-misclassified"]
+      "extra_args": ["--full-videos", "--separate-logs", "--allow-misclassified", "--metric-workers", "8"]
     }
   ]
 }

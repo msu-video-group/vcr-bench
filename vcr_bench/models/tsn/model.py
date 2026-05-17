@@ -44,6 +44,16 @@ class TSNClassifier(BaseVideoClassifier):
                         "checkpoint_filename": "tsn_r101_kinetics400.pth",
                     }
                 },
+            },
+            "r50": {
+                "display_name": "ResNet-50",
+                "datasets": {
+                    "sthv2": {
+                        "num_classes": 174,
+                        "checkpoint_url": "https://download.openmmlab.com/mmaction/v1.0/recognition/tsn/tsn_imagenet-pretrained-r50_8xb32-1x1x16-50e_sthv2-rgb/tsn_imagenet-pretrained-r50_8xb32-1x1x16-50e_sthv2-rgb_20230221-85bcc1c3.pth",
+                        "checkpoint_filename": "tsn_r50_sthv2.pth",
+                    }
+                },
             }
         }
     }
@@ -60,8 +70,8 @@ class TSNClassifier(BaseVideoClassifier):
         auto_download: bool = True,
     ) -> None:
         self.device = torch.device(device if (device != "cuda" or torch.cuda.is_available()) else "cpu")
-        self.backbone = backbone or "r101"
         self.weights_dataset = weights_dataset or "kinetics400"
+        self.backbone = backbone or ("r50" if self.weights_dataset == "sthv2" else "r101")
         if grad_forward_chunk_size is not None:
             self.grad_forward_chunk_size = int(grad_forward_chunk_size)
         weight_spec = self.get_weight_spec(self.backbone, self.weights_dataset)
@@ -72,8 +82,8 @@ class TSNClassifier(BaseVideoClassifier):
 
         num_segments = int(self.loading_configs["test"]["num_clips"])
         backbone_module = ResNet2d(
-            depth=101,
-            pretrained="https://download.pytorch.org/models/resnet101-cd907fc2.pth",
+            depth=self._resnet_depth(),
+            pretrained=self._torchvision_pretrained_url(),
             norm_eval=False,
             conv_cfg={"type": "Conv2d"},
             norm_cfg={"type": "BN2d", "requires_grad": True},
@@ -105,6 +115,20 @@ class TSNClassifier(BaseVideoClassifier):
         for p in self.model.parameters():
             p.requires_grad = False
 
+    def _resnet_depth(self) -> int:
+        if self.backbone == "r50":
+            return 50
+        if self.backbone == "r101":
+            return 101
+        raise ValueError(f"Unsupported TSN backbone: {self.backbone}")
+
+    def _torchvision_pretrained_url(self) -> str:
+        if self.backbone == "r50":
+            return "https://download.pytorch.org/models/resnet50-0676ba61.pth"
+        if self.backbone == "r101":
+            return "https://download.pytorch.org/models/resnet101-cd907fc2.pth"
+        raise ValueError(f"Unsupported TSN backbone: {self.backbone}")
+
     def _build_stage_config_dicts(self) -> tuple[dict[str, dict], dict[str, dict]]:
         common_loading = {
             "raw_input_format": "NTHWC",
@@ -121,12 +145,20 @@ class TSNClassifier(BaseVideoClassifier):
             "mean": (123.675, 116.28, 103.53),
             "std": (58.395, 57.12, 57.375),
         }
-        loading = {
-            "train": {**common_loading, "num_clips": 3},
-            "val": {**common_loading, "num_clips": 3},
-            "test": {**common_loading, "num_clips": 25},
-            "attack": {**common_loading, "num_clips": 3},
-        }
+        if self.weights_dataset == "sthv2":
+            loading = {
+                "train": {**common_loading, "num_clips": 16},
+                "val": {**common_loading, "num_clips": 16},
+                "test": {**common_loading, "num_clips": 25},
+                "attack": {**common_loading, "num_clips": 16},
+            }
+        else:
+            loading = {
+                "train": {**common_loading, "num_clips": 3},
+                "val": {**common_loading, "num_clips": 3},
+                "test": {**common_loading, "num_clips": 25},
+                "attack": {**common_loading, "num_clips": 3},
+            }
         preprocessing = {
             "train": {**common_pre, "spatial_strategy": "train_random_crop"},
             "val": {**common_pre, "spatial_strategy": "center_crop"},
