@@ -41,43 +41,37 @@ class IFGSMAttack(BaseVideoAttack):
     ) -> torch.Tensor:
         x_ref = self._ensure_float_attack_tensor(x.detach().clone())
         x_adv = self.clip_tensor(self._random_start(x_ref))
+        target = self._coerce_target(model, x_ref, input_format=input_format, y=y, targeted=targeted)
+        target_label = int(target.item())
 
-        with torch.no_grad():
-            init_conf = model(x_ref, input_format=input_format, enable_grad=False)
-            benign_label = int(torch.argmax(init_conf).item())
-            if targeted:
-                target_label = int(self._coerce_target(model, x_ref, input_format=input_format, y=y, targeted=True).item())
-            else:
-                target_label = benign_label
-        ce = torch.nn.CrossEntropyLoss()
-        adversarial_pred = torch.zeros_like(init_conf)
-        adversarial_pred[target_label] = 1.0
-
-        actual_iters = self.steps
+        actual_iters = 0
         for step in range(self.steps):
             x_adv = x_adv.detach().requires_grad_(True)
-            confidences = model(x_adv, input_format=input_format, enable_grad=True)
-            confidences = confidences.unsqueeze(0)
-            loss = ce(confidences, adversarial_pred.unsqueeze(0)) * (1 if targeted else -1)
+            # Use _preprocess_for_attack so gradient flows through a single softmax
+            # over raw model logits — avoids double-softmax for models like ActionCLIP
+            # that already return probabilities from their forward().
+            probs = self._preprocess_for_attack(model, x_adv, input_format=input_format, enable_grad=True)
+            loss = self._loss_from_probs(probs, target)
             grad = torch.autograd.grad(loss, x_adv)[0]
-            x_adv = x_adv.detach() - self.alpha * torch.sign(grad)
+            x_adv = x_adv.detach() + self.alpha * self.gradient_direction(grad, targeted=targeted)
             x_adv = self.project_linf(x_adv, x_ref)
             x_adv = self.clip_tensor(x_adv)
+            actual_iters = step + 1
 
             with torch.no_grad():
-                cur_conf = model(x_adv, input_format=input_format, enable_grad=False)
-                final_label = int(torch.argmax(cur_conf).item())
-                final_conf = float(cur_conf[final_label].item())
-                if (targeted and final_label == target_label and final_conf >= self.target_conf) or (
-                    (not targeted) and final_label != benign_label
-                ):
-                    actual_iters = step + 1
-                    break
+                cur_probs = self._preprocess_for_attack(model, x_adv, input_format=input_format, enable_grad=False)
+                cur_probs_mean = cur_probs.detach().mean(dim=0)
+                final_label = int(cur_probs_mean.argmax().item())
+                if targeted:
+                    if final_label == target_label and float(cur_probs_mean[target_label].item()) >= self.target_conf:
+                        break
+                else:
+                    if final_label != target_label:
+                        break
 
         self.last_result = {
             "iter_count": actual_iters,
-            "target_label": int(target_label) if targeted else -1,
-            "benign_label": int(benign_label),
+            "target_label": target_label if targeted else -1,
         }
         return x_adv.detach()
 
