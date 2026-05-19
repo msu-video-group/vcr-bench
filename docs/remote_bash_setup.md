@@ -1,7 +1,11 @@
 # Remote Bash Setup
 
-Copy this into a bash terminal from the repository root on the remote machine.
-It mirrors the package and FFmpeg/libvmaf setup from `getting_started.ipynb`.
+Copy the relevant sections into a bash terminal from the repository root on the remote machine.
+These mirror the setup from `getting_started.ipynb`.
+
+---
+
+## 1. Python packages
 
 ```bash
 set -euo pipefail
@@ -19,7 +23,34 @@ python3 -m pip install torch torchvision --index-url https://download.pytorch.or
 python3 -m pip install -e . matplotlib pickleshare
 python3 -m pip install -e ".[research]"
 
-# FFmpeg with libvmaf. Most system FFmpeg builds do not include this filter.
+# Verify
+python3 - <<'PY'
+import importlib.util
+required = ["torch", "torchvision", "matplotlib", "pandas", "IQA_pytorch"]
+missing = [name for name in required if importlib.util.find_spec(name) is None]
+if missing:
+    raise SystemExit(f"Missing packages: {missing}")
+import torch
+print("torch:", torch.__version__)
+print("torch cuda build:", torch.version.cuda)
+print("cuda available:", torch.cuda.is_available())
+if torch.cuda.is_available():
+    print("gpu:", torch.cuda.get_device_name(0))
+PY
+```
+
+---
+
+## 2. FFmpeg / libvmaf
+
+Most system FFmpeg builds do not include the `libvmaf` filter. This section
+downloads a static GPL build that does.
+
+```bash
+set -euo pipefail
+
+cd "${VCR_BENCH_REPO:-$PWD}"
+
 FFMPEG_DIR="$PWD/notebook_tools/ffmpeg"
 FFMPEG_URL="https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz"
 ARCHIVE_PATH="$FFMPEG_DIR/ffmpeg-linux64-gpl.tar.xz"
@@ -48,43 +79,15 @@ export FFMPEG_BIN="$ffmpeg_bin"
 export VMAF_BACKEND=ffmpeg
 export VMAF_TIMEOUT_SEC="${VMAF_TIMEOUT_SEC:-180}"
 
-echo "Using FFmpeg: $FFMPEG_BIN"
-
-python3 - <<'PY'
-import importlib.util
-import os
-import subprocess
-
-required = ["torch", "torchvision", "matplotlib", "pandas", "IQA_pytorch"]
-missing = [name for name in required if importlib.util.find_spec(name) is None]
-if missing:
-    raise SystemExit(f"Missing packages: {missing}")
-
-import torch
-print("torch:", torch.__version__)
-print("torch cuda build:", torch.version.cuda)
-print("cuda available:", torch.cuda.is_available())
-if torch.cuda.is_available():
-    print("gpu:", torch.cuda.get_device_name(0))
-
-ffmpeg_bin = os.environ["FFMPEG_BIN"]
-filters = subprocess.run(
-    [ffmpeg_bin, "-hide_banner", "-filters"],
-    check=True,
-    capture_output=True,
-    text=True,
-).stdout
-print("ffmpeg:", ffmpeg_bin)
-print("libvmaf:", "available" if " libvmaf " in filters else "missing")
-PY
+echo "FFmpeg: $FFMPEG_BIN"
+"$ffmpeg_bin" -hide_banner -filters | grep libvmaf
 ```
 
-For `scripts/batch_attack.sh` and remote attack jobs, the important part is that
-the binary is cached under `notebook_tools/ffmpeg`. The job bootstrap checks
-system FFmpeg first, then this cache, and exports `FFMPEG_BIN`/`VMAF_BACKEND`
-inside the Slurm task.
+The binary is cached under `notebook_tools/ffmpeg`. The Slurm job bootstrap
+(`scripts/batch_attack.sh`) checks system FFmpeg first, then this cache, and
+exports `FFMPEG_BIN`/`VMAF_BACKEND` inside the task automatically.
 
-To force a specific binary for manual runs in the current shell:
+To activate the cached binary in the current shell for manual runs:
 
 ```bash
 export FFMPEG_BIN="$(find "$PWD/notebook_tools/ffmpeg" -type f -path '*/bin/ffmpeg' | sort | head -n 1)"
@@ -92,7 +95,7 @@ export VMAF_BACKEND=ffmpeg
 export VMAF_TIMEOUT_SEC=180
 ```
 
-To disable FFmpeg bootstrapping inside remote attack jobs:
+To disable FFmpeg bootstrapping inside remote attack jobs entirely:
 
 ```bash
 export VCR_BENCH_BOOTSTRAP_FFMPEG=0

@@ -64,7 +64,7 @@ class _ActionClipModel(nn.Module):
         text_features = self.encode_text()
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
         similarity = (100.0 * video_features @ text_features.T).view(inputs.shape[0], self.num_prompt, -1)
-        return similarity.softmax(dim=2).mean(dim=1)
+        return similarity.mean(dim=1)
 
 
 class ActionClipClassifier(BaseVideoClassifier):

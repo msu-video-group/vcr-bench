@@ -221,12 +221,11 @@ def _build_paths(args: argparse.Namespace, model_name: str) -> tuple[Path, Path,
         save_attack_name = f"{save_attack_name}_{safe_comment}"
 
     results_root = Path(args.results_root)
-    logs_root = Path(args.logs_root)
     save_path = results_root / attack_root_name / save_attack_name / f"{model_name}.csv"
     if args.separate_logs:
-        log_path = logs_root / attack_root_name / save_attack_name / f"log_{save_attack_name}.csv"
+        log_path = results_root / attack_root_name / save_attack_name / f"log_{save_attack_name}.csv"
     else:
-        log_path = logs_root / attack_root_name / f"log_{attack_root_name}.csv"
+        log_path = results_root / attack_root_name / f"log_{attack_root_name}.csv"
     dump_path = results_root / "attacked_videos" / attack_root_name / save_attack_name / model_name
     return save_path, log_path, dump_path
 
