@@ -1,0 +1,22 @@
+{
+  "tracks": [
+    {
+      "name": "test-ifgsm8",
+      "attack_name": "test_ifgsm8",
+      "dataset": "kinetics400",
+      "num_videos": 30,
+      "save_videos": 0,
+      "models": [
+        "videomaev2", "uniformerv2", "uniformer", "mvitv2",
+        "videomae", "videoswin", "actionclip", "timesformer"
+      ],
+      "attacks": [
+        {"name": "ifgsm", "target": true}
+      ],
+      "defences": [
+        {"name": "no_defence", "adaptive": false}
+      ],
+      "extra_args": ["--num-workers", "4", "--batch-size", "1"]
+    }
+  ]
+}
