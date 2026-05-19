@@ -1,15 +1,20 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
-import clip
 import torch
 import torch.nn as nn
-from clip.model import CLIP, Transformer, build_model as build_clip_model
 
 from ..base import BaseVideoClassifier
 from ..ila.model import _load_labels
+from ..legacy_imports import isolated_import_paths
 from ..pipeline_config import PipelineStage
+
+_ILA_VENDOR_ROOT = Path(__file__).resolve().parents[1] / "ila" / "vendor"
+with isolated_import_paths(_ILA_VENDOR_ROOT):
+    import clip
+    from clip.model import CLIP, Transformer, build_model as build_clip_model
 
 
 class TransformerAdapter(nn.Module):
