@@ -3,8 +3,8 @@
 # Interface intentionally mirrors video_classifiers/methods/batch_attack_flexible.sh.
 
 #SBATCH --job-name=attack_vcr_bench
-#SBATCH --output=logs/job_%j.log
-#SBATCH --error=logs/job_%j.err
+#SBATCH --output=logs/job_%A_%a.log
+#SBATCH --error=logs/job_%A_%a.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=8
 #SBATCH --gres=gpu:8
@@ -229,6 +229,25 @@ if [[ "$visualize_defence_flag" -eq 1 ]]; then
 fi
 
 mkdir -p logs
+
+if [[ -n "${SLURM_ARRAY_TASK_ID:-}" ]]; then
+    array_task_id="${SLURM_ARRAY_TASK_ID}"
+    if ! [[ "$array_task_id" =~ ^[0-9]+$ ]]; then
+        echo "Error: SLURM_ARRAY_TASK_ID must be a non-negative integer, got '${array_task_id}'"
+        exit 1
+    fi
+    if (( array_task_id >= ${#method_names_local[@]} )); then
+        echo "Error: SLURM_ARRAY_TASK_ID=${array_task_id} is outside configured model range 0..$((${#method_names_local[@]} - 1))"
+        exit 1
+    fi
+
+    echo "Array job: ${SLURM_ARRAY_JOB_ID:-${SLURM_JOB_ID:-unknown}} task ${array_task_id}/${SLURM_ARRAY_TASK_COUNT:-${#method_names_local[@]}}"
+    method_names_local=("${method_names_local[$array_task_id]}")
+    attack_types_local=("${attack_types_local[$array_task_id]}")
+    target_flags_local=("${target_flags_local[$array_task_id]}")
+    defence_names_local=("${defence_names_local[$array_task_id]}")
+    adaptive_flags_local=("${adaptive_flags_local[$array_task_id]}")
+fi
 
 FREQPURE_CKPT="${REPO_ROOT}/vcr_bench/defences/freqpure/256x256_diffusion_uncond.pt"
 if [[ ! -f "$FREQPURE_CKPT" ]]; then

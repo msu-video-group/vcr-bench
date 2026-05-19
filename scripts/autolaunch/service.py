@@ -153,6 +153,30 @@ def _batch_combo_compat_key(combo):
     )
 
 
+def _is_single_gpu_launch_mode(launch_mode):
+    return launch_mode in {
+        "single_gpu",
+        "single-gpu",
+        "single_gpu_jobs",
+        "single-gpu-jobs",
+        "array",
+        "job_array",
+        "job-array",
+        "single_gpu_array",
+        "single-gpu-array",
+    }
+
+
+def _is_array_launch_mode(launch_mode):
+    return launch_mode in {
+        "array",
+        "job_array",
+        "job-array",
+        "single_gpu_array",
+        "single-gpu-array",
+    }
+
+
 def build_batch_attack_multi_sbatch_cmd(main_cfg, combos):
     if not combos:
         raise ValueError("combos must not be empty")
@@ -179,12 +203,19 @@ def build_batch_attack_multi_sbatch_cmd(main_cfg, combos):
     avoid_nodes = slurm_cfg.get("avoid_node_names", [])
     if avoid_nodes:
         sbatch_args.extend(["--exclude", ",".join(str(node) for node in avoid_nodes)])
-    if launch_mode in {"single_gpu", "single-gpu", "single_gpu_jobs", "single-gpu-jobs"}:
+    sbatch_args.extend(["--job-name", str(main_cfg.get("job_name", "vcr_bench"))])
+    if _is_single_gpu_launch_mode(launch_mode):
         cpus = int(slurm_cfg.get("single_gpu_cpus", 16))
         sbatch_args.extend(["--nodes", "1", "--ntasks", "1", "--gres", "gpu:1", "--cpus-per-gpu", str(cpus)])
         exclusive = str(slurm_cfg.get("single_gpu_exclusive", "user")).strip()
         if exclusive:
             sbatch_args.append(f"--exclusive={exclusive}" if exclusive != "true" else "--exclusive")
+    if _is_array_launch_mode(launch_mode):
+        array_limit = int(slurm_cfg.get("array_concurrency", 0) or 0)
+        array_spec = f"0-{len(combos) - 1}"
+        if array_limit > 0:
+            array_spec = f"{array_spec}%{array_limit}"
+        sbatch_args.extend(["--array", array_spec])
 
     cmd = [
         *sbatch_args, script,
@@ -357,10 +388,13 @@ def main():
             update_state_for_finished_jobs(state, running_job_ids, completed, main_cfg["max_failures"])
 
             launch_mode = str(main_cfg.get("slurm", {}).get("launch_mode", "multi_gpu_batch")).strip().lower()
-            single_gpu_mode = launch_mode in {"single_gpu", "single-gpu", "single_gpu_jobs", "single-gpu-jobs"}
+            single_gpu_mode = _is_single_gpu_launch_mode(launch_mode)
+            array_mode = _is_array_launch_mode(launch_mode)
             current_running = len(state["running"])
             available_slots = max(0, main_cfg["max_simultaneous_jobs"] - current_running)
-            batch_size = 1 if single_gpu_mode else max(1, int(main_cfg["max_attacks_per_job"]))
+            batch_size = max(1, int(main_cfg["max_attacks_per_job"]))
+            if single_gpu_mode and not array_mode:
+                batch_size = 1
             logging.info(
                 "scheduler: total=%d queue=%d completed=%d stoplisted=%d running=%d slots=%d launch_mode=%s test=%s",
                 len(combos), len(queue), skipped_completed, skipped_stoplist,

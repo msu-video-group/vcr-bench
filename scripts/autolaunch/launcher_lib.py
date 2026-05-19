@@ -27,6 +27,7 @@ def load_main_config(path):
     cfg["slurm"].setdefault("avoid_node_names", [])
     cfg["slurm"].setdefault("single_gpu_cpus", 16)
     cfg["slurm"].setdefault("single_gpu_exclusive", "user")
+    cfg["slurm"].setdefault("array_concurrency", 0)
     return cfg
 
 
