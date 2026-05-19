@@ -31,16 +31,14 @@
         {"name": "rotate",               "adaptive": false},
         {"name": "shuffle",              "adaptive": false},
         {"name": "temporal_median",      "adaptive": false},
-        {"name": "freqpure",             "adaptive": false},
         {"name": "crop_resize",          "adaptive": true},
         {"name": "flip",                 "adaptive": true},
         {"name": "gaussian_blur",        "adaptive": true},
         {"name": "rotate",               "adaptive": true},
         {"name": "shuffle",              "adaptive": true},
         {"name": "temporal_median",      "adaptive": true},
-        {"name": "freqpure",             "adaptive": true}
       ],
-      "extra_args": ["--full-videos", "--separate-logs", "--allow-misclassified", "--metric-workers", "8", "--batch-size", "4", "--num-workers", "8"]
+      "extra_args": ["--full-videos", "--separate-logs", "--allow-misclassified", "--metric-workers", "12", "--batch-size", "4", "--num-workers", "4"]
     }
   ]
 }

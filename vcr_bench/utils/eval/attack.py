@@ -5,6 +5,7 @@ import random
 import time
 import traceback
 import copy
+import math
 from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from pathlib import Path
 
@@ -362,6 +363,7 @@ def run_attack(
     time_sum = 0.0
     iter_sum = 0.0
     psnr_sum = 0.0
+    psnr_count = 0
     vmaf_sum = 0.0
     metrics_num = 0
 
@@ -373,7 +375,10 @@ def run_attack(
                 target_success += int(int(row["target_class"]) >= 0 and int(row["target_class"]) == int(row["attacked_class"]))
                 time_sum += float(row["time"])
                 iter_sum += float(row["iter_count"])
-                psnr_sum += float(row["psnr"])
+                psnr_v = float(row["psnr"])
+                if math.isfinite(psnr_v):
+                    psnr_sum += psnr_v
+                    psnr_count += 1
                 vmaf_sum += float(row["vmaf"])
                 metrics_num += 1
         except Exception:
@@ -391,7 +396,7 @@ def run_attack(
     def _flush_metric_jobs(*, block: bool, drain_all: bool = False) -> None:
         nonlocal all_rows, skip_paths
         nonlocal clear_correct, attacked_success, target_success
-        nonlocal time_sum, iter_sum, psnr_sum, vmaf_sum, metrics_num, processed_now
+        nonlocal time_sum, iter_sum, psnr_sum, psnr_count, vmaf_sum, metrics_num, processed_now
         nonlocal skipped_error_count
         nonlocal append_buffer
         if not pending_metric_jobs:
@@ -445,7 +450,9 @@ def run_attack(
                 iter_sum += float(row["iter_count"])
                 psnr_v = float(row["psnr"])
                 vmaf_v = float(row["vmaf"])
-                psnr_sum += float(psnr_v if psnr_v != float("inf") else 0.0)
+                if math.isfinite(psnr_v):
+                    psnr_sum += psnr_v
+                    psnr_count += 1
                 vmaf_sum += vmaf_v
                 metrics_num += 1
             processed_now += 1
@@ -463,7 +470,7 @@ def run_attack(
                 wall_elapsed = time.time() - start_total
                 mean_time = time_sum / max(clear_correct, 1)
                 mean_iter = iter_sum / max(metrics_num, 1)
-                mean_psnr = psnr_sum / max(metrics_num, 1)
+                mean_psnr = psnr_sum / max(psnr_count, 1)
                 mean_vmaf = vmaf_sum / max(metrics_num, 1)
                 logger(wall_elapsed, mean_time, mean_iter, mean_psnr, mean_vmaf, clear_correct, attacked_success, target_success, total_seen)
 
@@ -742,7 +749,7 @@ def run_attack(
     total_time = time.time() - start_total
     mean_time = time_sum / max(clear_correct, 1)
     mean_iter = iter_sum / max(metrics_num, 1)
-    mean_psnr = psnr_sum / max(metrics_num, 1)
+    mean_psnr = psnr_sum / max(psnr_count, 1)
     mean_vmaf = vmaf_sum / max(metrics_num, 1)
     logger(total_time, mean_time, mean_iter, mean_psnr, mean_vmaf, clear_correct, attacked_success, target_success, total_seen)
 
