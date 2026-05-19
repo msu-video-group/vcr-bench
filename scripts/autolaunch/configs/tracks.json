@@ -40,7 +40,7 @@
         {"name": "temporal_median",      "adaptive": true},
         {"name": "freqpure",             "adaptive": true}
       ],
-      "extra_args": ["--full-videos", "--separate-logs", "--allow-misclassified", "--metric-workers", "8"]
+      "extra_args": ["--full-videos", "--separate-logs", "--allow-misclassified", "--metric-workers", "8", "--batch-size", "4", "--num-workers", "8"]
     }
   ]
 }

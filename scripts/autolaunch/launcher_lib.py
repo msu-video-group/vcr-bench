@@ -20,10 +20,13 @@ def load_main_config(path):
     cfg.setdefault("logs_root", "attack_logs")
     cfg.setdefault("test_mode", False)
     cfg.setdefault("slurm", {})
+    cfg["slurm"].setdefault("launch_mode", "multi_gpu_batch")
     cfg["slurm"].setdefault("batch_attack_script", "./scripts/batch_attack.sh")
     cfg["slurm"].setdefault("container_image", "")
     cfg["slurm"].setdefault("container_mounts", "")
     cfg["slurm"].setdefault("avoid_node_names", [])
+    cfg["slurm"].setdefault("single_gpu_cpus", 16)
+    cfg["slurm"].setdefault("single_gpu_exclusive", "user")
     return cfg
 
 

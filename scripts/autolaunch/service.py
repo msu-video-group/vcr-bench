@@ -115,6 +115,8 @@ def _extract_batch_attack_passthrough(extra_args):
         "--attack-sample-chunk-size",
         "--grad-forward-chunk-size",
         "--metric-workers",
+        "--batch-size",
+        "--num-workers",
     }
     passthrough = []
     i = 0
@@ -157,6 +159,7 @@ def build_batch_attack_multi_sbatch_cmd(main_cfg, combos):
     first = combos[0]
     slurm_cfg = main_cfg.get("slurm", {})
     script = str(slurm_cfg.get("batch_attack_script", "./scripts/batch_attack.sh"))
+    launch_mode = str(slurm_cfg.get("launch_mode", "multi_gpu_batch")).strip().lower()
     dump_freq = compute_dump_freq(first["num_videos"], first.get("save_videos", 0))
     results_root = first.get("results_root") or main_cfg.get("results_root", "results/remote_attacks")
     logs_root = first.get("logs_root") or main_cfg.get("logs_root", "attack_logs")
@@ -172,8 +175,19 @@ def build_batch_attack_multi_sbatch_cmd(main_cfg, combos):
         for c in combos
     ])
 
+    sbatch_args = ["sbatch"]
+    avoid_nodes = slurm_cfg.get("avoid_node_names", [])
+    if avoid_nodes:
+        sbatch_args.extend(["--exclude", ",".join(str(node) for node in avoid_nodes)])
+    if launch_mode in {"single_gpu", "single-gpu", "single_gpu_jobs", "single-gpu-jobs"}:
+        cpus = int(slurm_cfg.get("single_gpu_cpus", 16))
+        sbatch_args.extend(["--nodes", "1", "--ntasks", "1", "--gres", "gpu:1", "--cpus-per-gpu", str(cpus)])
+        exclusive = str(slurm_cfg.get("single_gpu_exclusive", "user")).strip()
+        if exclusive:
+            sbatch_args.append(f"--exclusive={exclusive}" if exclusive != "true" else "--exclusive")
+
     cmd = [
-        "sbatch", script,
+        *sbatch_args, script,
         "--attack-name", first["attack_root"],
         "--attack-type", first["attack"],
         "--dataset", first["dataset"],
@@ -342,13 +356,15 @@ def main():
 
             update_state_for_finished_jobs(state, running_job_ids, completed, main_cfg["max_failures"])
 
+            launch_mode = str(main_cfg.get("slurm", {}).get("launch_mode", "multi_gpu_batch")).strip().lower()
+            single_gpu_mode = launch_mode in {"single_gpu", "single-gpu", "single_gpu_jobs", "single-gpu-jobs"}
             current_running = len(state["running"])
             available_slots = max(0, main_cfg["max_simultaneous_jobs"] - current_running)
-            batch_size = max(1, int(main_cfg["max_attacks_per_job"]))
+            batch_size = 1 if single_gpu_mode else max(1, int(main_cfg["max_attacks_per_job"]))
             logging.info(
-                "scheduler: total=%d queue=%d completed=%d stoplisted=%d running=%d slots=%d test=%s",
+                "scheduler: total=%d queue=%d completed=%d stoplisted=%d running=%d slots=%d launch_mode=%s test=%s",
                 len(combos), len(queue), skipped_completed, skipped_stoplist,
-                current_running, available_slots, test_mode,
+                current_running, available_slots, launch_mode, test_mode,
             )
 
             for _ in range(available_slots):

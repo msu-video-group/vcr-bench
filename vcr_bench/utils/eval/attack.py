@@ -4,16 +4,19 @@ import os
 import random
 import time
 import traceback
+import copy
 from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from pathlib import Path
 
 import numpy as np
 import torch
+from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
 from vcr_bench.attacks.base import BaseVideoAttack
 from vcr_bench.attacks.query_base import BaseQueryVideoAttack
 from vcr_bench.datasets.base import BaseVideoDataset
+from vcr_bench.datasets.loaded import collate_loaded_video_batch
 from vcr_bench.defences.base import BaseVideoDefence
 from vcr_bench.models.base import BaseVideoClassifier
 from vcr_bench.types import LoadedDatasetItem, VideoSampleRef
@@ -38,6 +41,67 @@ from vcr_bench.utils.video_dump import (
     save_video_lossless_like_original,
     to_uint8_thwc,
 )
+
+
+class _IndexedDataset(Dataset):
+    def __init__(self, dataset: Dataset, indices: list[int]) -> None:
+        self.dataset = dataset
+        self.indices = indices
+
+    def __len__(self) -> int:
+        return len(self.indices)
+
+    def __getitem__(self, index: int):
+        original_index = self.indices[index]
+        return original_index, self.dataset[original_index]
+
+
+def _collate_indexed_loaded_video_batch(batch: list[tuple[int, LoadedDatasetItem]]) -> dict:
+    indices = [idx for idx, _ in batch]
+    loaded = [item for _, item in batch]
+    collated = collate_loaded_video_batch(loaded)
+    collated["indices"] = indices
+    return collated
+
+
+def _iter_attack_items(
+    *,
+    dataset: BaseVideoDataset,
+    indices: list[int],
+    data_pipeline,
+    batch_size: int,
+    num_workers: int,
+):
+    batch_size = max(1, int(batch_size))
+    num_workers = max(0, int(num_workers))
+    if batch_size <= 1 and num_workers <= 0:
+        configured_dataset = dataset.configure_loading(data_pipeline, instant_preprocessing=False)
+        for idx in indices:
+            yield idx, configured_dataset[idx]
+        return
+
+    configured_dataset = copy.copy(dataset).configure_loading(data_pipeline, instant_preprocessing=False)
+    loader = DataLoader(
+        _IndexedDataset(configured_dataset, indices),
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        collate_fn=_collate_indexed_loaded_video_batch,
+        pin_memory=torch.cuda.is_available(),
+    )
+    for batch in loader:
+        tensors = batch["tensor"]
+        for j, sample in enumerate(batch["samples"]):
+            tensor = tensors[j] if batch["stackable"] else tensors[j]
+            yield batch["indices"][j], LoadedDatasetItem(
+                sample=sample,
+                tensor=tensor,
+                input_format=batch["input_format"],
+                sampled=batch["sampled"],
+                preprocessed=batch["preprocessed"],
+                full_tensor=batch["full_tensors"][j],
+                sampled_frame_ids=batch["sampled_frame_ids"][j],
+            )
 
 
 def _label_name(dataset: BaseVideoDataset, idx: int | None) -> str:
@@ -229,6 +293,8 @@ def run_attack(
     calc_frame_metrics: bool = False,
     metric_queue_limit: int | None = None,
     metric_workers: int | str | None = None,
+    batch_size: int = 1,
+    num_workers: int = 0,
     defence: BaseVideoDefence | None = None,
     adaptive: bool = False,
     save_defence_stages: bool = False,
@@ -249,8 +315,8 @@ def run_attack(
     if _defence_requires_full_video_context(defence, model) and hasattr(dataset, "full_videos"):
         setattr(dataset, "full_videos", True)
 
-    model.build_data_pipeline(pipeline_stage)
-    configured_dataset = dataset.configure_loading(model.build_data_pipeline(pipeline_stage), instant_preprocessing=False)
+    data_pipeline = model.build_data_pipeline(pipeline_stage)
+    configured_dataset = dataset.configure_loading(data_pipeline, instant_preprocessing=False)
     metric_workers = _resolve_metric_workers(metric_workers)
     metric_executor = ThreadPoolExecutor(max_workers=metric_workers)
     pending_metric_jobs: list[tuple[Future, dict]] = []
@@ -403,9 +469,15 @@ def run_attack(
 
         pending_metric_jobs[:] = remaining
 
-    for idx in tqdm(indices, total=len(indices), desc="attack"):
+    item_iter = _iter_attack_items(
+        dataset=dataset,
+        indices=indices,
+        data_pipeline=data_pipeline,
+        batch_size=batch_size,
+        num_workers=num_workers,
+    )
+    for idx, item in tqdm(item_iter, total=len(indices), desc="attack"):
         _flush_metric_jobs(block=False)
-        item = configured_dataset[idx]
         sample, sampled_video, input_format = _extract_sample_item(item)
         full_video_for_dump = item.full_tensor if isinstance(item, LoadedDatasetItem) else None
         sampled_frame_ids_for_dump = item.sampled_frame_ids if isinstance(item, LoadedDatasetItem) else None
@@ -694,6 +766,8 @@ def run_attack(
         "mean_psnr": mean_psnr,
         "mean_vmaf": mean_vmaf,
         "metric_workers": metric_workers,
+        "batch_size": max(1, int(batch_size)),
+        "num_workers": max(0, int(num_workers)),
         "save_path": str(save_path),
         "log_path": None if log_path_path is None else str(log_path_path),
         "dump_path": None if dump_path_path is None else str(dump_path_path),
