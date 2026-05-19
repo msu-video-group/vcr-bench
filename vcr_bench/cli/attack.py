@@ -13,6 +13,7 @@ from vcr_bench.cli.common import (
     build_model_dataset_context,
     print_model_options_payload,
     print_defaults_payload,
+    resolve_model_selection_for_dataset,
     write_json_output,
 )
 from vcr_bench.datasets import create_dataset
@@ -319,6 +320,7 @@ def main(argv: list[str] | None = None) -> None:
 
         defence = create_defence(args.defence, **dict(getattr(args, "defence_params", {}) or {}))
 
+    resolve_model_selection_for_dataset(args)
     model = create_model(
         args.model,
         checkpoint_path=args.checkpoint,

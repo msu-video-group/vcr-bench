@@ -9,6 +9,7 @@ from typing import Any
 
 from tqdm import tqdm
 
+from vcr_bench.cli.common import resolve_model_selection_for_dataset
 from vcr_bench.models import create_model
 from vcr_bench.presets import (
     apply_run_preset_to_args,
@@ -181,6 +182,7 @@ def main() -> None:
         raise SystemExit(f"No videos found in {video_dir} for suffixes: {sorted(suffixes)}")
 
     labels = _load_labels(args.labels)
+    resolve_model_selection_for_dataset(args)
     model = create_model(
         args.model,
         checkpoint_path=args.checkpoint,

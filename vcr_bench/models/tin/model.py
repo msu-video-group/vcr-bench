@@ -24,7 +24,9 @@ class TINClassifier(TSMClassifier):
 
     def __init__(self, *args, **kwargs) -> None:
         kwargs.setdefault("backbone", "r50")
-        super().__init__(*args, weights_dataset="sthv2", num_classes=174, **kwargs)
+        kwargs.setdefault("weights_dataset", "sthv2")
+        kwargs.setdefault("num_classes", 174)
+        super().__init__(*args, **kwargs)
 
     def _build_stage_config_dicts(self) -> tuple[dict[str, dict], dict[str, dict]]:
         common_loading = {

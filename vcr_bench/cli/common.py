@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,138 @@ class CliResolvedContext:
     preview_model: Any
     model_pipeline: Any
     dataset_kwargs: dict[str, Any]
+
+
+_WEIGHTS_DATASET_ALIASES = {
+    "ssv2": ("ssv2", "sthv2"),
+    "sthv2": ("sthv2", "ssv2"),
+    "something-something-v2": ("sthv2", "ssv2"),
+    "something_something_v2": ("sthv2", "ssv2"),
+}
+
+
+def _weights_dataset_candidates(dataset: str | None) -> list[str]:
+    if not dataset:
+        return []
+    raw = str(dataset).strip()
+    lowered = raw.lower()
+    aliases = _WEIGHTS_DATASET_ALIASES.get(lowered, (raw,))
+    out: list[str] = []
+    for value in aliases:
+        if value and value not in out:
+            out.append(value)
+    return out
+
+
+def _first_available_model_selection(weight_datasets: dict[str, list[str]], backbone: str | None) -> tuple[str | None, str | None]:
+    if backbone and backbone in weight_datasets and weight_datasets.get(backbone):
+        return backbone, str(weight_datasets[backbone][0])
+    for candidate_backbone, datasets in weight_datasets.items():
+        if datasets:
+            return str(candidate_backbone), str(datasets[0])
+    return backbone, None
+
+
+def _find_weights_dataset(
+    weight_datasets: dict[str, list[str]],
+    weights_dataset: str,
+    backbone: str | None = None,
+) -> tuple[str | None, str | None]:
+    if backbone:
+        datasets = weight_datasets.get(backbone, [])
+        if weights_dataset in datasets:
+            return backbone, weights_dataset
+        return None, None
+    for candidate_backbone, datasets in weight_datasets.items():
+        if weights_dataset in datasets:
+            return str(candidate_backbone), weights_dataset
+    return None, None
+
+
+def resolve_model_selection_for_dataset(args: Any, *, warn: bool = True) -> None:
+    model_name = getattr(args, "model", None)
+    if not model_name:
+        return
+    try:
+        options = get_model_options(model_name)
+    except Exception:
+        return
+
+    raw_weight_datasets = options.get("weight_datasets", {}) or {}
+    if not isinstance(raw_weight_datasets, dict) or not raw_weight_datasets:
+        return
+    weight_datasets: dict[str, list[str]] = {
+        str(backbone): [str(ds) for ds in (datasets or [])]
+        for backbone, datasets in raw_weight_datasets.items()
+    }
+
+    requested_backbone = getattr(args, "backbone", None)
+    requested_weights = getattr(args, "weights_dataset", None)
+    dataset_name = getattr(args, "dataset", None)
+    dataset_candidates = _weights_dataset_candidates(dataset_name)
+
+    selected_backbone: str | None = None
+    selected_weights: str | None = None
+    warning_reason = ""
+
+    if requested_weights:
+        selected_backbone, selected_weights = _find_weights_dataset(
+            weight_datasets,
+            str(requested_weights),
+            str(requested_backbone) if requested_backbone else None,
+        )
+        if selected_weights is None and not requested_backbone:
+            selected_backbone, selected_weights = _find_weights_dataset(weight_datasets, str(requested_weights))
+        if selected_weights is None:
+            selected_backbone, selected_weights = _first_available_model_selection(
+                weight_datasets,
+                str(requested_backbone) if requested_backbone else None,
+            )
+            warning_reason = f"requested weights_dataset={requested_weights!r} is unavailable"
+        elif requested_backbone and selected_backbone != str(requested_backbone):
+            warning_reason = f"requested backbone={requested_backbone!r} has no weights_dataset={requested_weights!r}"
+    else:
+        for candidate in dataset_candidates:
+            selected_backbone, selected_weights = _find_weights_dataset(
+                weight_datasets,
+                candidate,
+                str(requested_backbone) if requested_backbone else None,
+            )
+            if selected_weights is not None:
+                break
+        if selected_weights is None and not requested_backbone:
+            for candidate in dataset_candidates:
+                selected_backbone, selected_weights = _find_weights_dataset(weight_datasets, candidate)
+                if selected_weights is not None:
+                    break
+        if selected_weights is None:
+            selected_backbone, selected_weights = _first_available_model_selection(
+                weight_datasets,
+                str(requested_backbone) if requested_backbone else None,
+            )
+            if dataset_name:
+                warning_reason = f"no checkpoint is configured for dataset={dataset_name!r}"
+
+    if selected_backbone:
+        setattr(args, "backbone", selected_backbone)
+    if selected_weights:
+        setattr(args, "weights_dataset", selected_weights)
+
+    if (
+        warn
+        and selected_weights
+        and dataset_name
+        and selected_weights not in dataset_candidates
+    ):
+        reason = f" ({warning_reason})" if warning_reason else ""
+        print(
+            "WARNING: "
+            f"model {model_name!r} has no checkpoint matching dataset {dataset_name!r}{reason}; "
+            f"using backbone={selected_backbone!r}, weights_dataset={selected_weights!r}. "
+            "Predicted class names may belong to the weights dataset, not the evaluation dataset.",
+            file=sys.stderr,
+            flush=True,
+        )
 
 
 def apply_default_dataset_subset(args: Any) -> None:
@@ -53,6 +186,7 @@ def build_dataset_kwargs_for_model(args: Any, model: Any, *, pipeline_stage_over
 def build_model_dataset_context(args: Any, *, pipeline_stage_override: str | None = None) -> CliResolvedContext:
     stage = pipeline_stage_override or getattr(args, "pipeline_stage", "test")
     apply_default_dataset_subset(args)
+    resolve_model_selection_for_dataset(args)
     preview_model = create_model(
         args.model,
         checkpoint_path=getattr(args, "checkpoint", None),

@@ -10,6 +10,7 @@ from vcr_bench.cli.common import (
     build_model_dataset_context,
     print_model_options_payload,
     print_defaults_payload,
+    resolve_model_selection_for_dataset,
     write_single_row_csv_output,
     write_json_output,
 )
@@ -119,6 +120,7 @@ def main() -> None:
         )
         return
 
+    resolve_model_selection_for_dataset(args)
     model = create_model(
         args.model,
         checkpoint_path=args.checkpoint,
