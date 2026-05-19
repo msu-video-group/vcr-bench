@@ -8,6 +8,7 @@ from ..vendor_mmaction.resnet3d import ResNet3d
 
 class I3DNonLocalClassifier(I3DClassifier):
     model_name = "i3dnonlocal"
+    logit_temperature = 10.0
     MODEL_CAPABILITIES: dict[str, Any] = {
         "backbones": {
             "r50": {

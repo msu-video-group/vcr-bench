@@ -27,6 +27,7 @@ class BaseVideoClassifier(ABC):
     model_name = "unknown"
     MODEL_CAPABILITIES: dict[str, Any] = {"backbones": {}}
     grad_forward_chunk_size: int | None = None
+    logit_temperature: float = 1.0
 
     def train(self, mode: bool = True) -> "BaseVideoClassifier":
         module = getattr(self, "model", None)
@@ -355,6 +356,11 @@ class BaseVideoClassifier(ABC):
                         logits = logits[0]
         if logits.ndim == 1:
             logits = logits.unsqueeze(0)
+        temperature = float(getattr(self, "logit_temperature", 1.0) or 1.0)
+        if temperature <= 0:
+            raise ValueError(f"{self.__class__.__name__}.logit_temperature must be positive")
+        if temperature != 1.0:
+            logits = logits / temperature
         return logits
 
     def _probs_from_logits_like(self, logits_or_probs: torch.Tensor) -> torch.Tensor:

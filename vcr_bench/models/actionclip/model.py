@@ -71,6 +71,9 @@ class ActionClipClassifier(BaseVideoClassifier):
     model_name = "actionclip"
     raw_input_format = "NTHWC"
     preprocessed_format = "NTCHW"
+    # The wrapped ActionCLIP head emits 100x cosine logits. Keep argmax unchanged
+    # while reducing softmax saturation in both grad and no-grad paths.
+    logit_temperature = 10.0
     MODEL_CAPABILITIES: dict[str, Any] = {
         "backbones": {
             "vit_b16": {
