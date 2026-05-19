@@ -3,7 +3,7 @@
   "tmux_session": "29m_pli",
   "repo_path": "~/users/29m_pli/vcr-bench",
   "job_name": "29m_pli",
-  "max_simultaneous_jobs": 32,
+  "max_simultaneous_jobs": 40,
   "max_attacks_per_job": 27,
   "max_failures": 2,
   "poll_interval_sec": 180,
