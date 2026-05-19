@@ -334,8 +334,8 @@ def _ffmpeg_filter_path(executable, path):
 
 def _ffmpeg_supports_libvmaf(ffmpeg):
     global _FFMPEG_LIBVMAF_AVAILABLE
-    if _FFMPEG_LIBVMAF_AVAILABLE is not None:
-        return _FFMPEG_LIBVMAF_AVAILABLE
+    if _FFMPEG_LIBVMAF_AVAILABLE is True:
+        return True
     try:
         result = subprocess.run(
             [ffmpeg, "-hide_banner", "-filters"],
@@ -344,10 +344,12 @@ def _ffmpeg_supports_libvmaf(ffmpeg):
             timeout=10,
             text=True,
         )
-        _FFMPEG_LIBVMAF_AVAILABLE = result.returncode == 0 and " libvmaf " in result.stdout
+        available = result.returncode == 0 and " libvmaf " in (result.stdout + result.stderr)
+        if available:
+            _FFMPEG_LIBVMAF_AVAILABLE = True
+        return available
     except Exception:
-        _FFMPEG_LIBVMAF_AVAILABLE = False
-    return _FFMPEG_LIBVMAF_AVAILABLE
+        return False
 
 
 def _run_ffmpeg_vmaf(ffmpeg, ref_np, dist_np, log_path, timeout_sec):
@@ -451,8 +453,13 @@ def VMAF(x, y):
         return 0.0
     ref_np = to_uint8_video(x)
     dist_np = to_uint8_video(y)
-    ffmpeg = shutil.which(os.getenv("FFMPEG_BIN", "ffmpeg"))
-    vqmt = shutil.which(os.getenv("VQMT_BIN", "vqmt"))
+    def _resolve_bin(env_var, default):
+        path = os.getenv(env_var, default)
+        if os.path.isabs(path):
+            return path if (os.path.isfile(path) and os.access(path, os.X_OK)) else None
+        return shutil.which(path)
+    ffmpeg = _resolve_bin("FFMPEG_BIN", "ffmpeg")
+    vqmt = _resolve_bin("VQMT_BIN", "vqmt")
     ref_video = None
     dist_video = None
     log_file = tempfile.NamedTemporaryFile(suffix='.json', delete=False)

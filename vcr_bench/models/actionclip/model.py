@@ -138,7 +138,9 @@ class ActionClipClassifier(BaseVideoClassifier):
             self._load_checkpoint(self.checkpoint_path)
         else:
             self.checkpoint_path = checkpoint_path
-        self.model.eval().to(self.device)
+        # CLIP checkpoints are stored in fp16; convert to fp32 so that adversarial
+        # gradient computation (softmax over 100× cosine logits) doesn't vanish in fp16.
+        self.model.float().eval().to(self.device)
         for param in self.model.parameters():
             param.requires_grad = False
 

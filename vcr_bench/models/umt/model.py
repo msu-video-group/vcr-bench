@@ -1,17 +1,12 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 import torch
 
 from ..base import BaseVideoClassifier
-from ..legacy_imports import import_attr
 from ..pipeline_config import PipelineStage
-
-
-def _umt_root() -> Path:
-    return Path(__file__).resolve().parents[2] / "Classifiers" / "UMT"
+from ._impl import umt_vit_large_patch16_224
 
 
 class UMTClassifier(BaseVideoClassifier):
@@ -64,8 +59,7 @@ class UMTClassifier(BaseVideoClassifier):
             param.requires_grad = False
 
     def _build_model(self) -> torch.nn.Module:
-        factory = import_attr("models", "umt_vit_large_patch16_224", _umt_root(), purge_modules=("models",))
-        return factory(
+        return umt_vit_large_patch16_224(
             num_classes=self.num_classes,
             all_frames=8,
             tubelet_size=1,

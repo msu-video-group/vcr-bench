@@ -21,7 +21,8 @@ class OnePeaceClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_relpath": "Classifiers/ONE-PEACE/checkpoint/onepeace_video_k400.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/onepeace_video_k400.pth",
+                        "checkpoint_filename": "onepeace_video_k400.pth",
                     }
                 },
             }
@@ -37,6 +38,7 @@ class OnePeaceClassifier(BaseVideoClassifier):
         grad_forward_chunk_size: int | None = None,
         load_weights: bool | None = None,
         num_classes: int | None = None,
+        auto_download: bool = True,
     ) -> None:
         self.device = torch.device(device if (device != "cuda" or torch.cuda.is_available()) else "cpu")
         self.backbone = backbone or "vit_l40"
@@ -69,7 +71,12 @@ class OnePeaceClassifier(BaseVideoClassifier):
                 dropout_ratio=0.5,
             ),
         )
-        self.checkpoint_path = checkpoint_path or self._default_checkpoint_path(self.backbone, self.weights_dataset)
+        self.checkpoint_path = self.resolve_checkpoint_path(
+            self.backbone,
+            self.weights_dataset,
+            checkpoint_path,
+            auto_download=auto_download,
+        )
         should_load = bool(self.checkpoint_path) if load_weights is None else bool(load_weights)
         if should_load:
             if not self.checkpoint_path:

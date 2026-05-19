@@ -1,17 +1,12 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 import torch
 
 from ..base import BaseVideoClassifier
-from ..legacy_imports import import_attr
 from ..pipeline_config import PipelineStage
-
-
-def _internvideo_root() -> Path:
-    return Path(__file__).resolve().parents[2] / "Classifiers" / "InternVideo"
+from ._impl import internvideo2_1B_patch14_224
 
 
 class InternVideo2Classifier(BaseVideoClassifier):
@@ -64,13 +59,7 @@ class InternVideo2Classifier(BaseVideoClassifier):
             param.requires_grad = False
 
     def _build_model(self) -> torch.nn.Module:
-        factory = import_attr(
-            "InternVideo2.single_modality.models",
-            "internvideo2_1B_patch14_224",
-            _internvideo_root(),
-            purge_modules=("InternVideo2",),
-        )
-        return factory(
+        return internvideo2_1B_patch14_224(
             num_classes=self.num_classes,
             use_flash_attn=False,
             use_fused_rmsnorm=False,
