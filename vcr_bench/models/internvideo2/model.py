@@ -20,7 +20,8 @@ class InternVideo2Classifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_relpath": "Classifiers/InternVideo/InternVideo2/single_modality/checkpoint/1B_ft_k710_ft_k400_f16.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/internvideo2_1B_ft_k710_ft_k400_f16.pth",
+                        "checkpoint_filename": "internvideo2_1B_ft_k710_ft_k400_f16.pth",
                     }
                 },
             }
@@ -36,6 +37,7 @@ class InternVideo2Classifier(BaseVideoClassifier):
         grad_forward_chunk_size: int | None = None,
         load_weights: bool | None = None,
         num_classes: int | None = None,
+        auto_download: bool = True,
     ) -> None:
         self.device = torch.device(device if (device != "cuda" or torch.cuda.is_available()) else "cpu")
         self.backbone = backbone or "vit_1b_p14"
@@ -48,7 +50,12 @@ class InternVideo2Classifier(BaseVideoClassifier):
         self._active_stage: PipelineStage = "test"  # type: ignore[assignment]
         self._bind_stage_functions("test")
         self.model = self._build_model()
-        self.checkpoint_path = checkpoint_path or self._default_checkpoint_path(self.backbone, self.weights_dataset)
+        self.checkpoint_path = self.resolve_checkpoint_path(
+            self.backbone,
+            self.weights_dataset,
+            checkpoint_path,
+            auto_download=auto_download,
+        )
         should_load = bool(self.checkpoint_path) if load_weights is None else bool(load_weights)
         if should_load:
             if not self.checkpoint_path:

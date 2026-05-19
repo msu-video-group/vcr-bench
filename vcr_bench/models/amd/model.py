@@ -20,7 +20,8 @@ class AmdK400Classifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_relpath": "Classifiers/AMD/data/vitb_k400_finetune_90e.pth",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/amd_vitb_k400_finetune_90e.pth",
+                        "checkpoint_filename": "amd_vitb_k400_finetune_90e.pth",
                     },
                 },
             },
