@@ -206,7 +206,7 @@ def build_batch_attack_multi_sbatch_cmd(main_cfg, combos):
     sbatch_args.extend(["--job-name", str(main_cfg.get("job_name", "vcr_bench"))])
     if _is_single_gpu_launch_mode(launch_mode):
         cpus = int(slurm_cfg.get("single_gpu_cpus", 16))
-        sbatch_args.extend(["--nodes", "1", "--ntasks", "1", "--gres", "gpu:1", "--cpus-per-gpu", str(cpus)])
+        sbatch_args.extend(["--nodes", "1", "--ntasks", "1", "--gres=gpu:1", "--cpus-per-task", str(cpus)])
         exclusive = str(slurm_cfg.get("single_gpu_exclusive", "user")).strip()
         if exclusive:
             sbatch_args.append(f"--exclusive={exclusive}" if exclusive != "true" else "--exclusive")

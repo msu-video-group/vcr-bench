@@ -151,9 +151,9 @@ filename = "actionclip_vit_b16_32f_kinetics400.pth"
 revision = "main"
 local_subdir = "vcr_bench/models/actionclip/checkpoints"
 
-[checkpoints.internvideo_base_kinetics400]
+[checkpoints.internvideo_vit_base_p16_kinetics400]
 model = "internvideo"
-backbone = "base"
+backbone = "vit_base_p16"
 weights_dataset = "kinetics400"
 repo_id = "vcr-bench/checkpoints-internvideo"
 filename = "internvideo_vit_base_p16_kinetics400.bin"

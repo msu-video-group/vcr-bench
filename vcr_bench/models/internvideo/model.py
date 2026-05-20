@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import torch
+from huggingface_hub import hf_hub_download
 
 from ..base import BaseVideoClassifier
 from ..pipeline_config import PipelineStage
@@ -20,7 +22,7 @@ class InternVideoClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": "https://huggingface.co/OpenGVLab/InternVideoMAE_models/resolve/main/mae-b/pytorch_model.bin",
+                        "checkpoint_url": "https://huggingface.co/vcr-bench/checkpoints-internvideo/resolve/main/internvideo_vit_base_p16_kinetics400.bin",
                         "checkpoint_filename": "internvideo_vit_base_p16_kinetics400.bin",
                     }
                 },
@@ -104,18 +106,48 @@ class InternVideoClassifier(BaseVideoClassifier):
         return loading, preprocessing
 
     def _load_checkpoint(self, checkpoint_path: str) -> None:
+        state_dict = self._read_checkpoint_state_dict(checkpoint_path)
+        missing, unexpected = self.model.load_state_dict(state_dict, strict=False)
+        missing = [key for key in missing if not key.endswith("num_batches_tracked")]
+        if "head.weight" in missing or "head.bias" in missing:
+            repaired_path = self._redownload_classifier_checkpoint(checkpoint_path)
+            if repaired_path is not None:
+                state_dict = self._read_checkpoint_state_dict(repaired_path)
+                missing, unexpected = self.model.load_state_dict(state_dict, strict=False)
+                missing = [key for key in missing if not key.endswith("num_batches_tracked")]
+            if "head.weight" in missing or "head.bias" in missing:
+                raise RuntimeError(
+                    "InternVideo checkpoint is missing classifier weights. "
+                    "Remove the MAE pretrain file or pass a Kinetics-400 fine-tuned checkpoint."
+                )
+        if unexpected and len(unexpected) == len(state_dict):
+            raise RuntimeError("InternVideo checkpoint keys did not match the model")
+
+    def _read_checkpoint_state_dict(self, checkpoint_path: str) -> dict[str, torch.Tensor]:
         checkpoint = torch.load(checkpoint_path, map_location="cpu")
-        state_dict = self.extract_tensor_state_dict(
+        return self.extract_tensor_state_dict(
             checkpoint,
             root_keys=("state_dict", "model", "module"),
             strip_prefixes=("module.", "backbone."),
         )
-        missing, unexpected = self.model.load_state_dict(state_dict, strict=False)
-        missing = [key for key in missing if not key.endswith("num_batches_tracked")]
-        if "head.weight" in missing or "head.bias" in missing:
-            raise RuntimeError("InternVideo checkpoint is missing classifier weights")
-        if unexpected and len(unexpected) == len(state_dict):
-            raise RuntimeError("InternVideo checkpoint keys did not match the model")
+
+    def _redownload_classifier_checkpoint(self, checkpoint_path: str) -> str | None:
+        path = Path(checkpoint_path)
+        if path.name != "internvideo_vit_base_p16_kinetics400.bin":
+            return None
+        try:
+            return str(
+                hf_hub_download(
+                    repo_id="vcr-bench/checkpoints-internvideo",
+                    filename=path.name,
+                    revision="main",
+                    repo_type="model",
+                    local_dir=str(path.parent),
+                    force_download=True,
+                )
+            )
+        except Exception:
+            return None
 
 
 MODEL_CLASS = InternVideoClassifier

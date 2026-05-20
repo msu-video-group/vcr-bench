@@ -23,10 +23,16 @@ class TRNClassifier(TSNClassifier):
     }
 
     def __init__(self, *args, **kwargs) -> None:
-        kwargs.setdefault("backbone", "r50")
-        kwargs.setdefault("weights_dataset", "sthv2")
-        kwargs.setdefault("num_classes", 174)
-        super().__init__(*args, **kwargs)
+        backbone = kwargs.pop("backbone", None)
+        weights_dataset = kwargs.pop("weights_dataset", None)
+        num_classes = kwargs.pop("num_classes", None)
+        super().__init__(
+            *args,
+            backbone="r50" if backbone is None else backbone,
+            weights_dataset="sthv2" if weights_dataset is None else weights_dataset,
+            num_classes=174 if num_classes is None else num_classes,
+            **kwargs,
+        )
 
     def _build_stage_config_dicts(self) -> tuple[dict[str, dict], dict[str, dict]]:
         common_loading = {

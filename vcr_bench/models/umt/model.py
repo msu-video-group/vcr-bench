@@ -74,7 +74,7 @@ class UMTClassifier(BaseVideoClassifier):
             attn_drop_rate=0.0,
             use_checkpoint=False,
             use_mean_pooling=True,
-            init_scale=0.001,
+            init_scale=0.0,  # checkpoint has no layer-scale (gamma) params
         )
 
     def _build_stage_config_dicts(self) -> tuple[dict[str, dict], dict[str, dict]]:
