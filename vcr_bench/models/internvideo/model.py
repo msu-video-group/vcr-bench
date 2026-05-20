@@ -129,6 +129,9 @@ class InternVideoClassifier(BaseVideoClassifier):
             checkpoint,
             root_keys=("state_dict", "model", "module"),
             strip_prefixes=("module.", "backbone."),
+            # MMAction2-style checkpoints store the classifier as cls_head.fc_cls.*
+            # rather than head.*; remap so it loads into self.head.
+            key_replacements=(("cls_head.fc_cls.", "head."),),
         )
 
     def _redownload_classifier_checkpoint(self, checkpoint_path: str) -> str | None:

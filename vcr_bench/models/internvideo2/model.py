@@ -105,17 +105,14 @@ class InternVideo2Classifier(BaseVideoClassifier):
         return loading, preprocessing
 
     def _load_checkpoint(self, checkpoint_path: str) -> None:
-        checkpoint = torch.load(checkpoint_path, map_location="cpu")
-        if isinstance(checkpoint, dict):
-            if "module" in checkpoint:
-                state_dict = checkpoint["module"]
-            elif "state_dict" in checkpoint:
-                state_dict = checkpoint["state_dict"]
-            else:
-                state_dict = checkpoint
-        else:
-            raise ValueError("Unsupported InternVideo2 checkpoint format")
-        self.model.load_state_dict(state_dict, strict=True)
+        missing, unexpected = self.load_converted_checkpoint(
+            checkpoint_path,
+            strict=False,
+            root_keys=("module", "state_dict", "model"),
+            required_keys=("head.weight", "head.bias"),
+        )
+        if unexpected and len(unexpected) == len(missing):
+            raise RuntimeError("InternVideo2 checkpoint keys did not match the model")
 
 
 MODEL_CLASS = InternVideo2Classifier
