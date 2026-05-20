@@ -3,9 +3,20 @@ from __future__ import annotations
 
 from functools import partial
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+
+def _get_sinusoid_encoding_table(n_position: int, d_hid: int) -> torch.Tensor:
+    """Sinusoidal positional encoding table (non-learnable)."""
+    def get_pos_angle_vec(position: int) -> list[float]:
+        return [position / (10000 ** (2 * (i // 2) / d_hid)) for i in range(d_hid)]
+    table = np.array([get_pos_angle_vec(pos) for pos in range(n_position)], dtype=np.float32)
+    table[:, 0::2] = np.sin(table[:, 0::2])
+    table[:, 1::2] = np.cos(table[:, 1::2])
+    return torch.tensor(table, dtype=torch.float32).unsqueeze(0)
 
 
 def _drop_path(x: torch.Tensor, drop_prob: float = 0.0, training: bool = False) -> torch.Tensor:
@@ -148,8 +159,12 @@ class VisionTransformer(nn.Module):
                                       in_chans=in_chans, embed_dim=embed_dim,
                                       num_frames=all_frames, tubelet_size=tubelet_size)
         num_patches = self.patch_embed.num_patches
-        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
-        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim))
+        # Sinusoidal positional encoding – not learnable, not saved in state_dict
+        self.register_buffer(
+            "pos_embed",
+            _get_sinusoid_encoding_table(num_patches, embed_dim),
+            persistent=False,
+        )
         self.pos_drop = nn.Dropout(p=drop_rate)
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]
         self.blocks = nn.ModuleList([
@@ -161,8 +176,6 @@ class VisionTransformer(nn.Module):
         self.norm = nn.Identity() if use_mean_pooling else norm_layer(embed_dim)
         self.fc_norm = norm_layer(embed_dim) if use_mean_pooling else None
         self.head = nn.Linear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
-        nn.init.trunc_normal_(self.pos_embed, std=0.02)
-        nn.init.trunc_normal_(self.cls_token, std=0.02)
         self.apply(self._init_weights)
 
     def _init_weights(self, m: nn.Module) -> None:
@@ -175,10 +188,7 @@ class VisionTransformer(nn.Module):
             nn.init.constant_(m.weight, 1.0)
 
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
-        B = x.shape[0]
         x = self.patch_embed(x)
-        cls_tokens = self.cls_token.expand(B, -1, -1)
-        x = torch.cat((cls_tokens, x), dim=1)
         x = self.pos_drop(x + self.pos_embed)
         for blk in self.blocks:
             if self.use_checkpoint:
@@ -188,7 +198,7 @@ class VisionTransformer(nn.Module):
                 x = blk(x)
         x = self.norm(x)
         if self.fc_norm is not None:
-            return self.fc_norm(x[:, 1:].mean(dim=1))
+            return self.fc_norm(x.mean(dim=1))
         return x[:, 0]
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

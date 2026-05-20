@@ -22,8 +22,8 @@ class InternVideoClassifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": "https://huggingface.co/vcr-bench/checkpoints-internvideo/resolve/main/internvideo_vit_base_p16_kinetics400.bin",
-                        "checkpoint_filename": "internvideo_vit_base_p16_kinetics400.bin",
+                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/internvideo_vit_base_p16_kinetics400.pth",
+                        "checkpoint_filename": "internvideo_vit_base_p16_kinetics400.pth",
                     }
                 },
             }
@@ -129,19 +129,24 @@ class InternVideoClassifier(BaseVideoClassifier):
             checkpoint,
             root_keys=("state_dict", "model", "module"),
             strip_prefixes=("module.", "backbone."),
-            # MMAction2-style checkpoints store the classifier as cls_head.fc_cls.*
-            # rather than head.*; remap so it loads into self.head.
-            key_replacements=(("cls_head.fc_cls.", "head."),),
+            # Remappings are no-ops on the canonical converted checkpoint but
+            # keep compatibility with raw mmaction2 or pjlab-format checkpoints.
+            key_replacements=(
+                ("cls_head.fc_cls.", "head."),
+                ("patch_embed.projection.", "patch_embed.proj."),
+                (".mlp.layers.0.0.", ".mlp.fc1."),
+                (".mlp.layers.1.", ".mlp.fc2."),
+            ),
         )
 
     def _redownload_classifier_checkpoint(self, checkpoint_path: str) -> str | None:
         path = Path(checkpoint_path)
-        if path.name != "internvideo_vit_base_p16_kinetics400.bin":
+        if path.name != "internvideo_vit_base_p16_kinetics400.pth":
             return None
         try:
             return str(
                 hf_hub_download(
-                    repo_id="vcr-bench/checkpoints-internvideo",
+                    repo_id="maxv65/vcr-bench",
                     filename=path.name,
                     revision="main",
                     repo_type="model",
