@@ -3,8 +3,40 @@
 This mirrors the OpenGVLab InternVideo2 classifier head used by the K400
 fine-tuned checkpoints: a 1B video encoder followed by an attentive CLIP
 projector and a 768-wide classification head.
+
+NOTE: The model is fine-tuned on K400 starting from a K710-pretrained checkpoint.
+The head has 400 outputs, but the K400 class IDs inside K710 are not contiguous —
+they are listed (in K400 label order) by ``_K400_SORTED_INDICES`` below.
+The forward pass must apply this permutation so logit[i] corresponds to K400
+class i, not K710 class i.
 """
 from __future__ import annotations
+
+# Maps K400 label index (0-399) → column index in the head's 400-output weight
+# matrix.  Taken verbatim from OpenGVLab/InternVideo2 single_modality/models/internvideo2.py.
+_K400_SORTED_INDICES: list[int] = [
+    341, 158, 189, 16, 398, 302, 202, 318, 80, 323, 249, 315, 18, 88, 365, 52, 257, 103, 113,
+    162, 75, 338, 388, 352, 308, 125, 159, 82, 10, 44, 92, 396, 185, 258, 383, 178, 71, 260,
+    15, 335, 192, 326, 58, 133, 172, 120, 334, 280, 306, 101, 337, 173, 203, 356, 4, 209, 332,
+    7, 65, 115, 95, 81, 232, 344, 303, 201, 342, 351, 165, 397, 252, 368, 285, 244, 363, 355,
+    79, 268, 110, 343, 72, 219, 321, 208, 345, 340, 84, 61, 206, 188, 62, 55, 29, 237, 2, 286,
+    245, 90, 8, 372, 325, 380, 226, 274, 346, 354, 97, 28, 246, 194, 212, 26, 281, 147, 215,
+    264, 30, 14, 301, 275, 66, 265, 224, 104, 121, 357, 117, 54, 107, 279, 109, 122, 289, 78,
+    59, 241, 179, 291, 349, 142, 152, 220, 311, 386, 145, 239, 392, 99, 266, 100, 176, 314, 167,
+    64, 160, 216, 49, 207, 222, 184, 171, 22, 234, 148, 339, 218, 294, 324, 233, 262, 9, 377,
+    41, 390, 53, 150, 361, 73, 247, 96, 60, 364, 298, 70, 395, 143, 236, 336, 196, 385, 33,
+    144, 1, 307, 393, 256, 263, 375, 235, 273, 243, 106, 366, 271, 186, 287, 51, 299, 175, 276,
+    369, 57, 11, 373, 35, 163, 297, 195, 399, 290, 382, 319, 134, 40, 310, 223, 151, 270, 3,
+    387, 137, 31, 309, 217, 17, 374, 190, 277, 327, 135, 394, 50, 284, 177, 67, 379, 141, 353,
+    108, 37, 136, 197, 272, 21, 312, 213, 164, 182, 250, 91, 89, 253, 199, 333, 248, 63, 119,
+    0, 130, 102, 32, 227, 362, 296, 23, 47, 156, 180, 183, 313, 5, 350, 389, 328, 112, 93, 378,
+    359, 83, 282, 174, 371, 48, 360, 24, 376, 68, 42, 221, 140, 181, 118, 116, 381, 94, 77,
+    27, 45, 87, 230, 292, 76, 39, 169, 131, 19, 126, 367, 105, 114, 193, 210, 305, 149, 98,
+    259, 200, 12, 320, 254, 146, 278, 242, 261, 36, 293, 251, 214, 25, 304, 204, 157, 255, 111,
+    229, 283, 128, 161, 170, 86, 74, 138, 6, 198, 384, 187, 155, 348, 154, 166, 124, 205, 132,
+    13, 34, 225, 43, 347, 228, 358, 38, 127, 231, 316, 269, 288, 139, 168, 46, 238, 317, 69,
+    211, 123, 391, 330, 295, 322, 329, 129, 240, 153, 267, 85, 300, 20, 191, 56, 370, 331,
+]
 
 import math
 from functools import partial
@@ -391,7 +423,13 @@ class InternVideo2(nn.Module):
 
         x = self.clip_projector(x)
         x = self.fc_norm(x)
-        return self.head(self.fc_dropout(x))
+        x = self.head(self.fc_dropout(x))
+        # Re-map head columns to K400 label order.  The checkpoint was fine-tuned
+        # starting from K710 weights; the 400 K400 classes are not at consecutive
+        # indices in the weight matrix.  Only apply when this is a 400-class head.
+        if x.shape[1] == len(_K400_SORTED_INDICES):
+            x = x[:, _K400_SORTED_INDICES]
+        return x
 
 
 def internvideo2_1B_patch14_224(**kwargs: object) -> InternVideo2:
