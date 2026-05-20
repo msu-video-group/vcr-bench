@@ -7,11 +7,10 @@
       "num_videos": 100,
       "save_videos": 5,
       "models": [
-        "amd", "c2d", "c3d", "i3d", "i3dnonlocal",
-        "ila", "internvideo2", "mvitv2", "onepeace", "r2plus1d",
-        "slowfast", "slowonly", "tadaformer", "tanet", "timesformer", 
-        "tpn", "tsm", "tsmnonlocal", "tsm_surrogate", "tsn", "umt",
-        "uniformer", "uniformerv2", "videomae", "videomaev2", "videoswin", "x3d"
+        "actionclip", "timesformer", "tsmnonlocal", "ila",
+        "tsm", "tsn", "uniformerv2", "onepeace", "amd",
+        "tadaformer", "slowonly", "videomae", "tpn", "videomaev2",
+        "c2d", "r2plus1d", "tanet", "uniformer", "videoswin", "mvitv2"
       ],
       "attacks": [
         {"name": "amifgsm",        "target": true},
@@ -24,13 +23,6 @@
         {"name": "stadv",          "target": true}
       ],
       "defences": [
-        {"name": "no_defence",           "adaptive": false},
-        {"name": "crop_resize",          "adaptive": false},
-        {"name": "flip",                 "adaptive": false},
-        {"name": "gaussian_blur",        "adaptive": false},
-        {"name": "rotate",               "adaptive": false},
-        {"name": "shuffle",              "adaptive": false},
-        {"name": "temporal_median",      "adaptive": false},
         {"name": "crop_resize",          "adaptive": true},
         {"name": "flip",                 "adaptive": true},
         {"name": "gaussian_blur",        "adaptive": true},

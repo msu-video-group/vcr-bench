@@ -64,6 +64,13 @@ def handle_stop_signal(signum, _frame):
     logging.info("received stop signal: %s", signum)
 
 
+def normalize_slurm_job_id(job_id):
+    job_id = str(job_id).strip()
+    if not job_id:
+        return ""
+    return job_id.split("_", 1)[0].split(".", 1)[0]
+
+
 def get_running_job_ids(job_name=None, tracked_job_ids=None):
     if tracked_job_ids:
         ids_arg = ",".join(str(jid) for jid in tracked_job_ids if str(jid).strip())
@@ -79,7 +86,12 @@ def get_running_job_ids(job_name=None, tracked_job_ids=None):
         if result.returncode != 0:
             logging.warning("squeue failed: %s", result.stderr.strip())
             return None
-        return set(line.strip() for line in result.stdout.splitlines() if line.strip())
+        return {
+            normalized
+            for line in result.stdout.splitlines()
+            for normalized in [normalize_slurm_job_id(line)]
+            if normalized
+        }
     except FileNotFoundError:
         logging.error("squeue not found")
         return None
@@ -100,7 +112,9 @@ def get_job_queue_info(tracked_job_ids):
         for line in result.stdout.splitlines():
             parts = line.strip().split("|", 2)
             if len(parts) == 3:
-                info[parts[0]] = {"state": parts[1], "reason": parts[2]}
+                job_id = normalize_slurm_job_id(parts[0])
+                if job_id:
+                    info[job_id] = {"state": parts[1], "reason": parts[2]}
         return info
     except FileNotFoundError:
         return {}
