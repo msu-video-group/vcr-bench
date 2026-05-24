@@ -23,6 +23,7 @@
         {"name": "stadv",          "target": true}
       ],
       "defences": [
+        {"name": "no_defence",           "adaptive": false},
         {"name": "crop_resize",          "adaptive": true},
         {"name": "flip",                 "adaptive": true},
         {"name": "gaussian_blur",        "adaptive": true},

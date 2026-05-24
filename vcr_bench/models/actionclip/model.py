@@ -3,18 +3,60 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import importlib
+import sys
+
 import torch
 import torch.nn as nn
 
 from ..base import BaseVideoClassifier
 from ..ila.model import _load_labels
-from ..legacy_imports import isolated_import_paths
 from ..pipeline_config import PipelineStage
 
 _ILA_VENDOR_ROOT = Path(__file__).resolve().parents[1] / "ila" / "vendor"
-with isolated_import_paths(_ILA_VENDOR_ROOT):
-    import clip
-    from clip.model import CLIP, Transformer, build_model as build_clip_model
+
+
+def _is_ila_vendor_path(path: str) -> bool:
+    try:
+        resolved = Path(path).resolve()
+    except OSError:
+        return False
+    return resolved == _ILA_VENDOR_ROOT or _ILA_VENDOR_ROOT in resolved.parents
+
+
+def _load_openai_clip():
+    original_path = list(sys.path)
+    saved_clip_modules = {
+        name: module
+        for name, module in sys.modules.items()
+        if name == "clip" or name.startswith("clip.")
+    }
+    for name in list(saved_clip_modules):
+        sys.modules.pop(name, None)
+    sys.path[:] = [path for path in sys.path if not _is_ila_vendor_path(path)]
+    try:
+        clip_module = importlib.import_module("clip")
+        clip_model_module = importlib.import_module("clip.model")
+        build_model = getattr(clip_model_module, "build_model", None)
+        if build_model is None:
+            raise ImportError(
+                f"ActionCLIP requires OpenAI CLIP with clip.model.build_model; got {clip_model_module.__file__}"
+            )
+        return (
+            clip_module,
+            clip_model_module.CLIP,
+            clip_model_module.Transformer,
+            build_model,
+        )
+    finally:
+        sys.path[:] = original_path
+        for name in list(sys.modules):
+            if name == "clip" or name.startswith("clip."):
+                sys.modules.pop(name, None)
+        sys.modules.update(saved_clip_modules)
+
+
+clip, CLIP, Transformer, build_clip_model = _load_openai_clip()
 
 
 class TransformerAdapter(nn.Module):

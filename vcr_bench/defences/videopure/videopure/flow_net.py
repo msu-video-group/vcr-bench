@@ -1,3 +1,5 @@
+import os
+
 import torch
 from einops import rearrange
 import torch.nn.functional as F
@@ -19,7 +21,7 @@ class Flow_models(torch.nn.Module):
     
     @torch.no_grad()
     def compute_flows(self,videos):
-        videos=videos.permute(0,2,1,3,4)
+        videos=videos.permute(0,2,1,3,4).contiguous()
         flows = [self.compute_flow(videos.clone())]
         flows = [rearrange(flow, 'b t c h w -> (b t) c h w') for flow in flows]
         flows = [self.resize_flow(flow, size_type='ratio', sizes=(0.125, 0.125)) for flow in flows]
@@ -108,15 +110,25 @@ class Flow_models(torch.nn.Module):
         target_h = min(h, 512)
         target_w = min(w, 512)
         if h > target_h or w > target_w:
-            lrs_down = F.interpolate(lrs.view(-1, c, h, w), size=(target_h, target_w), mode='bilinear', align_corners=False)
-            lrs_down = lrs_down.view(n, t, c, target_h, target_w)
+            lrs_down = F.interpolate(
+                lrs.contiguous().view(-1, c, h, w),
+                size=(target_h, target_w),
+                mode='bilinear',
+                align_corners=False,
+            )
+            lrs_down = lrs_down.view(n, t, c, target_h, target_w).contiguous()
         else:
-            lrs_down = lrs
+            lrs_down = lrs.contiguous()
             target_h, target_w = h, w
 
-        lrs_1 = lrs_down[:, :-1, :, :, :].reshape(-1, c, target_h, target_w)  # former
-        lrs_2 = lrs_down[:, 1:, :, :, :].reshape(-1, c, target_h, target_w)   # latter
-        flows_backward = self.flow_model(lrs_1, lrs_2).view(n, t - 1, 2, target_h, target_w)
+        lrs_1 = lrs_down[:, :-1, :, :, :].reshape(-1, c, target_h, target_w).contiguous()  # former
+        lrs_2 = lrs_down[:, 1:, :, :, :].reshape(-1, c, target_h, target_w).contiguous()   # latter
+        flow_chunk_size = max(1, int(os.getenv("VIDEOPURE_FLOW_CHUNK_SIZE", "16")))
+        flow_chunks = []
+        for start in range(0, lrs_1.shape[0], flow_chunk_size):
+            end = min(start + flow_chunk_size, lrs_1.shape[0])
+            flow_chunks.append(self.flow_model(lrs_1[start:end], lrs_2[start:end]))
+        flows_backward = torch.cat(flow_chunks, dim=0).view(n, t - 1, 2, target_h, target_w)
 
         # Upsample flow back to original resolution if needed
         if target_h != h or target_w != w:

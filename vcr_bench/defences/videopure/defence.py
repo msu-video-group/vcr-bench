@@ -334,7 +334,7 @@ class DenoiseDefence(BaseVideoDefence):
         )
 
         # [T, H, W, C] -> [C, T, H, W]  (same permute as old Denoiser.py wrapper)
-        original_video = flat_thwc.permute(3, 0, 1, 2)
+        original_video = flat_thwc.permute(3, 0, 1, 2).contiguous()
         input_t = int(original_video.shape[1])
         input_h = int(original_video.shape[2])
         input_w = int(original_video.shape[3])
