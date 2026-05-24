@@ -1,6 +1,9 @@
 *.mp4
 *.pyc
 *.pth
+vcr_bench/models/internvideo/checkpoints/mae-b/pytorch_model.bin
+!vcr_bench/defences/videopure/videopure/core/raft-things.pth
+/vcr-bench
 __pycache__/
 .pytest_cache/
 .cache/

@@ -4,6 +4,43 @@ dataset_subset = "kinetics400_mini_test"
 num_videos = 8
 models = ["x3d", "timesformer", "videomae"]
 
+[accuracy_suites.kinetics400_all_models]
+dataset = "kinetics400"
+dataset_subset = "k400_test"
+num_videos = 10
+results_root = "results/accuracy"
+models = [
+  "actionclip",
+  "amd",
+  "c2d",
+  "csn",
+  "i3d",
+  "i3dnonlocal",
+  "ila",
+  "internvideo",
+  "internvideo2",
+  "mvitv2",
+  "onepeace",
+  "r2plus1d",
+  "slowfast",
+  "slowonly",
+  "tadaformer",
+  "tanet",
+  "timesformer",
+  "tpn",
+  "tsm",
+  "tsm_surrogate",
+  "tsmnonlocal",
+  "tsn",
+  "umt",
+  "uniformer",
+  "uniformerv2",
+  "videomae",
+  "videomaev2",
+  "videoswin",
+  "x3d",
+]
+
 [attack_suites.default]
 dataset = "kinetics400"
 dataset_subset = "kinetics400_mini_test"
