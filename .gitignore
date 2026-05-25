@@ -13,6 +13,8 @@ remote_results/
 results/
 attack_logs/
 data/
+!docs/data/
+!docs/data/**
 tests/
 scripts/autolaunch/runtime/
 scripts/autolaunch/logs/
