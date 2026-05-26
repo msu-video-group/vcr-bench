@@ -1,6 +1,6 @@
 # VCR-Bench
 
-A benchmark for adversarial robustness of video classification models — run attacks, measure defences, profile VRAM, and orchestrate jobs on remote Slurm clusters.
+A benchmark for adversarial robustness of video classification models.
 
 ---
 
