@@ -59,3 +59,140 @@ attack = "mifgsm"
 [[attack_suites.default.entries]]
 model = "videomae"
 attack = "square"
+
+[attack_suites.vram_ifgsm10_all_classifiers]
+dataset = "kinetics400"
+dataset_subset = "k400_val"
+num_videos = 1
+attack_name = "vram_ifgsm10_all_classifiers"
+results_root = "results/remote_vram"
+vram_profile_root = "results/vram/ifgsm10_all_classifiers"
+lite_attack = true
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "actionclip"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "amd"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "c2d"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "c3d"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "csn"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "i3d"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "i3dnonlocal"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "ila"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "internvideo"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "internvideo2"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "mvitv2"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "onepeace"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "r2plus1d"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "slowfast"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "slowonly"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "tadaformer"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "tanet"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "timesformer"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "tin"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "tpn"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "trn"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "tsm"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "tsm_surrogate"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "tsmnonlocal"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "tsn"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "umt"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "uniformer"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "uniformerv2"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "videomae"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "videomaev2"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "videoswin"
+attack = "ifgsm"
+
+[[attack_suites.vram_ifgsm10_all_classifiers.entries]]
+model = "x3d"
+attack = "ifgsm"

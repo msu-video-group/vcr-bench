@@ -197,3 +197,166 @@ tbody tr:hover {
   font-size: 11px;
   color: #49586a;
 }
+
+.project-page {
+  background: #ffffff;
+}
+
+.project-container {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 44px 22px 64px;
+}
+
+.project-hero {
+  text-align: center;
+  padding: 18px 0 28px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: #46647f;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.project-hero h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(38px, 7vw, 72px);
+  line-height: 1.02;
+  font-weight: 700;
+}
+
+.project-subtitle {
+  max-width: 760px;
+  margin: 16px auto 0;
+  color: #34465a;
+  font-size: 20px;
+  line-height: 1.45;
+}
+
+.authors {
+  margin: 18px auto 0;
+  color: #526273;
+  font-size: 15px;
+}
+
+.project-links {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.project-links a,
+.text-link {
+  color: #0f609b;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.project-links a {
+  border: 1px solid #c8d9e8;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: #f5f9fc;
+}
+
+.project-links a:hover,
+.text-link:hover {
+  color: #083f69;
+  text-decoration: underline;
+}
+
+.project-section {
+  margin-top: 26px;
+  padding: 0;
+}
+
+.project-section h2 {
+  margin: 0 0 10px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.project-section p {
+  margin: 0;
+  color: #3d4f62;
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.figure-placeholder {
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #b8c8d7;
+  border-radius: 8px;
+  background: #f8fafc;
+  text-align: center;
+}
+
+.section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 12px;
+}
+
+.benchmark-table-wrap {
+  border-radius: 6px;
+}
+
+.benchmark-table {
+  min-width: 920px;
+}
+
+.benchmark-table th {
+  background: #eef4f8;
+}
+
+.benchmark-table td:first-child {
+  font-weight: 700;
+}
+
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+}
+
+.bibtex {
+  overflow: auto;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid #dbe4ed;
+  border-radius: 6px;
+  background: #f7f9fb;
+  color: #1e2d3d;
+}
+
+@media (max-width: 760px) {
+  .project-container {
+    padding: 28px 14px 44px;
+  }
+
+  .project-subtitle {
+    font-size: 17px;
+  }
+
+  .section-heading,
+  .project-grid {
+    display: block;
+  }
+
+  .text-link {
+    display: inline-block;
+    margin-top: 8px;
+  }
+}
