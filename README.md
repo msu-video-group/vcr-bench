@@ -299,3 +299,5 @@ vcr-bench-remote --config configs/local.toml \
 - [ONE-PEACE](https://github.com/OFA-Sys/ONE-PEACE)
 - [TAdaConv / TAdaFormer](https://github.com/alibaba-mmai-research/TAdaConv)
 - [Unmasked Teacher (UMT)](https://github.com/OpenGVLab/unmasked_teacher)
+
+We gratefully acknowledge all listed projects for their model weights, attack implementations, and defence code, which formed the basis of the corresponding components in VCR-Bench.
