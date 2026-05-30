@@ -1,0 +1,131 @@
+/* VCR-Bench academic homepage — extends Bulma */
+
+body {
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.navbar-item img {
+  max-height: 2.5rem;
+}
+
+/* ── Hero ── */
+.publication-title {
+  font-family: 'Castoro', Georgia, 'Times New Roman', serif !important;
+}
+
+.publication-authors {
+  font-size: 1.1rem;
+}
+
+.publication-authors .author-block {
+  margin-right: 6px;
+}
+
+.publication-links .link-block {
+  margin: 4px;
+}
+
+/* ── Teaser ── */
+.teaser .hero-body {
+  padding-top: 0.5rem;
+  padding-bottom: 1.5rem;
+}
+
+.teaser .hero-body img {
+  max-width: 100%;
+  border-radius: 6px;
+}
+
+.teaser-caption {
+  margin-top: 10px;
+  color: #6b7c8f;
+  font-size: 14px;
+}
+
+/* ── Section titles ── */
+.section-title {
+  font-family: 'Castoro', Georgia, serif;
+}
+
+/* ── Leaderboard tabs ── */
+#leaderboardTabs ul { gap: 8px; }
+#leaderboardTabs button { border: 1px solid #c8d9e8; background: #f5f9fc; color: #0f609b; font-weight: 600; }
+#leaderboardTabs button.is-active { background: #0f609b; color: #fff; border-color: #0f609b; }
+
+/* ── Leaderboard ── */
+.leaderboard-link {
+  font-size: 14px;
+  margin-left: 10px;
+  color: #3273dc;
+  vertical-align: middle;
+}
+
+.leaderboard-link:hover {
+  text-decoration: underline;
+}
+
+/* Summary pills (populated by home.js) */
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.pill {
+  border: 1px solid #d6dce5;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: #3c4a5b;
+  background: #f7f9fb;
+}
+
+/* Benchmark table */
+#benchmarkTable th,
+#benchmarkTable td {
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+#benchmarkTable td:first-child {
+  font-weight: 700;
+}
+
+#benchmarkTable .has-text-right {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Two-column info boxes ── */
+.info-box {
+  height: 100%;
+}
+
+/* ── BibTeX ── */
+#BibTeX pre {
+  background: #f5f7fa;
+  border: 1px solid #dbe4ed;
+  border-radius: 6px;
+  padding: 16px;
+  overflow: auto;
+  font-size: 13.5px;
+  color: #1e2d3d;
+}
+
+/* ── Footer ── */
+.footer {
+  padding: 2rem 1.5rem;
+}
+
+.footer p {
+  font-size: 14px;
+  color: #6b7c8f;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .publication-title {
+    font-size: 2.2rem !important;
+  }
+}

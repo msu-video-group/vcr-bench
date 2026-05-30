@@ -1,109 +1,277 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="VCR-Bench — Adversarial robustness benchmark for video classification models. 30+ models, 15+ attacks, 12 defences.">
   <title>VCR-Bench</title>
-  <link rel="stylesheet" href="./styles.css">
+
+  <link rel="icon" type="image/svg+xml" href="./assets/Logo1-cropped.svg">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+
+  <!-- Bulma CSS framework (same as NIC-RobustBench template) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+
+  <!-- Font Awesome icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Academic icons (arXiv, etc.) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+  <!-- VCR-Bench page customisations -->
+  <link rel="stylesheet" href="./index.css">
 </head>
-<body class="project-page">
-  <main class="project-container">
-    <header class="project-hero">
-      <p class="eyebrow">Video classifier robustness benchmark</p>
-      <h1>VCR-Bench</h1>
-      <p class="project-subtitle">
-        A benchmark page for full white-box adversarial robustness evaluation of video classifiers.
-      </p>
-      <p class="authors">
-        Author list, affiliation line, and paper venue can be placed here.
-      </p>
-      <nav class="project-links" aria-label="Project links">
-        <a href="./explorer.html">Interactive Explorer</a>
-        <a href="https://github.com/msu-video-group" rel="noreferrer">Code</a>
-        <a href="#leaderboard">Leaderboard</a>
-        <a href="#bibtex">BibTeX</a>
-      </nav>
-    </header>
+<body>
 
-    <section class="project-section figure-placeholder" aria-label="Framework overview placeholder">
-      <div>
-        <h2>Framework Overview</h2>
-        <p>
-          Reserve this area for a pipeline figure, benchmark diagram, or teaser image.
-        </p>
+<!-- ══════════════════════════════════════════════
+     HERO — title, authors, links
+══════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+
+          <!-- Logo -->
+          <img src="./assets/Logo1-cropped.svg"
+               alt="VCR-Bench logo"
+               style="width:260px; margin-bottom:18px;">
+
+          <h1 class="title is-1 publication-title">
+            VCR-Bench: <span style="font-weight:400; color:#4a5568;">A benchmark for adversarial robustness of video classification models</span>
+          </h1>
+
+          <!-- Authors -->
+          <div class="is-size-5 publication-authors" style="margin-bottom:6px;">
+            <span class="author-block">Maksim Plinskiy<sup>1</sup>,</span>
+            <span class="author-block">Aleksandr Gushchin<sup>2,1</sup>,</span>
+            <span class="author-block">Sergey Lavrushkin<sup>3</sup>,</span>
+            <span class="author-block">Dmitriy S. Vatolin<sup>3</sup>,</span>
+            <span class="author-block">Anastasia Antsiferova<sup>2,3</sup></span>
+          </div>
+          <div class="is-size-6 publication-authors" style="margin-bottom:4px; color:#526273;">
+            <span class="author-block"><sup>1</sup>Lomonosov Moscow State University,</span>
+            <span class="author-block"><sup>2</sup>Trusted AI Research Center RAS,</span>
+            <span class="author-block"><sup>3</sup>MSU Institute for Artificial Intelligence</span>
+          </div>
+
+          <!-- Links row -->
+          <div class="column has-text-centered" style="margin-top:6px;">
+            <div class="publication-links">
+
+              <span class="link-block">
+                <a href="https://github.com/msu-video-group/vcr-bench"
+                   target="_blank"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fab fa-github"></i></span>
+                  <span>Code</span>
+                </a>
+              </span>
+
+              <span class="link-block">
+                <a href="./explorer.html"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-chart-bar"></i></span>
+                  <span>Explorer</span>
+                </a>
+              </span>
+
+              <span class="link-block">
+                <a href="#leaderboard"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-trophy"></i></span>
+                  <span>Leaderboard</span>
+                </a>
+              </span>
+
+              <span class="link-block">
+                <a href="#BibTeX"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="ai ai-arxiv"></i></span>
+                  <span>BibTeX</span>
+                </a>
+              </span>
+
+            </div>
+          </div><!-- /links row -->
+
+        </div>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
-    <section class="project-section">
-      <h2>Abstract</h2>
-      <p>
-        VCR-Bench evaluates adversarial robustness of video classification models under a full white-box
-        setting. This page summarizes the ordinary <code>full_white_box</code> track and links to an
-        interactive explorer with per-model, per-attack, and per-defence analysis.
-      </p>
-    </section>
 
-    <section id="leaderboard" class="project-section">
-      <div class="section-heading">
-        <div>
-          <h2>Full White-Box Leaderboard</h2>
+<!-- ══════════════════════════════════════════════
+     TEASER — pipeline diagram
+══════════════════════════════════════════════ -->
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body has-text-centered">
+      <img src="./assets/scheme2.svg"
+           alt="VCR-Bench pipeline overview"
+           style="width:100%; max-width:860px;">
+      <p class="teaser-caption">Pipeline overview of the VCR-Bench evaluation framework.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     ABSTRACT
+══════════════════════════════════════════════ -->
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3 section-title">Abstract</h2>
+        <div class="content has-text-justified">
           <p>
-            Aggregated over ordinary full white-box attacks, defences, and completed model runs.
+            Robustness of image classification has several benchmarks, but their video counterparts
+            are absent. In video classification the temporal dimension introduces additional degrees
+            of freedom for adversarial attacks, defenses, and preprocessing. Temporal sampling,
+            perturbation budgets, and metric aggregation also interact in ways with no direct analogue
+            in the image setting. Therefore, robustness for video classifiers is studied across
+            scattered, incompatible implementations, making reported numbers hard to reproduce and
+            analyze. We introduce <strong>VCR-Bench</strong>, a modular open-source benchmark
+            framework that standardizes video loading, wrappers for classifiers, adversarial attacks
+            and defenses, perceptual metrics, configuration presets, and result logging. VCR-Bench
+            currently integrates <strong>30 video classification models</strong>,
+            <strong>14 adversarial attacks</strong>, and <strong>10 defense wrappers</strong> under
+            a common evaluation protocol. We evaluate representative video classifiers, attacks, and
+            defenses on a Kinetics-400 subset, reporting clean accuracy, attack success rate,
+            perceptual quality, runtime, and memory usage. VCR-Bench is released with documented
+            installation, reproducible run presets, component-extension interfaces, and scripts for
+            reproducing the reported results at
+            <a href="https://github.com/msu-video-group/vcr-bench" target="_blank">github.com/msu-video-group/vcr-bench</a>.
           </p>
         </div>
-        <a class="text-link" href="./explorer.html">Open detailed explorer</a>
       </div>
-      <div id="benchmarkSummary" class="summary"></div>
-      <div class="table-wrap benchmark-table-wrap">
-        <table id="benchmarkTable" class="benchmark-table">
-          <thead>
-            <tr>
-              <th>Attack</th>
-              <th class="num">Runs</th>
-              <th class="num">Videos</th>
-              <th class="num">ASR (%)</th>
-              <th class="num">TargetSR (%)</th>
-              <th class="num">Adv. Acc (%)</th>
-              <th class="num">PSNR</th>
-              <th class="num">SSIM</th>
-              <th class="num">LPIPS</th>
-              <th class="num">Mean Time (s)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="10">Loading benchmark data...</td>
-            </tr>
-          </tbody>
-        </table>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     LEADERBOARD
+══════════════════════════════════════════════ -->
+<section id="leaderboard" class="section">
+  <div class="container is-max-desktop">
+
+    <div style="display:flex; align-items:baseline; justify-content:center; gap:12px; margin-bottom:8px;">
+      <h2 class="title is-3 section-title" style="margin:0;">Full White-Box Leaderboard</h2>
+      <a href="./explorer.html" class="leaderboard-link">Open detailed explorer →</a>
+    </div>
+
+    <p class="has-text-centered" style="color:#6b7c8f; font-size:15px; margin-bottom:20px;">
+      Aggregated over full white-box attacks, defences, and completed model runs.
+    </p>
+
+    <div id="benchmarkSummary" class="summary"></div>
+
+    <div id="leaderboardTabs" class="tabs is-centered" style="margin-bottom:0;">
+      <ul>
+        <li data-view="attacks"><button class="button is-small is-rounded" data-view="attacks">Top Attacks</button></li>
+        <li data-view="models"><button class="button is-small is-rounded" data-view="models">Top Models</button></li>
+        <li data-view="defences"><button class="button is-small is-rounded" data-view="defences">Top Defences</button></li>
+      </ul>
+    </div>
+
+    <div class="table-container">
+      <table id="benchmarkTable" class="table is-striped is-hoverable is-fullwidth">
+        <thead><tr></tr></thead>
+        <tbody>
+          <tr><td colspan="8">Loading benchmark data…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     PROTOCOL & MODELS  (two-column)
+══════════════════════════════════════════════ -->
+<section class="section" style="padding-top:0;">
+  <div class="container is-max-desktop">
+    <div class="columns">
+
+      <div class="column">
+        <div class="box info-box">
+          <h3 class="title is-5 section-title">Evaluation Protocol</h3>
+          <div class="content">
+            <p>
+              Threat model: full white-box L∞ with ε&nbsp;=&nbsp;8/255.
+              Dataset: Kinetics-400 validation set. Attacks run in both untargeted and
+              targeted modes. Defences can be applied non-adaptively or adaptively
+              (adversary optimises through the defence).
+            </p>
+          </div>
+        </div>
       </div>
-    </section>
 
-    <section class="project-grid">
-      <article class="project-section">
-        <h2>Protocol</h2>
-        <p>
-          Space for evaluation details: threat model, target mode, attack budget, datasets, and defences.
-        </p>
-      </article>
-      <article class="project-section">
-        <h2>Models</h2>
-        <p>
-          Space for model families, checkpoints, input resolutions, and implementation notes.
-        </p>
-      </article>
-    </section>
+      <div class="column">
+        <div class="box info-box">
+          <h3 class="title is-5 section-title">Model Coverage</h3>
+          <div class="content">
+            <p>
+              30+ video recognition models spanning CNN (C3D, I3D, SlowFast…),
+              Transformer (TimeSformer, VideoMAE, VideoSwin, MViTv2…), and
+              Vision-Language families (ActionCLIP, InternVideo, AMD, UMT…).
+            </p>
+          </div>
+        </div>
+      </div>
 
-    <section id="bibtex" class="project-section">
-      <h2>BibTeX</h2>
-      <pre class="bibtex"><code>@misc{vcrbench2026,
-  title = {VCR-Bench},
-  author = {Author List},
-  year = {2026}
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+     BIBTEX
+══════════════════════════════════════════════ -->
+<section id="BibTeX" class="section">
+  <div class="container is-max-desktop content">
+    <h2 class="title section-title">BibTeX</h2>
+    <pre><code>@misc{vcrbench2026,
+  title  = {VCR-Bench: A Modular Open-Source Benchmark for Video Classification Robustness},
+  author = {Plinskiy, Maksim and Gushchin, Aleksandr and Lavrushkin, Sergey and
+            Vatolin, Dmitriy S. and Antsiferova, Anastasia},
+  year   = {2026}
 }</code></pre>
-    </section>
-  </main>
+  </div>
+</section>
 
-  <script src="./home.js"></script>
+
+<!-- ══════════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content has-text-centered">
+          <p>
+            This page was built using the
+            <a href="https://github.com/eliahuhorwitz/Academic-project-page-template"
+               target="_blank">Academic Project Page Template</a>
+            adopted from the
+            <a href="https://nerfies.github.io" target="_blank">Nerfies</a> project page.
+            Licensed under a
+            <a rel="license"
+               href="http://creativecommons.org/licenses/by-sa/4.0/"
+               target="_blank">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="./home.js"></script>
 </body>
 </html>

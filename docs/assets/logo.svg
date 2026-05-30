@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="110" viewBox="0 0 520 110">
+  <defs>
+    <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4f8ef7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c5cfc;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="noiseGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f76c6c;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#f7a34f;stop-opacity:0.9" />
+    </linearGradient>
+  </defs>
+
+  <!-- Film strip body -->
+  <rect x="10" y="15" width="80" height="80" rx="6" fill="url(#frameGrad)" opacity="0.15"/>
+  <rect x="10" y="15" width="80" height="80" rx="6" fill="none" stroke="url(#frameGrad)" stroke-width="2.5"/>
+
+  <!-- Sprocket holes left -->
+  <rect x="10" y="22" width="9" height="13" rx="2.5" fill="url(#frameGrad)"/>
+  <rect x="10" y="43" width="9" height="13" rx="2.5" fill="url(#frameGrad)"/>
+  <rect x="10" y="64" width="9" height="13" rx="2.5" fill="url(#frameGrad)"/>
+
+  <!-- Sprocket holes right -->
+  <rect x="81" y="22" width="9" height="13" rx="2.5" fill="url(#frameGrad)"/>
+  <rect x="81" y="43" width="9" height="13" rx="2.5" fill="url(#frameGrad)"/>
+  <rect x="81" y="64" width="9" height="13" rx="2.5" fill="url(#frameGrad)"/>
+
+  <!-- Adversarial noise pattern inside frame -->
+  <rect x="22" y="25" width="56" height="60" rx="2" fill="none"/>
+  <line x1="22" y1="37" x2="78" y2="37" stroke="url(#noiseGrad)" stroke-width="1.8" stroke-dasharray="4 3" opacity="0.85"/>
+  <line x1="22" y1="49" x2="78" y2="49" stroke="url(#noiseGrad)" stroke-width="1.8" stroke-dasharray="6 2" opacity="0.85"/>
+  <line x1="22" y1="61" x2="78" y2="61" stroke="url(#noiseGrad)" stroke-width="1.8" stroke-dasharray="3 4" opacity="0.85"/>
+  <line x1="22" y1="73" x2="78" y2="73" stroke="url(#noiseGrad)" stroke-width="1.8" stroke-dasharray="5 3" opacity="0.85"/>
+  <line x1="38" y1="25" x2="38" y2="85" stroke="url(#noiseGrad)" stroke-width="1.8" stroke-dasharray="4 4" opacity="0.6"/>
+  <line x1="58" y1="25" x2="58" y2="85" stroke="url(#noiseGrad)" stroke-width="1.8" stroke-dasharray="6 2" opacity="0.6"/>
+
+  <!-- Title: VCR -->
+  <text x="108" y="66" font-family="'Segoe UI', 'Inter', Arial, sans-serif" font-size="46" font-weight="800" letter-spacing="-1" fill="url(#frameGrad)">VCR</text>
+  <!-- Title: -Bench -->
+  <text x="215" y="66" font-family="'Segoe UI', 'Inter', Arial, sans-serif" font-size="46" font-weight="300" fill="#555e6e">-Bench</text>
+
+  <!-- Tagline -->
+  <text x="109" y="86" font-family="'Segoe UI', 'Inter', Arial, sans-serif" font-size="12.5" fill="#8a95a3" letter-spacing="1.5">ADVERSARIAL ROBUSTNESS · VIDEO CLASSIFICATION</text>
+</svg>

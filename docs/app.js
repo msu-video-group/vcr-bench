@@ -163,7 +163,9 @@
   function fmt(v, digits) {
     const n = asNumber(v);
     if (n == null) return "N/A";
-    return n.toFixed(digits);
+    const d = digits != null ? digits : 3;
+    const factor = Math.pow(10, d);
+    return (Math.trunc(n * factor) / factor).toFixed(d);
   }
 
   function metricLabel(k) {
@@ -177,7 +179,7 @@
       asr: "ASR (%)",
       target_sr: "TargetSR (%)",
       clear_acc: "Clear Acc (%)",
-      adv_acc: "Adversarial Acc (%)",
+      adv_acc: "Robust Acc (%)",
       psnr: "PSNR",
       ssim: "SSIM",
       lpips: "LPIPS",
@@ -736,7 +738,7 @@
       html += `<td class="num">${asNumber(r.num_total) ?? r.nVideos ?? 0}</td>`;
       metricCols.forEach((k) => {
         const cls = k === "asr" || k === "target_sr" || k === "clear_acc" || k === "adv_acc" ? "good" : "";
-        html += `<td class="num ${cls}">${fmt(r[k], 3)}</td>`;
+        html += `<td class="num ${cls}">${fmt(r[k])}</td>`;
       });
       html += "</tr>";
     });
@@ -1003,7 +1005,7 @@
       html += `<td class="num">${r.runCount}</td>`;
       html += `<td class="num">${totalsByModel.get(r.key) || 0}</td>`;
       metricCols.forEach((k) => {
-        html += `<td class="num">${fmt(r[k], 4)}</td>`;
+        html += `<td class="num">${fmt(r[k])}</td>`;
       });
       html += "</tr>";
     });
@@ -1066,7 +1068,7 @@
       cols.forEach((c) => {
         const val = r[c];
         const n = asNumber(val);
-        html += n == null ? `<td>${val ?? ""}</td>` : `<td class="num">${fmt(n, 4)}</td>`;
+        html += n == null ? `<td>${val ?? ""}</td>` : `<td class="num">${fmt(n)}</td>`;
       });
       html += "</tr>";
     });

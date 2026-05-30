@@ -7,6 +7,7 @@ vcr_bench/models/internvideo/checkpoints/mae-b/pytorch_model.bin
 __pycache__/
 .pytest_cache/
 .cache/
+.claude/
 .venv/
 configs/local.toml
 remote_results/

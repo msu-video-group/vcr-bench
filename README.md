@@ -1,28 +1,92 @@
-# VCR-Bench
+<div align="center">
+  <img src="docs/assets/Logo1-cropped.svg" alt="VCR-Bench logo" width="320"/>
+</div>
 
-A benchmark for adversarial robustness of video classification models.
+<br/>
+
+<div align="center">
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-CUDA%20recommended-ee4c2c?logo=pytorch&logoColor=white)](https://pytorch.org/)
+
+</div>
+
+---
+
+**VCR-Bench** is a modular benchmark for evaluating the adversarial robustness of video classification models. It provides a unified pipeline for running white-box and black-box attacks, wrapping models with defences, measuring clean accuracy baselines, and collecting structured results — all through a single CLI or Python API.
+
+The benchmark covers **30 video classification models**, **14 adversarial attacks** (gradient-based, query-based, and perceptual), and **10 defense wrappers**, making it straightforward to compare attack transferability, defence effectiveness, and model sensitivity under a common evaluation protocol.
+
+---
+
+## How it works
+
+<div align="center">
+  <img src="docs/assets/scheme.svg" alt="VCR-Bench pipeline" width="700"/>
+</div>
+
+The `--adaptive` flag places the defence **before** the attack so that the adversary optimises through it, enabling adaptive evaluation.
 
 ---
 
 ## Quick start
 
+> **Tip:** For an end-to-end walkthrough that installs all dependencies (including LPIPS/VMAF metric extras) and runs clean tests, attacks, and defences interactively, open [`getting_started.ipynb`](getting_started.ipynb).
+
 ```bash
 # 1. Install
 pip install -e .
 
-# Optional: install broader research dependencies used by
-# additional models, attacks, and defences
+# Optional: broader research dependencies (additional models, attacks, defences)
 pip install -e ".[research]"
 
-# 2. Pull the model checkpoint and a mini dataset subset
+# 2. Pull a model checkpoint and a mini dataset subset
 vcr-bench-artifacts list-checkpoints --model x3d
 
-# 3. Run your first attack (8 videos, IFGSM on X3D)
+# 3. Run your first attack  (8 videos, I-FGSM on X3D)
 vcr-bench-attack --model x3d --attack ifgsm --dataset kinetics400 \
   --dataset-subset kinetics400_mini_val --num-videos 8
 ```
 
 Results land in `results/` by default.
+
+---
+
+## Supported components
+
+### Models
+
+| Family | Models |
+|---|---|
+| CNN | C3D, C2D, CSN, R2+1D, I3D, I3D-NonLocal, SlowFast, SlowOnly |
+| Transformer | TimeSformer, VideoMAE, VideoMAEv2, VideoSwin, MViTv2 |
+| Unified | UniFormer, UniFormerV2, X3D, TAdaFormer, TANet, TIN, TPN, TRN, TSM, TSM-NonLocal, TSN |
+| Vision-Language | ActionCLIP, InternVideo, InternVideo2, ONE-PEACE, AMD, UMT |
+
+### Attacks
+
+| Category | Methods |
+|---|---|
+| Gradient-based (L∞) | I-FGSM, MI-FGSM, AMI-FGSM, GradEst, GradEstV2 |
+| Perceptual / spatial | StAdv, SSAH, StyleFool, Zhang-DISTS, Zhang-LPIPS, Zhang-SSIM, Flickering ⚠️ |
+| Universal / transferable | UAP, BMTC, TENAD, Korhonen et al. |
+| Query-based (black-box) | Square, Parsimonious |
+
+> ⚠️ **Flickering** currently produces weak or inconsistent adversarial examples across models. Under active improvement.
+
+### Defences
+
+| Category | Methods |
+|---|---|
+| Spatial filtering | Gaussian Blur, Bilateral Filter ⚠️, Domain Transform ⚠️ |
+| Temporal | Temporal Median, Shuffle, Flip, Rotate |
+| Compression / reconstruction | JPEG Compression, Crop+Resize, VideoPure 🔬, FreqPure 🔬 |
+| Stochastic | Randomized Smoothing |
+
+> ⚠️ **Bilateral Filter** and **Domain Transform** show limited defence effectiveness in current evaluations. Under active improvement.
+>
+> 🔬 **VideoPure** and **FreqPure** are diffusion-based defences and may behave unstably (slow inference, sensitivity to hyperparameters, occasional degenerate outputs). Work is ongoing to improve their reliability.
 
 ---
 
@@ -32,23 +96,10 @@ Results land in `results/` by default.
 |---|---|
 | `vcr-bench-attack` | Run an adversarial attack against a model |
 | `vcr-bench-test` | Measure clean accuracy (baseline) |
-| `vcr-bench-classify` | Classify an arbitrary folder with videos and save predictions |
+| `vcr-bench-classify` | Classify an arbitrary folder of videos and save predictions |
 | `vcr-bench-artifacts` | Download / inspect checkpoints and dataset archives |
 | `vcr-bench-prepare` | Prepare video data and model inputs |
 | `vcr-bench-remote` | Launch and monitor jobs on a remote Slurm cluster |
-
-### `vcr-bench-classify` example
-
-```bash
-vcr-bench-classify \
-  --model x3d \
-  --video-dir /path/to/videos \
-  --recursive \
-  --labels data/kinetics400/k400_val/k400_val/annotations/k400_label_map_k400.txt \
-  --output-csv results/classify/x3d_predictions.csv
-```
-
-The command always writes a full JSON report. If `--output-json` is omitted, it is created automatically under `results/classify/`.
 
 ### `vcr-bench-attack` key flags
 
@@ -77,6 +128,17 @@ The command always writes a full JSON report. If `--output-json` is omitted, it 
 --override key=value           Override any preset field (dotted key, JSON value)
 ```
 
+### `vcr-bench-classify` example
+
+```bash
+vcr-bench-classify \
+  --model x3d \
+  --video-dir /path/to/videos \
+  --recursive \
+  --labels data/kinetics400/k400_val/annotations/k400_label_map_k400.txt \
+  --output-csv results/classify/x3d_predictions.csv
+```
+
 ### Preset examples
 
 ```bash
@@ -92,35 +154,6 @@ vcr-bench-test --run-preset accuracy_amd_100 --print-resolved-preset
 
 ---
 
-## System requirements
-
-Python 3.10+, PyTorch with CUDA recommended.
-
-The table below will be filled in once VRAM profiling data is collected for each model. Use `--vram-profile-csv` to contribute measurements.
-
-| Model | Backbone | Inference VRAM | Attack VRAM (IFGSM, 10 steps) | Min GPU |
-|---|---|---|---|---|
-| X3D | — | — | — | — |
-| TimeSformer | — | — | — | — |
-| VideoMAE | — | — | — | — |
-| SlowFast | — | — | — | — |
-| SlowOnly | — | — | — | — |
-| MViTv2 | — | — | — | — |
-| VideoSwin | — | — | — | — |
-| UniFormer | — | — | — | — |
-| UniFormerV2 | — | — | — | — |
-| InternVideo | — | — | — | — |
-| InternVideo2 | — | — | — | — |
-| ActionCLIP | — | — | — | — |
-| C3D | — | — | — | — |
-| I3D | — | — | — | — |
-| TSM | — | — | — | — |
-| TSN | — | — | — | — |
-
-Use `--grad-forward-chunk-size <n>` to reduce VRAM on memory-constrained GPUs.
-
----
-
 ## Usage in code
 
 ```python
@@ -129,13 +162,8 @@ from vcr_bench.datasets import create_dataset
 from vcr_bench.attacks import create_attack
 from vcr_bench.utils.eval import run_attack
 
-model = create_model("x3d", device="cuda")
-
-dataset = create_dataset(
-    "kinetics400",
-    video_root="data/kinetics400/k400_val",
-)
-
+model  = create_model("x3d", device="cuda")
+dataset = create_dataset("kinetics400", video_root="data/kinetics400/k400_val")
 attack = create_attack("ifgsm", eps=8.0, alpha=1.0, steps=10)
 
 run_attack(
@@ -183,74 +211,65 @@ configs/
 
 Copy `configs/local.toml.example` to `configs/local.toml` and set your local data paths. The `[remote]` section is optional and only needed if you use `vcr-bench-remote`.
 
-If a model, attack, or defence does not have a checked-in JSON preset yet, `vcr-bench` now synthesizes a default preset from the component signature/capabilities so it remains configurable through the same preset system.
+If a model, attack, or defence does not have a checked-in JSON preset yet, `vcr-bench` synthesizes a default preset from the component signature so it remains configurable through the same preset system.
+
+---
+
+## System requirements
+
+Python 3.10+, PyTorch with CUDA recommended. Use `--grad-forward-chunk-size <n>` to reduce VRAM on memory-constrained GPUs.
+
+### VMAF metric
+
+VMAF scoring requires an FFmpeg build with `libvmaf` (most system packages omit it). To install one automatically:
+
+**Linux:**
+```bash
+bash scripts/install_vmaf_ffmpeg.sh
+# or, to export env vars into the current shell session:
+source scripts/install_vmaf_ffmpeg.sh
+```
+
+**Windows / macOS:** run the *"Install FFmpeg With libvmaf"* cell in [`getting_started.ipynb`](getting_started.ipynb) — it downloads and extracts the right build automatically.
+
+The script (and notebook cell) set three env vars that VCR-Bench reads:
+```bash
+export FFMPEG_BIN=/path/to/ffmpeg   # path to the libvmaf-enabled binary
+export VMAF_BACKEND=ffmpeg
+export VMAF_TIMEOUT_SEC=180
+```
+
+Pass `--vmaf` / `--no-vmaf` to `vcr-bench-attack` to explicitly enable or disable VMAF calculation per run.
+
+### VRAM profiling
+
+To collect per-model VRAM figures run:
+
+```bash
+vcr-bench-attack \
+  --attack-preset ifgsm --model-preset x3d \
+  --dataset kinetics400 --num-videos 1 --lite-attack \
+  --vram-profile-csv results/vram/x3d_ifgsm.csv
+```
+
+The CSV records `no_grad_forward`, `with_grad_forward_backward`, and per-attack-call peaks (allocated / reserved MB). To profile all classifiers remotely:
+
+```bash
+vcr-bench-remote --config configs/local.toml \
+  launch-attack-suite --suite vram_ifgsm10_all_classifiers
+```
 
 ---
 
 ## Docs
 
 - [Data formats & pipeline conventions](docs/formats.md)
+- [Component reference](docs/component_reference.md)
 - [Adding a model](docs/adding_models.md)
 - [Adding a dataset](docs/adding_datasets.md)
 - [Adding an attack](docs/adding_attacks.md)
 - [Adding a defence](docs/adding_defences.md)
 - [Remote execution & Slurm guide](docs/REMOTE_DEBUGGING.md)
-
-### Remote execution quick reference
-
-```bash
-# 1. Push local changes to the remote
-vcr-bench-remote push-code --commit-message "my change"
-
-# 2. Sync the remote checkout
-vcr-bench-remote --config configs/local.toml --remote main sync-remote
-
-# 3. Launch a single focused job
-vcr-bench-remote --config configs/local.toml --remote main launch-job --mode attack \
-  --model x3d --attack ifgsm --dataset kinetics400 \
-  --dataset-subset kinetics400_mini_val --num-videos 8 \
-  --attack-name debug_ifgsm
-
-# 4. Launch the full benchmark suites
-vcr-bench-remote --config configs/local.toml --remote main launch-accuracy-suite --suite default
-vcr-bench-remote --config configs/local.toml --remote main launch-attack-suite   --suite default
-
-# 5. Check status and fetch results
-vcr-bench-remote --config configs/local.toml --remote main job-status          --job-id 123456
-vcr-bench-remote --config configs/local.toml --remote main fetch-job-artifacts --job-id 123456 \
-  --attack-name default_suite
-```
-
-Add `--dry-run` to any command to print what would be executed without contacting the cluster. By default, remote sync now uses a non-destructive detached checkout strategy; pass `sync-remote --strategy reset-hard` only if you explicitly want the old behavior.
-
-### VRAM profiling
-
-```bash
-vcr-bench-attack \
-  --attack-preset ifgsm --model-preset amd \
-  --dataset kinetics400 --num-videos 1 --lite-attack \
-  --vram-profile-csv results/vram/x3d_ifgsm.csv
-```
-
-The CSV gets rows for `no_grad_forward`, `with_grad_forward_backward`, and each profiled `attack` call, with peak allocated/reserved VRAM and deltas over baseline. For a run-wide attack peak, take the max `peak_allocated_mb` among rows where `pass_type=attack`.
-
-### Artifact management
-
-```bash
-# List available checkpoints for a model
-vcr-bench-artifacts list-checkpoints --model x3d
-
-# Build a dataset subset archive
-vcr-bench-artifacts build-dataset-archive \
-  --dataset kinetics400 --subset kinetics400_mini_val \
-  --source-dir /path/to/subset
-
-# Upload remote checkpoint files to one HF repo without logging in on the remote
-HF_TOKEN=... python scripts/upload_remote_checkpoints_to_hf.py \
-  --target-repo maxv65/vcr-bench \
-  --skip-existing \
-  --update-manifest
-```
 
 ---
 
@@ -263,8 +282,9 @@ HF_TOKEN=... python scripts/upload_remote_checkpoints_to_hf.py \
 5. If you add a model, attack, or defence:
    - Subclass the corresponding base in `vcr_bench/models/`, `vcr_bench/attacks/`, or `vcr_bench/defences/`.
    - Add a JSON preset under `configs/models/`, `configs/attacks/`, or `configs/defences/`.
-   - If you have VRAM numbers, fill in the system requirements table above.
 6. Open a PR with a short description of what changed and why.
+
+---
 
 ## Acknowledgements
 
