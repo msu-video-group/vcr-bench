@@ -221,9 +221,12 @@ def build_batch_attack_multi_sbatch_cmd(main_cfg, combos):
     if _is_single_gpu_launch_mode(launch_mode):
         cpus = int(slurm_cfg.get("single_gpu_cpus", 16))
         sbatch_args.extend(["--nodes", "1", "--ntasks", "1", "--gres=gpu:1", "--cpus-per-task", str(cpus)])
-        exclusive = str(slurm_cfg.get("single_gpu_exclusive", "user")).strip()
-        if exclusive:
-            sbatch_args.append(f"--exclusive={exclusive}" if exclusive != "true" else "--exclusive")
+        # In array mode each task shares the node with other tasks (1 GPU each), so --exclusive
+        # must not be set — it would cause every task to monopolize the entire node.
+        if not _is_array_launch_mode(launch_mode):
+            exclusive = str(slurm_cfg.get("single_gpu_exclusive", "user")).strip()
+            if exclusive:
+                sbatch_args.append(f"--exclusive={exclusive}" if exclusive != "true" else "--exclusive")
     if _is_array_launch_mode(launch_mode):
         array_limit = int(slurm_cfg.get("array_concurrency", 0) or 0)
         array_spec = f"0-{len(combos) - 1}"

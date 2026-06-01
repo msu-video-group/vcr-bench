@@ -5,6 +5,8 @@
 #SBATCH --job-name=attack_vcr_bench
 #SBATCH --output=logs/job_%A_%a.log
 #SBATCH --error=logs/job_%A_%a.err
+# Default resource directives for standalone (non-autolaunch) use.
+# When submitted via autolaunch service.py these are overridden by sbatch CLI args.
 #SBATCH --nodes=1
 #SBATCH --ntasks=8
 #SBATCH --gres=gpu:8
@@ -347,7 +349,7 @@ for ((i=0; i<${#method_names_local[@]}; i++)); do
     srun_args=(--exclusive --ntasks 1 -G 1 --cpus-per-task "$step_cpus")
     [[ -n "${CONTAINER_IMAGE}" ]] && srun_args+=(--container-image "${CONTAINER_IMAGE}")
     [[ -n "${CONTAINER_MOUNTS}" ]] && srun_args+=(--container-mounts "${CONTAINER_MOUNTS}")
-    srun "${srun_args[@]}" bash -lc "python3 -c \"import importlib.util, sys; mods=['transformers','diffusers','yacs','IQA_pytorch','pywt','timm','einops','scipy','PIL','clip']; missing=[m for m in mods if importlib.util.find_spec(m) is None]; import transformers; getattr(transformers, 'Dinov2WithRegistersConfig'); major=int(transformers.__version__.split('.', 1)[0]); sys.exit(0 if not missing and major < 5 else 1)\" || pip install -q --upgrade 'transformers>=4.46,<5' diffusers yacs 'numpy<2' IQA_pytorch PyWavelets timm einops scipy Pillow openai-clip; cd /work && if [[ \"${vmaf_flag}\" -eq 1 && \"\${VCR_BENCH_BOOTSTRAP_FFMPEG:-1}\" != \"0\" ]]; then if ffmpeg -hide_banner -filters 2>/dev/null | grep -q ' libvmaf '; then export VMAF_BACKEND=\"\${VMAF_BACKEND:-ffmpeg}\"; elif ffmpeg_bin=\"\$(bash ./scripts/ensure_ffmpeg_libvmaf.sh)\"; then export FFMPEG_BIN=\"\${ffmpeg_bin}\"; export VMAF_BACKEND=ffmpeg; export VMAF_TIMEOUT_SEC=\"\${VMAF_TIMEOUT_SEC:-180}\"; echo \"Using FFmpeg/libvmaf: \${FFMPEG_BIN}\"; else echo 'WARNING: unable to bootstrap ffmpeg/libvmaf; VMAF may be reported as 0.0'; fi; fi; { ffmpeg -hide_banner -filters 2>/dev/null | grep -q ' libvmaf ' || [[ -n \"\${FFMPEG_BIN:-}\" ]] || command -v vqmt >/dev/null 2>&1; } || { echo 'WARNING: neither ffmpeg/libvmaf nor vqmt is available; VMAF will be reported as 0.0'; }; ${cmd_str}" >> "$log_file" 2>&1 &
+    srun "${srun_args[@]}" bash -lc "python3 -c \"import importlib.util, sys; mods=['transformers','diffusers','yacs','IQA_pytorch','pywt','timm','einops','scipy','PIL','clip']; missing=[m for m in mods if importlib.util.find_spec(m) is None]; import transformers; getattr(transformers, 'Dinov2WithRegistersConfig'); major=int(transformers.__version__.split('.', 1)[0]); sys.exit(0 if not missing and major < 5 else 1)\" || pip install -q --timeout 15 --retries 1 --upgrade 'transformers>=4.46,<5' diffusers yacs 'numpy<2' IQA_pytorch PyWavelets timm einops scipy Pillow openai-clip; cd /work && if [[ \"${vmaf_flag}\" -eq 1 && \"\${VCR_BENCH_BOOTSTRAP_FFMPEG:-1}\" != \"0\" ]]; then if ffmpeg -hide_banner -filters 2>/dev/null | grep -q ' libvmaf '; then export VMAF_BACKEND=\"\${VMAF_BACKEND:-ffmpeg}\"; elif ffmpeg_bin=\"\$(bash ./scripts/ensure_ffmpeg_libvmaf.sh)\"; then export FFMPEG_BIN=\"\${ffmpeg_bin}\"; export VMAF_BACKEND=ffmpeg; export VMAF_TIMEOUT_SEC=\"\${VMAF_TIMEOUT_SEC:-180}\"; echo \"Using FFmpeg/libvmaf: \${FFMPEG_BIN}\"; else echo 'WARNING: unable to bootstrap ffmpeg/libvmaf; VMAF may be reported as 0.0'; fi; fi; { ffmpeg -hide_banner -filters 2>/dev/null | grep -q ' libvmaf ' || [[ -n \"\${FFMPEG_BIN:-}\" ]] || command -v vqmt >/dev/null 2>&1; } || { echo 'WARNING: neither ffmpeg/libvmaf nor vqmt is available; VMAF will be reported as 0.0'; }; ${cmd_str}" >> "$log_file" 2>&1 &
 done
 
 wait

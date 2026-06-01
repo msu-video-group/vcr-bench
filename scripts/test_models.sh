@@ -50,6 +50,7 @@ pipeline_stage="test"
 results_root="results/accuracy"
 save_csv_flag=0
 dataset_subset=""
+vram_profile_root=""
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -88,6 +89,7 @@ while [[ "$#" -gt 0 ]]; do
         --pipeline-stage) pipeline_stage="$2"; shift ;;
         --results-root) results_root="$2"; shift ;;
         --save-csv) save_csv_flag=1 ;;
+        --vram-profile-root) vram_profile_root="$2"; shift ;;
     esac
     shift
 done
@@ -150,6 +152,10 @@ for current_model in "${method_names_local[@]}"; do
     [[ "$instant_preprocessing_flag" -eq 1 ]] && cmd+=(--instant-preprocessing)
     [[ "$full_video_flag" -eq 1 ]] && cmd+=(--full-videos)
     [[ "$verbose_flag" -eq 1 ]] && cmd+=(--verbose)
+    if [[ -n "$vram_profile_root" ]]; then
+        mkdir -p "$vram_profile_root"
+        cmd+=(--vram-profile-csv "${vram_profile_root%/}/${current_model}.csv")
+    fi
 
     printf -v cmd_str '%q ' "${cmd[@]}"
 
