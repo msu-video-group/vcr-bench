@@ -44,12 +44,19 @@ pip install -e ".[research]"
 # 2. Pull a model checkpoint and a mini dataset subset
 vcr-bench-artifacts list-checkpoints --model x3d
 
-# 3. Run your first attack  (8 videos, I-FGSM on X3D)
+# 3. Run your first attack  (I-FGSM on X3D, CC0 demo videos)
 vcr-bench-attack --model x3d --attack ifgsm --dataset kinetics400 \
-  --dataset-subset kinetics400_mini_val --num-videos 8
+  --dataset-subset demo --num-videos 8
 ```
 
 Results land in `results/` by default.
+
+> **Datasets / videos.** VCR-Bench ships dataset *adapters* but **does not redistribute raw
+> videos** for Kinetics-400, UCF-101, HMDB-51 or SSv2. The `demo` subset above is a small
+> CC0 / public-domain set (model **pseudo-labels**, for demonstrations only); build and
+> publish it once with [`scripts/build_demo_dataset.py`](scripts/build_demo_dataset.py)
+> (see [docs/demo_dataset.md](docs/demo_dataset.md)). To run on a real dataset, download it
+> yourself and pass `--video-root` — see [docs/datasets.md](docs/datasets.md).
 
 ---
 
@@ -258,6 +265,42 @@ The CSV records `no_grad_forward`, `with_grad_forward_backward`, and per-attack-
 vcr-bench-remote --config configs/local.toml \
   launch-attack-suite --suite vram_ifgsm10_all_classifiers
 ```
+
+#### Measured peak VRAM per classifier
+
+Peak **allocated** GPU memory for a single Kinetics-400 video on one NVIDIA A100-SXM4-80GB, in two passes: **Inference** (`no_grad_forward`) and **White-box** (`with_grad_forward_backward` — one forward + one backward / differentiation). Models are sorted by white-box peak.
+
+| Model | Backbone | Inference, GB | White-box, GB |
+|---|---|---:|---:|
+| ONE-PEACE | vit_l40 | 7.39 | 67.97 |
+| UMT | vit_large_p16 | 5.09 | 64.00 |
+| InternVideo2 | vit_1b_p14 | 6.07 | 56.68 |
+| VideoSwin | base_p244_w877 | 10.63 | 50.29 |
+| TAdaFormer | large_14 | 3.03 | 41.54 |
+| SlowOnly | r50 | 6.35 | 37.57 |
+| VideoMAE | vit_base_p16 | 4.21 | 32.40 |
+| VideoMAEv2 | vit_base_p16 | 4.21 | 32.40 |
+| TANet | r50 | 3.60 | 32.32 |
+| X3D | x3d_m | 4.31 | 31.36 |
+| I3D-NonLocal | r50 | 5.45 | 28.37 |
+| UniFormer | base | 1.89 | 27.03 |
+| TPN | r50 | 3.84 | 26.52 |
+| SlowFast | r101 | 3.55 | 25.67 |
+| I3D | r50 | 5.42 | 23.42 |
+| C2D | r50 | 3.49 | 20.17 |
+| R2+1D | r34 | 4.76 | 19.59 |
+| MViTv2 | base_p244 | 4.21 | 18.74 |
+| AMD | vitb | 1.18 | 17.72 |
+| TSM | r50 | 1.74 | 16.44 |
+| TSM-NonLocal | r50 | 1.48 | 11.13 |
+| UniFormerV2 | base | 1.48 | 11.05 |
+| TSM-Surrogate | r50 | 0.92 | 8.30 |
+| ILA | vit_b16 | 1.74 | 5.41 |
+| ActionCLIP | vit_b16 | 0.98 | 4.06 |
+| TSN | r101 | 0.45 | 3.27 |
+| TimeSformer | vit_base_p16 | 0.52 | 2.63 |
+
+> Figures are peak allocated memory (`torch.cuda.max_memory_allocated`); reserved peaks are higher. Each model uses its own default clip sampling (number of views × frames), so absolute numbers reflect both architecture and input shape. ActionCLIP's inference figure is the steady-state forward; it excludes the one-time CLIP text-encoder pass (14 prompts × 400 classes ≈ 5.6k texts, ~14 GB) that is computed once and cached on the first forward.
 
 ---
 
