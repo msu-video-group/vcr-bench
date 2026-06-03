@@ -1,0 +1,9 @@
+include LICENSE
+include THIRD_PARTY_NOTICES.md
+include docs/licenses.md
+
+# Vendored third-party license / notice files (keep attribution in the sdist).
+recursive-include vcr_bench LICENSE
+recursive-include vcr_bench LICENSE_*
+recursive-include vcr_bench NOTICE.md
+recursive-include vcr_bench NOTICE

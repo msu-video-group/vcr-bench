@@ -1,7 +1,6 @@
 (() => {
   const tableBody = document.querySelector("#benchmarkTable tbody");
   const tableHead = document.querySelector("#benchmarkTable thead tr");
-  const summaryEl = document.querySelector("#benchmarkSummary");
   const tabsEl   = document.querySelector("#leaderboardTabs");
 
   const format = (value, digits = 3) => {
@@ -100,18 +99,6 @@
     ).join("");
   }
 
-  function renderSummary() {
-    const stats   = cache.stats || {};
-    const attacks  = new Set(cache.runs.map((r) => r.attack)).size;
-    const defences = new Set(cache.runs.map((r) => r.defence)).size;
-    summaryEl.innerHTML = [
-      `<span class="pill">Runs: ${cache.runs.length}</span>`,
-      `<span class="pill">Attacks: ${attacks}</span>`,
-      `<span class="pill">Defences: ${defences}</span>`,
-      `<span class="pill">Folders: ${stats.ordinary_folders ?? "-"}</span>`,
-    ].join("");
-  }
-
   function setView(viewKey) {
     tabsEl.querySelectorAll("button").forEach((btn) => {
       btn.classList.toggle("is-active", btn.dataset.view === viewKey);
@@ -129,11 +116,9 @@
         btn.addEventListener("click", () => setView(btn.dataset.view));
       });
 
-      renderSummary();
       setView("attacks");
     } catch (err) {
       tableBody.innerHTML = `<tr><td colspan="8">Failed to load benchmark data: ${err.message}</td></tr>`;
-      summaryEl.innerHTML = '<span class="pill">Data unavailable</span>';
     }
   }
 

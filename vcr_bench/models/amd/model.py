@@ -20,7 +20,9 @@ class AmdK400Classifier(BaseVideoClassifier):
                 "datasets": {
                     "kinetics400": {
                         "num_classes": 400,
-                        "checkpoint_url": "https://huggingface.co/maxv65/vcr-bench/resolve/main/amd_vitb_k400_finetune_90e.pth",
+                        # AMD upstream ships no LICENSE (research use only); its weights are
+                        # not redistributed by VCR-Bench. Provide the checkpoint yourself via
+                        # --checkpoint-path or place it at the path below. See docs/licenses.md.
                         "checkpoint_filename": "amd_vitb_k400_finetune_90e.pth",
                     },
                 },

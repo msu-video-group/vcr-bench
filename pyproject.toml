@@ -52,5 +52,10 @@ vcr-bench-remote = "vcr_bench.remote.cli:main"
 [tool.setuptools]
 include-package-data = true
 
+# Ship vendored third-party license/notice files inside the wheel so redistribution
+# retains the required attribution (see THIRD_PARTY_NOTICES.md).
+[tool.setuptools.package-data]
+"*" = ["LICENSE", "LICENSE_*", "NOTICE.md", "NOTICE"]
+
 [tool.setuptools.packages.find]
 include = ["vcr_bench*"]

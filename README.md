@@ -26,6 +26,10 @@ The benchmark covers **30 video classification models**, **14 adversarial attack
   <img src="docs/assets/scheme.svg" alt="VCR-Bench pipeline" width="700"/>
 </div>
 
+Every evaluation flows through a single standardized pipeline. A run starts from a configuration preset that fixes the dataset, the temporal sampling strategy, the perturbation budget, and the metric aggregation, so that any combination of components is measured under identical conditions. Videos are decoded once through a shared loader and handed to a classifier wrapper that exposes a common interface, which lets the same attack or defence operate unchanged across CNN, Transformer, and Vision-Language models.
+
+For each clip the framework applies the selected adversarial attack against the wrapped model, optionally routing inputs through a defence wrapper. The resulting clean and adversarial predictions, together with perceptual-quality, runtime, and memory measurements, are logged in a uniform schema and aggregated into the clean accuracy, attack success rate, and robustness scores — making every reported number reproducible and directly comparable across models, attacks, and defences.
+
 The `--adaptive` flag places the defence **before** the attack so that the adversary optimises through it, enabling adaptive evaluation.
 
 ---
@@ -52,7 +56,7 @@ vcr-bench-attack --model x3d --attack ifgsm --dataset kinetics400 \
 Results land in `results/` by default.
 
 > **Datasets / videos.** VCR-Bench ships dataset *adapters* but **does not redistribute raw
-> videos** for Kinetics-400, UCF-101, HMDB-51 or SSv2. The `demo` subset above is a small
+> videos** for Kinetics-400, UCF-101 or SSv2. The `demo` subset above is a small
 > CC0 / public-domain set (model **pseudo-labels**, for demonstrations only); build and
 > publish it once with [`scripts/build_demo_dataset.py`](scripts/build_demo_dataset.py)
 > (see [docs/demo_dataset.md](docs/demo_dataset.md)). To run on a real dataset, download it
@@ -76,24 +80,18 @@ Results land in `results/` by default.
 | Category | Methods |
 |---|---|
 | Gradient-based (L∞) | I-FGSM, MI-FGSM, AMI-FGSM, GradEst, GradEstV2 |
-| Perceptual / spatial | StAdv, SSAH, StyleFool, Zhang-DISTS, Zhang-LPIPS, Zhang-SSIM, Flickering ⚠️ |
+| Perceptual / spatial | StAdv, SSAH, StyleFool, Zhang-DISTS, Zhang-LPIPS, Zhang-SSIM, Flickering |
 | Universal / transferable | UAP, BMTC, TENAD, Korhonen et al. |
 | Query-based (black-box) | Square, Parsimonious |
-
-> ⚠️ **Flickering** currently produces weak or inconsistent adversarial examples across models. Under active improvement.
 
 ### Defences
 
 | Category | Methods |
 |---|---|
-| Spatial filtering | Gaussian Blur, Bilateral Filter ⚠️, Domain Transform ⚠️ |
+| Spatial filtering | Gaussian Blur, Bilateral Filter, Domain Transform |
 | Temporal | Temporal Median, Shuffle, Flip, Rotate |
-| Compression / reconstruction | JPEG Compression, Crop+Resize, VideoPure 🔬, FreqPure 🔬 |
+| Compression / reconstruction | JPEG Compression, Crop+Resize, VideoPure, FreqPure |
 | Stochastic | Randomized Smoothing |
-
-> ⚠️ **Bilateral Filter** and **Domain Transform** show limited defence effectiveness in current evaluations. Under active improvement.
->
-> 🔬 **VideoPure** and **FreqPure** are diffusion-based defences and may behave unstably (slow inference, sensitivity to hyperparameters, occasional degenerate outputs). Work is ongoing to improve their reliability.
 
 ---
 
@@ -153,7 +151,7 @@ vcr-bench-classify \
 vcr-bench-attack --run-preset attack_x3d_ifgsm_debug --override attack.params.steps=3
 
 # Mix presets
-vcr-bench-attack --attack-preset ifgsm --model-preset amd --dataset kinetics400 --lite-attack
+vcr-bench-attack --attack-preset ifgsm --model-preset videomae --dataset kinetics400 --lite-attack
 
 # Print the resolved config without running
 vcr-bench-test --run-preset accuracy_amd_100 --print-resolved-preset
@@ -186,7 +184,7 @@ run_attack(
 )
 ```
 
-**Adding a defence:**
+**Applying a defence:**
 
 ```python
 from vcr_bench.defences import create_defence
@@ -343,4 +341,4 @@ Peak **allocated** GPU memory for a single Kinetics-400 video on one NVIDIA A100
 - [TAdaConv / TAdaFormer](https://github.com/alibaba-mmai-research/TAdaConv)
 - [Unmasked Teacher (UMT)](https://github.com/OpenGVLab/unmasked_teacher)
 
-We gratefully acknowledge all listed projects for their model weights, attack implementations, and defence code, which formed the basis of the corresponding components in VCR-Bench.
+We gratefully acknowledge all listed projects for their model weights, attack implementations, and defence code, which formed the basis of the corresponding components in VCR-Bench. Per-component licensing details are documented in [docs/licenses.md](docs/licenses.md).

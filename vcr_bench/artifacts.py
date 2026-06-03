@@ -11,6 +11,19 @@ from huggingface_hub.errors import HfHubHTTPError, RepositoryNotFoundError
 from .config import get_path, load_checkpoint_registry, load_dataset_registry, load_settings, repo_root
 
 
+# Video container suffixes used to detect locally-provided raw videos.
+_VIDEO_SUFFIXES = {".mp4", ".mkv", ".avi", ".webm", ".mov", ".y4m"}
+
+
+def _has_video_files(root: Path) -> bool:
+    if not root.exists():
+        return False
+    for path in root.rglob("*"):
+        if path.is_file() and path.suffix.lower() in _VIDEO_SUFFIXES:
+            return True
+    return False
+
+
 def _hf_download(*, repo_id: str, filename: str, revision: str, repo_type: str, local_dir: Path) -> Path:
     local_dir.mkdir(parents=True, exist_ok=True)
     target = local_dir / filename
@@ -106,13 +119,17 @@ def resolve_dataset_subset(dataset: str, subset: str) -> dict[str, str]:
     entry = get_dataset_subset_entry(dataset, subset)
     if entry is None:
         raise ValueError(f"Unknown dataset subset: {dataset}/{subset}")
+    # Only subsets explicitly flagged `redistributable = true` may auto-download their
+    # video archive. Copyrighted datasets (Kinetics, UCF-101, SSv2, ...) are
+    # never bundled — users must provide the raw videos themselves via --video-root.
+    redistributable = bool(entry.get("redistributable", False))
     cache_root = get_path("cache_dir") / "dataset_archives" / dataset / subset
     data_root = get_path("data_dir") / dataset / subset
     extract_root = data_root / str(entry.get("extract_subdir", subset))
     marker = extract_root / ".vcr_extract_complete.json"
     archive_filename = entry.get("filename")
     archive_path: Path | None = None
-    if archive_filename:
+    if archive_filename and redistributable:
         archive_path = _hf_download(
             repo_id=str(entry["repo_id"]),
             filename=str(archive_filename),
@@ -156,8 +173,21 @@ def resolve_dataset_subset(dataset: str, subset: str) -> dict[str, str]:
         labels_path.parent.mkdir(parents=True, exist_ok=True)
         labels_path.write_bytes(labels_src.read_bytes())
     split = str(entry.get("split", "val"))
+    video_root = extract_root / str(entry["video_root"])
+    if not redistributable and not _has_video_files(video_root):
+        raise FileNotFoundError(
+            f"Raw videos for {dataset}/{subset} are not bundled with VCR-Bench, which does "
+            f"not redistribute copyrighted video files.\n"
+            f"Provide the videos yourself one of these ways:\n"
+            f"  1) Download {dataset} from the provider and pass --video-root with "
+            f"--annotations/--labels, e.g. for Kinetics-400 see "
+            f"https://github.com/cvdfoundation/kinetics-dataset\n"
+            f"  2) Use the bundled CC0 demo subset instead: --dataset-subset demo\n"
+            f"Expected videos under: {video_root}\n"
+            f"(annotations/labels were resolved to: {annotations_path} / {labels_path})"
+        )
     return {
-        "video_root": str(extract_root / str(entry["video_root"])),
+        "video_root": str(video_root),
         "annotations": str(annotations_path),
         "labels": str(labels_path),
         "split": split,

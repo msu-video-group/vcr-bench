@@ -1,4 +1,30 @@
+# Dataset subset manifests.
+#
+# Raw video files for copyrighted datasets (Kinetics-400, UCF-101,
+# Something-Something V2, ...) are NOT redistributed by VCR-Bench. Those subsets are
+# left with `redistributable = false`: the adapters resolve annotations/labels, but the
+# videos must be supplied by the user via --video-root (see docs/datasets.md).
+#
+# Only subsets explicitly flagged `redistributable = true` auto-download their video
+# archive. The `demo` subset below is a small CC0 / public-domain set, pseudo-labelled in
+# the Kinetics-400 taxonomy, intended for demonstrations — not for reproducing benchmark
+# numbers. See docs/demo_dataset.md and scripts/build_demo_dataset.py.
+
+[datasets.kinetics400.demo]
+redistributable = true
+repo_id = "maxv65/vcr-bench"
+filename = "k400_demo_cc0.zip"
+annotations_filename = "k400_demo_cc0.csv"
+labels_filename = "k400_label_map_k400.txt"
+revision = "main"
+extract_subdir = "k400_demo_cc0"
+video_root = "."
+annotations = "annotations/k400_demo_cc0.csv"
+labels = "annotations/k400_label_map_k400.txt"
+split = "test"
+
 [datasets.kinetics400.k400_val]
+redistributable = false
 repo_id = "maxv65/vcr-bench"
 filename = "k400_val.zip"
 annotations_filename = "k400_val.csv"
@@ -11,6 +37,7 @@ labels = "annotations/k400_label_map_k400.txt"
 split = "val"
 
 [datasets.kinetics400.k400_test]
+redistributable = false
 repo_id = "maxv65/vcr-bench"
 filename = "k400_test.zip"
 annotations_filename = "k400_test.csv"
@@ -23,6 +50,7 @@ labels = "annotations/k400_label_map_k400.txt"
 split = "test"
 
 [datasets.kinetics400.kinetics400_mini_val]
+redistributable = false
 repo_id = "maxv65/vcr-bench"
 filename = "k400_val.zip"
 annotations_filename = "k400_val.csv"
@@ -35,6 +63,7 @@ labels = "annotations/k400_label_map_k400.txt"
 split = "val"
 
 [datasets.kinetics400.kinetics400_mini_test]
+redistributable = false
 repo_id = "maxv65/vcr-bench"
 filename = "k400_test.zip"
 annotations_filename = "k400_test.csv"
