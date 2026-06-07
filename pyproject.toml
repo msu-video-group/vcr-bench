@@ -59,3 +59,6 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 include = ["vcr_bench*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

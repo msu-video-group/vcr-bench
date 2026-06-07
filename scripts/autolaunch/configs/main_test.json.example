@@ -1,0 +1,23 @@
+{
+  "ssh_host": "your-host",
+  "tmux_session": "vcr-bench",
+  "repo_path": "~/path/to/vcr-bench",
+  "job_name": "vcr-bench",
+  "max_simultaneous_jobs": 8,
+  "max_attacks_per_job": 1,
+  "max_failures": 2,
+  "poll_interval_sec": 60,
+  "tracks_config": "scripts/autolaunch/configs/test_ifgsm8.json",
+  "results_root": "results/remote_attacks",
+  "logs_root": "attack_logs",
+  "test_mode": false,
+  "slurm": {
+    "launch_mode": "single_gpu",
+    "batch_attack_script": "./scripts/batch_attack.sh",
+    "container_image": "~/path/to/python.sqsh",
+    "container_mounts": "~/path/to/vcr-bench:/work",
+    "single_gpu_cpus": 16,
+    "single_gpu_exclusive": "user",
+    "avoid_node_names": []
+  }
+}

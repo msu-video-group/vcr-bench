@@ -6,9 +6,11 @@
 # videos must be supplied by the user via --video-root (see docs/datasets.md).
 #
 # Only subsets explicitly flagged `redistributable = true` auto-download their video
-# archive. The `demo` subset below is a small CC0 / public-domain set, pseudo-labelled in
-# the Kinetics-400 taxonomy, intended for demonstrations — not for reproducing benchmark
-# numbers. See docs/demo_dataset.md and scripts/build_demo_dataset.py.
+# archive. The `demo` subset below is a small set of real Kinetics clips whose source
+# YouTube videos are Creative Commons (CC BY 3.0), so they are redistributable with
+# attribution; it carries real ground-truth labels. Intended for demos / smoke tests, not
+# for reproducing benchmark numbers. See docs/demo_dataset.md and
+# scripts/select_kinetics_cc.py (build) — scripts/build_demo_dataset.py is a CC0 alternative.
 
 [datasets.kinetics400.demo]
 redistributable = true

@@ -1,0 +1,210 @@
+# Source manifest for scripts/build_demo_dataset.py
+#
+# The builder queries Wikimedia Commons for each entry's `search` term, keeps only files
+# whose license is in `license_allow` (CC0 / public domain by default), trims short clips,
+# and pseudo-labels them with the classifier ensemble. `target_class` is the Kinetics-400
+# action we are aiming for; the label actually written to the dataset is whatever the
+# ensemble agrees on (see require_target_match below).
+#
+# Licensing: only CC0 / public-domain sources are accepted, so the resulting demo set is
+# safe to redistribute (including commercially) with no attribution obligation. Provenance
+# (source URL, author, license) is still recorded in PROVENANCE.csv for transparency.
+#
+# All target_class values below are real Kinetics-400 classes, so K400-trained checkpoints
+# apply directly. The list leans on music/instrument classes because CC0 colour footage is
+# abundant for them; sports/dance are sparser under a CC0-only filter.
+
+[settings]
+# CC0 / public-domain tokens (always accepted, no attribution needed).
+license_allow = ["cc0", "publicdomain", "public domain", "pd-self", "pd-user", "no restrictions"]
+# Also accept plain CC BY (commercial OK with attribution). ShareAlike / NonCommercial /
+# NoDerivatives are still rejected. CC BY clips are listed in ATTRIBUTION.md.
+allow_cc_by = true
+per_class_target = 5            # clips to keep per class
+max_candidates_per_class = 8    # Commons files to download and try per class
+clip_seconds = 10.0             # trimmed clip length (Kinetics-like ~10s)
+output_fps = 30                 # standardise frame rate so frame counts match (~300 frames)
+min_source_seconds = 4.0        # skip sources shorter than this
+max_source_mb = 200.0           # skip source files larger than this (avoid full films)
+min_source_height = 360         # skip sources below this resolution (Kinetics itself is mostly 360p+)
+min_color_satmax = 20.0         # skip B&W clips by peak chroma (B&W ~4-9, colour ~40-99)
+confidence_threshold = 0.30     # per-model min top-1 softmax confidence
+require_unanimous = true        # all ensemble models that scored a clip must agree on top-1
+require_target_match = false    # if true, ensemble top-1 must equal target_class
+
+# Ensemble used for pseudo-labelling (top-3 by Kinetics-400 accuracy in this repo;
+# all Apache-2.0 / MIT). Models are loaded one at a time. The largest model
+# (InternVideo2-1B) is listed last so that on small GPUs a possible OOM does not affect
+# the lighter models that already scored.
+[[ensemble]]
+model = "umt"
+backbone = "vit_large_p16"
+weights_dataset = "kinetics400"
+
+[[ensemble]]
+model = "tadaformer"
+backbone = "large_14"
+weights_dataset = "kinetics400"
+
+[[ensemble]]
+model = "internvideo2"
+backbone = "vit_1b_p14"
+weights_dataset = "kinetics400"
+
+# ---------------------------------------------------------------------------
+# Target classes (all valid Kinetics-400). ~24 classes x up to 5 clips -> aim ~100.
+# Search terms kept simple/broad for higher CC0 yield.
+# ---------------------------------------------------------------------------
+[[sources]]
+target_class = "playing piano"
+search = "person playing piano"
+
+[[sources]]
+target_class = "playing guitar"
+search = "person playing guitar"
+
+[[sources]]
+target_class = "playing violin"
+search = "playing violin"
+
+[[sources]]
+target_class = "playing cello"
+search = "playing cello"
+
+[[sources]]
+target_class = "playing trumpet"
+search = "playing trumpet"
+
+[[sources]]
+target_class = "playing saxophone"
+search = "playing saxophone"
+
+[[sources]]
+target_class = "playing accordion"
+search = "playing accordion"
+
+[[sources]]
+target_class = "playing flute"
+search = "playing flute"
+
+[[sources]]
+target_class = "playing clarinet"
+search = "playing clarinet"
+
+[[sources]]
+target_class = "playing organ"
+search = "pipe organ"
+
+[[sources]]
+target_class = "playing harp"
+search = "playing harp"
+
+[[sources]]
+target_class = "playing trombone"
+search = "playing trombone"
+
+[[sources]]
+target_class = "playing drums"
+search = "drum kit"
+
+[[sources]]
+target_class = "playing bass guitar"
+search = "bass guitar"
+
+[[sources]]
+target_class = "playing xylophone"
+search = "xylophone"
+
+[[sources]]
+target_class = "playing cymbals"
+search = "marching band cymbals"
+
+[[sources]]
+target_class = "singing"
+search = "singer singing"
+
+[[sources]]
+target_class = "marching"
+search = "marching band parade"
+
+[[sources]]
+target_class = "busking"
+search = "street musician"
+
+[[sources]]
+target_class = "bowling"
+search = "ten pin bowling"
+
+[[sources]]
+target_class = "skateboarding"
+search = "skateboarding"
+
+[[sources]]
+target_class = "snowboarding"
+search = "snowboarding"
+
+[[sources]]
+target_class = "surfing water"
+search = "surfing wave"
+
+[[sources]]
+target_class = "tap dancing"
+search = "tap dance"
+
+# --- sports / movement (more plentiful once CC BY is allowed) ---
+[[sources]]
+target_class = "playing tennis"
+search = "tennis match rally"
+
+[[sources]]
+target_class = "playing basketball"
+search = "basketball game play"
+
+[[sources]]
+target_class = "playing volleyball"
+search = "volleyball match"
+
+[[sources]]
+target_class = "playing cricket"
+search = "cricket batting bowling"
+
+[[sources]]
+target_class = "playing ice hockey"
+search = "ice hockey game"
+
+[[sources]]
+target_class = "playing badminton"
+search = "badminton match"
+
+[[sources]]
+target_class = "riding a bike"
+search = "person riding bicycle"
+
+[[sources]]
+target_class = "riding mountain bike"
+search = "mountain biking trail"
+
+[[sources]]
+target_class = "skiing crosscountry"
+search = "cross country skiing"
+
+[[sources]]
+target_class = "ski jumping"
+search = "ski jump competition"
+
+[[sources]]
+target_class = "windsurfing"
+search = "windsurfing"
+
+[[sources]]
+target_class = "skipping rope"
+search = "jump rope skipping"
+
+[[sources]]
+target_class = "juggling balls"
+search = "juggling balls juggler"
+
+[[sources]]
+target_class = "breakdancing"
+search = "breakdance bboy"
+

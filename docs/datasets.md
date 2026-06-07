@@ -5,7 +5,8 @@ redistribute any raw video files**. Kinetics-400, UCF-101 and Something-Somethin
 V2 contain third-party / copyrighted videos (see [licenses.md](licenses.md)); you must
 obtain the videos yourself and point the tools at your local copy.
 
-The only dataset that auto-downloads its videos is the CC0 **demo** subset
+The only dataset that auto-downloads its videos is the **demo** subset — real Kinetics
+clips whose YouTube sources are Creative Commons (CC BY 3.0), with real labels
 (see [demo_dataset.md](demo_dataset.md)).
 
 ## Supported adapters
@@ -15,7 +16,7 @@ The only dataset that auto-downloads its videos is the CC0 **demo** subset
 | Kinetics-400 | `kinetics400` | bring your own (`--video-root`) |
 | UCF-101 | `ucf101` | bring your own (`--video-root`) |
 | Something-Something V2 | `sthv2` | bring your own (`--video-root`) |
-| CC0 demo | `kinetics400 --dataset-subset demo` | auto-downloaded (redistributable) |
+| Demo (CC BY 3.0 Kinetics) | `kinetics400 --dataset-subset demo` | auto-downloaded (redistributable) |
 
 ## Providing your own videos
 

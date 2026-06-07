@@ -2,7 +2,6 @@
 *.pyc
 *.pth
 vcr_bench/models/internvideo/checkpoints/mae-b/pytorch_model.bin
-!vcr_bench/defences/videopure/videopure/core/raft-things.pth
 /vcr-bench
 __pycache__/
 *.egg-info/
@@ -19,10 +18,25 @@ attack_logs/
 data/
 !docs/data/
 !docs/data/**
-tests/
 scripts/autolaunch/runtime/
 scripts/autolaunch/logs/
+# Per-user autolaunch connection configs (host / paths). Copy the committed
+# *.json.example templates to these names and edit locally. Shareable benchmark
+# matrices (tracks*.json, test_ifgsm8.json) stay tracked.
+scripts/autolaunch/configs/main.json
+scripts/autolaunch/configs/main_test.json
+scripts/autolaunch/configs/*_blackbox_*.json
 vcr_bench/defences/denoise/videopure/hf-cache/
 private_docs/
 notebook_outputs/
 notebook_tools/
+
+# Third-party components whose upstreams ship NO license (research use only).
+# Their code is NOT redistributed via this repository — it stays local-only and
+# must be obtained from the upstream repos. See docs/licenses.md / THIRD_PARTY_NOTICES.md.
+vcr_bench/models/amd/
+vcr_bench/models/ila/
+vcr_bench/defences/videopure/
+vcr_bench/defences/freqpure/
+vcr_bench/attacks/bmtc/
+vcr_bench/attacks/stylefool/

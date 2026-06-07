@@ -160,23 +160,10 @@ filename = "internvideo_vit_base_p16_kinetics400.bin"
 revision = "main"
 local_subdir = "vcr_bench/models/internvideo/checkpoints"
 
-[checkpoints.amd_vitb_kinetics400]
-model = "amd"
-backbone = "vitb"
-weights_dataset = "kinetics400"
-repo_id = "maxv65/vcr-bench"
-filename = "amd_vitb_k400_finetune_90e.pth"
-revision = "main"
-local_subdir = "vcr_bench/models/amd/checkpoints"
-
-[checkpoints.ila_vit_b16_kinetics400]
-model = "ila"
-backbone = "vit_b16"
-weights_dataset = "kinetics400"
-repo_id = "maxv65/vcr-bench"
-filename = "ila_k400_B_16_8_rel.pth"
-revision = "main"
-local_subdir = "vcr_bench/models/ila/checkpoints"
+# AMD and ILA upstreams ship no LICENSE (research use only); VCR-Bench does not
+# redistribute their weights. They are bring-your-own: pass the checkpoint with
+# --checkpoint-path (or place it under vcr_bench/models/<amd|ila>/checkpoints/).
+# See docs/licenses.md. Intentionally no auto-download manifest entry here.
 
 [checkpoints.internvideo2_vit_1b_p14_kinetics400]
 model = "internvideo2"

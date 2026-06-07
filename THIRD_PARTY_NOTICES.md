@@ -18,24 +18,27 @@ downloads, non-commercial caveats) see [docs/licenses.md](docs/licenses.md).
 | `vcr_bench/models/internvideo2/` | [OpenGVLab/InternVideo (InternVideo2)](https://github.com/OpenGVLab/InternVideo) | Apache-2.0 | [LICENSE](vcr_bench/models/internvideo2/LICENSE) |
 | `vcr_bench/models/onepeace/` | [OFA-Sys/ONE-PEACE](https://github.com/OFA-Sys/ONE-PEACE) | Apache-2.0 | [LICENSE](vcr_bench/models/onepeace/LICENSE) |
 | `vcr_bench/models/umt/` | [OpenGVLab/unmasked_teacher](https://github.com/OpenGVLab/unmasked_teacher) | MIT | [LICENSE](vcr_bench/models/umt/LICENSE) |
-| `vcr_bench/models/ila/vendor/clip/` | [openai/CLIP](https://github.com/openai/CLIP) | MIT | [LICENSE](vcr_bench/models/ila/vendor/clip/LICENSE) |
-| `vcr_bench/defences/videopure/videopure/schedule/` (diffusers-derived) | [huggingface/diffusers](https://github.com/huggingface/diffusers) | Apache-2.0 | [LICENSE_DIFFUSERS](vcr_bench/defences/videopure/videopure/schedule/LICENSE_DIFFUSERS) |
-| `vcr_bench/defences/videopure/videopure/core/` (RAFT) | [princeton-vl/RAFT](https://github.com/princeton-vl/RAFT) | BSD-3-Clause | [LICENSE_RAFT](vcr_bench/defences/videopure/videopure/core/LICENSE_RAFT) |
-| `vcr_bench/defences/freqpure/guided_diffusion/` | [openai/guided-diffusion](https://github.com/openai/guided-diffusion) | MIT | [LICENSE_GUIDED_DIFFUSION](vcr_bench/defences/freqpure/guided_diffusion/LICENSE_GUIDED_DIFFUSION) |
 
-## Vendored code with NO upstream license (research use only)
+## Components NOT distributed (no upstream license — local-only)
 
-These upstreams ship no LICENSE file and are released as companion code to their papers.
-VCR-Bench does **not** redistribute their model weights (bring-your-own via
-`--checkpoint-path`). Redistributing the code or weights requires written permission from
-the upstream authors.
+The components below wrap upstream projects that ship **no LICENSE file** (all rights
+reserved; released only as companion code to their papers, for research use). Because we
+have no license to redistribute them, **their code is not included in this repository** —
+it is git-ignored and lives only in a local checkout. VCR-Bench keeps the dynamic-plugin
+hooks (registry keys, config presets) so that if you obtain the upstream code yourself and
+place it at the path below, the component activates automatically; otherwise the component
+is simply unavailable. Model weights for these are likewise bring-your-own via
+`--checkpoint-path` (no auto-download). Obtain code/weights and clarify redistribution
+rights directly with the upstream authors.
 
-| Path | Upstream | Notice |
+| Path (local-only) | Upstream | Kind |
 |---|---|---|
-| `vcr_bench/models/amd/vendor/` | [MCG-NJU/AMD](https://github.com/MCG-NJU/AMD) | [NOTICE](vcr_bench/models/amd/vendor/NOTICE.md) |
-| `vcr_bench/models/ila/vendor/models/` | [Francis-Rings/ILA](https://github.com/Francis-Rings/ILA) | [NOTICE](vcr_bench/models/ila/vendor/NOTICE.md) |
-| `vcr_bench/defences/videopure/` (wrapper) | [deep-kaixun/VideoPure](https://github.com/deep-kaixun/VideoPure) | [NOTICE](vcr_bench/defences/videopure/NOTICE.md) |
-| `vcr_bench/defences/freqpure/` (wrapper) | [GaozhengPei/FreqPure](https://github.com/GaozhengPei/FreqPure) | [NOTICE](vcr_bench/defences/freqpure/NOTICE.md) |
+| `vcr_bench/models/amd/` | [MCG-NJU/AMD](https://github.com/MCG-NJU/AMD) | model |
+| `vcr_bench/models/ila/` | [Francis-Rings/ILA](https://github.com/Francis-Rings/ILA) (bundles openai/CLIP, MIT) | model |
+| `vcr_bench/defences/videopure/` | [deep-kaixun/VideoPure](https://github.com/deep-kaixun/VideoPure) (bundles diffusers Apache-2.0, RAFT BSD-3-Clause) | defence |
+| `vcr_bench/defences/freqpure/` | [GaozhengPei/FreqPure](https://github.com/GaozhengPei/FreqPure) (bundles openai/guided-diffusion, MIT) | defence |
+| `vcr_bench/attacks/bmtc/` | [mlvccn/BMTC_TransferAttackVid](https://github.com/mlvccn/BMTC_TransferAttackVid) | attack |
+| `vcr_bench/attacks/stylefool/` | [yuxincao22/StyleFool](https://github.com/yuxincao22/StyleFool) | attack |
 
 ## Runtime downloads & non-commercial caveats
 

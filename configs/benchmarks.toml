@@ -1,6 +1,9 @@
+# Default suite uses the redistributable CC BY 3.0 `demo` subset so it runs out of the box
+# (no manual Kinetics download). Use the *_all_models / k400_test suites with your own videos
+# for real benchmark numbers.
 [accuracy_suites.default]
 dataset = "kinetics400"
-dataset_subset = "kinetics400_mini_test"
+dataset_subset = "demo"
 num_videos = 8
 models = ["x3d", "timesformer", "videomae"]
 
@@ -43,7 +46,7 @@ models = [
 
 [attack_suites.default]
 dataset = "kinetics400"
-dataset_subset = "kinetics400_mini_test"
+dataset_subset = "demo"
 num_videos = 8
 attack_name = "default_suite"
 results_root = "results/remote_attacks"

@@ -18,8 +18,8 @@ upstream `LICENSE` text or a `NOTICE.md`), see [THIRD_PARTY_NOTICES.md](../THIRD
 | InternVideo2 | [InternVideo](https://github.com/OpenGVLab/InternVideo) | Apache-2.0 |
 | ONE-PEACE | [ONE-PEACE](https://github.com/OFA-Sys/ONE-PEACE) | Apache-2.0 |
 | ONE-PEACE (fairseq dependency) | [fairseq](https://github.com/facebookresearch/fairseq) | MIT |
-| AMD | [MCG-NJU/AMD](https://github.com/MCG-NJU/AMD) | No LICENSE file — research use only; weights not redistributed (bring-your-own). Provenance: [`vcr_bench/models/amd/vendor/NOTICE.md`](../vcr_bench/models/amd/vendor/NOTICE.md) |
-| ILA | [Francis-Rings/ILA](https://github.com/Francis-Rings/ILA) | No LICENSE file — research use only; weights not redistributed (bring-your-own). Bundled `clip/` is MIT. Provenance: [`vcr_bench/models/ila/vendor/NOTICE.md`](../vcr_bench/models/ila/vendor/NOTICE.md) |
+| AMD | [MCG-NJU/AMD](https://github.com/MCG-NJU/AMD) | No LICENSE file — **code not distributed** with this repo (local-only, git-ignored); weights bring-your-own (no auto-download). Obtain both from upstream. See [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). |
+| ILA | [Francis-Rings/ILA](https://github.com/Francis-Rings/ILA) | No LICENSE file — **code not distributed** with this repo (local-only, git-ignored); weights bring-your-own (no auto-download). Bundled `clip/` is MIT. See [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). |
 | UMT | [OpenGVLab/unmasked_teacher](https://github.com/OpenGVLab/unmasked_teacher) | MIT — license included at `vcr_bench/models/umt/LICENSE` |
 | FlashAttention (InternVideo dependency) | [flash-attention](https://github.com/Dao-AILab/flash-attention) | BSD-3-Clause |
 
@@ -30,8 +30,8 @@ upstream `LICENSE` text or a `NOTICE.md`), see [THIRD_PARTY_NOTICES.md](../THIRD
 | Attack | License |
 |---|---|
 | IFGSM, MIFGSM, AMIFGSM, UAP, Zhang-SSIM/LPIPS/DISTS, Korhonen et al., STAdv, SSAH, GradEstV2, Square | Project code — no separate third-party license |
-| BMTC | No LICENSE file — [mlvccn/BMTC_TransferAttackVid](https://github.com/mlvccn/BMTC_TransferAttackVid) released as companion code to the paper (see repo README); research use only |
-| StyleFool | No LICENSE file — [yuxincao22/StyleFool](https://github.com/yuxincao22/StyleFool) released as companion code to [arXiv:2203.16000](https://arxiv.org/abs/2203.16000); research use only |
+| BMTC | No LICENSE file — [mlvccn/BMTC_TransferAttackVid](https://github.com/mlvccn/BMTC_TransferAttackVid) released as companion code to the paper; research use only. **Code not distributed** with this repo (local-only, git-ignored) — obtain from upstream. |
+| StyleFool | No LICENSE file — [yuxincao22/StyleFool](https://github.com/yuxincao22/StyleFool) released as companion code to [arXiv:2203.16000](https://arxiv.org/abs/2203.16000); research use only. **Code not distributed** with this repo (local-only, git-ignored) — obtain from upstream. |
 
 ---
 
@@ -40,8 +40,8 @@ upstream `LICENSE` text or a `NOTICE.md`), see [THIRD_PARTY_NOTICES.md](../THIRD
 | Defence | License |
 |---|---|
 | Temporal median, shuffle, Gaussian blur, flip, crop/resize, rotate, bilateral, domain transform, randomized smoothing | Project code — no separate third-party license |
-| VideoPure | No upstream LICENSE — [deep-kaixun/VideoPure](https://github.com/deep-kaixun/VideoPure) released as companion code to [arXiv:2501.14999](https://arxiv.org/abs/2501.14999); research use only. Bundled sub-components carry their own licenses (diffusers Apache-2.0, RAFT BSD-3-Clause, flow_viz MIT) — see [`vcr_bench/defences/videopure/NOTICE.md`](../vcr_bench/defences/videopure/NOTICE.md) |
-| FreqPure | No upstream LICENSE — [GaozhengPei/FreqPure](https://github.com/GaozhengPei/FreqPure) released as companion code to the paper; research use only. Bundled guided-diffusion is MIT — see [`vcr_bench/defences/freqpure/NOTICE.md`](../vcr_bench/defences/freqpure/NOTICE.md) |
+| VideoPure | No upstream LICENSE — [deep-kaixun/VideoPure](https://github.com/deep-kaixun/VideoPure) released as companion code to [arXiv:2501.14999](https://arxiv.org/abs/2501.14999); research use only. **Code not distributed** with this repo (local-only, git-ignored) — obtain from upstream. Bundled sub-components carry their own licenses (diffusers Apache-2.0, RAFT BSD-3-Clause, flow_viz MIT). |
+| FreqPure | No upstream LICENSE — [GaozhengPei/FreqPure](https://github.com/GaozhengPei/FreqPure) released as companion code to the paper; research use only. **Code not distributed** with this repo (local-only, git-ignored) — obtain from upstream. Bundled guided-diffusion is MIT. |
 | OpenAI guided-diffusion (FreqPure dependency) | MIT |
 | Hugging Face diffusers (VideoPure dependency) | Apache-2.0 |
 | **VideoPure diffusion weights** — auto-downloaded `damo-vilab/text-to-video-ms-1.7b` (default `VIDEOPURE_MODEL_ID`) | **CC BY-NC 4.0** ([model card](https://huggingface.co/damo-vilab/text-to-video-ms-1.7b); ali-vilab / ModelScope) — **non-commercial use only**. Any run that uses the VideoPure defence pulls these weights, so that evaluation path is research / non-commercial only, even though VCR-Bench's own code is MIT. |
@@ -66,7 +66,7 @@ Download the videos yourself from the provider and point the tools at them with
 example, use the CC0/public-domain **demo** subset instead (see
 [demo_dataset.md](demo_dataset.md)).
 
-| Demo subset (CC0) | Small pseudo-labelled set built from CC0 / public-domain Wikimedia Commons clips via [`scripts/build_demo_dataset.py`](../scripts/build_demo_dataset.py). Redistributable (incl. commercially), no attribution required; per-clip provenance recorded in `PROVENANCE.csv`. Labels are model-generated **pseudo-labels**, not ground truth — for demos only. |
+| Demo subset (`--dataset-subset demo`) | Small set of **real Kinetics clips** (57 clips / 41 classes) whose source YouTube videos are **CC BY 3.0**, selected via [`scripts/select_kinetics_cc.py`](../scripts/select_kinetics_cc.py). Redistributable (incl. commercially) **with attribution** — per-clip channel/URL in the archive's `ATTRIBUTION.md` (+ `PROVENANCE.csv`). Carries **real ground-truth labels**; for demos / smoke tests, not benchmark numbers. A CC0 pseudo-labelled alternative exists via [`scripts/build_demo_dataset.py`](../scripts/build_demo_dataset.py). |
 
 ---
 
@@ -125,9 +125,9 @@ processes for VMAF metric computation.
 
 ## Items Requiring Attention Before Redistribution
 
-1. **AMD, ILA** — no LICENSE file in upstream repos (research use only). VCR-Bench does **not** redistribute their weights: both are bring-your-own (no auto-download URL), so the user must supply the checkpoint via `--checkpoint-path`. Obtain written permission before redistributing these classifiers or their weights.
-2. **BMTC, StyleFool** — same as above for attacks.
-3. **VideoPure, FreqPure** — same as above for defences. Add the MIT license text for the OpenAI guided-diffusion portions.
+1. **AMD, ILA** — no LICENSE file in upstream repos (research use only). Their **code is not distributed** with this repository (git-ignored, local-only) and their weights are bring-your-own (no auto-download URL; supply via `--checkpoint-path`). To use them, obtain the code and weights from the upstream repos and clarify redistribution rights with the authors.
+2. **BMTC, StyleFool** — same as above for attacks: code not distributed (local-only); obtain from upstream.
+3. **VideoPure, FreqPure** — same as above for defences: code not distributed (local-only); obtain from upstream. Their bundled MIT/Apache/BSD sub-components travel with the upstream checkout.
 4. **UMT** — upstream MIT license now included at `vcr_bench/models/umt/LICENSE`. (Vendored license/NOTICE files for all bundled third-party code are indexed in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).)
 5. **Dataset videos and model weights** — keep out of source archives unless the respective terms explicitly permit redistribution. VCR-Bench does not bundle raw videos for Kinetics-400 / UCF-101 / SSv2; only the CC0 `demo` subset is auto-downloadable (`redistributable = true` in `configs/datasets.toml`).
 6. **`pyiqa` is non-commercial** (PolyForm Noncommercial + NTU S-Lab) — any benchmark path that uses `pyiqa` metrics is **research / non-commercial only**, even though VCR-Bench's own code is MIT. Some `pyiqa` metric weights additionally carry CC BY-NC-SA. Do not confuse it with the MIT-licensed `IQA-pytorch` package.
