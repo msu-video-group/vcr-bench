@@ -107,10 +107,13 @@ def main() -> int:
     service_parts.extend(args.service_arg)
     service_cmd = " ".join(q(p) for p in service_parts)
 
+    # Fast-forward only: keep remote in sync with origin/master without a hard
+    # reset, so untracked / out-of-band restored files (e.g. license-stripped
+    # models placed on disk manually) survive the sync.
     force_sync = (
         f"cd {repo_path_remote} && "
         "git fetch --all --prune && "
-        "git reset --hard origin/master"
+        "git merge --ff-only origin/master"
     )
     git_pull_cmd = f"bash -lc {q(force_sync)}"
     ensure_exec_bits = (

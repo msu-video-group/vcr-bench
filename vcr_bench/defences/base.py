@@ -23,6 +23,12 @@ class BaseVideoDefence(ABC):
 
     voting_count: int = 1
 
+    #: Whether ``transform`` is differentiable w.r.t. its input. Defences that run
+    #: under ``torch.no_grad()`` / detach their output (e.g. diffusion purification)
+    #: set this to ``False``; ``install`` then splices a BPDA straight-through
+    #: identity gradient so adaptive attacks can backprop through them.
+    differentiable: bool = True
+
     # ------------------------------------------------------------------
     # Core transformation — subclasses must implement this
     # ------------------------------------------------------------------
@@ -61,6 +67,20 @@ class BaseVideoDefence(ABC):
             orig_dtype = t.dtype
             t_float = t.float() if t.dtype != torch.float32 else t
             transformed = defence.transform(t_float)
+            # BPDA (Backward Pass Differentiable Approximation): non-differentiable
+            # defences (diffusion purification runs under no_grad / detaches) break the
+            # adaptive attack's gradient graph. Splice a straight-through identity: the
+            # forward value stays the real purified output, while the backward pass
+            # treats the defence as identity (d transform / d input = I). Only engages
+            # when a gradient is actually being tracked (i.e. the adaptive attack's
+            # forward), so the no_grad predict path is unaffected.
+            if (
+                not defence.differentiable
+                and torch.is_grad_enabled()
+                and t_float.requires_grad
+                and transformed.shape == t_float.shape
+            ):
+                transformed = transformed.detach() + (t_float - t_float.detach())
             if orig_dtype != torch.float32:
                 transformed = transformed.to(orig_dtype)
             return orig_pre(transformed, input_format)

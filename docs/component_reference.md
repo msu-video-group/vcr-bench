@@ -74,6 +74,7 @@ Defences transform sampled clips before model preprocessing. In non-adaptive eva
 |---|---|---|---|
 | `bilateral` | Bilateral filtering | `default` | Applies spatiotemporal bilateral smoothing to suppress small perturbations while preserving edges. |
 | `crop_resize` | Crop-resize | `default` | Randomly crops and resizes frames to disrupt spatially localized perturbations. |
+| `diff_jpeg` | Differentiable JPEG | `default`, `strong` | Differentiable JPEG compression (soft-rounded DCT quantization); gradients flow through `transform`, making it usable as an adaptive (white-box) compression defence. |
 | `domain_transform` | Domain transform filtering | `default` | Applies domain-transform-style smoothing controlled by range and temporal sigmas. |
 | `flip` | Horizontal flip | `default` | Horizontally flips frames according to `flip_prob`; useful as a simple input transformation defence. |
 | `freqpure` | FreqPure | `default` | Diffusion/frequency-domain purification defence with DDIM/DDPM preset options. |

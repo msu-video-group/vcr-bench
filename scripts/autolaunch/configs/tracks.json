@@ -29,7 +29,8 @@
         {"name": "gaussian_blur",        "adaptive": true},
         {"name": "rotate",               "adaptive": true},
         {"name": "shuffle",              "adaptive": true},
-        {"name": "temporal_median",      "adaptive": true}
+        {"name": "temporal_median",      "adaptive": true},
+        {"name": "diff_jpeg",            "adaptive": true}
       ],
       "extra_args": ["--full-videos", "--separate-logs", "--allow-misclassified", "--metric-workers", "12", "--batch-size", "4", "--num-workers", "4"]
     },

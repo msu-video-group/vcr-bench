@@ -1,0 +1,19 @@
+{
+  "kind": "defence",
+  "name": "diff_jpeg",
+  "presets": {
+    "default": {
+      "factory_name": "diff_jpeg",
+      "params": {
+        "quality": 75
+      }
+    },
+    "strong": {
+      "factory_name": "diff_jpeg",
+      "params": {
+        "quality": 30
+      }
+    }
+  },
+  "default_preset": "default"
+}

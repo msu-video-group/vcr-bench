@@ -38,7 +38,8 @@
         {"name": "blur",             "adaptive": true},
         {"name": "flip",             "adaptive": true},
         {"name": "crop",             "adaptive": true},
-        {"name": "rotate",           "adaptive": true}
+        {"name": "rotate",           "adaptive": true},
+        {"name": "diff_jpeg",        "adaptive": true}
       ],
       "extra_args": ["--full-videos", "--separate-logs", "--metric-workers", "12"]
     }
