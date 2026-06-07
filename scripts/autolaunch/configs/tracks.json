@@ -10,7 +10,9 @@
         "actionclip", "timesformer", "tsmnonlocal", "ila",
         "tsm", "tsn", "uniformerv2", "onepeace", "amd",
         "tadaformer", "slowonly", "videomae", "tpn", "videomaev2",
-        "c2d", "r2plus1d", "tanet", "uniformer", "videoswin", "mvitv2"
+        "c2d", "r2plus1d", "tanet", "uniformer", "videoswin", "mvitv2",
+        "x3d", "csn", "i3d", "i3dnonlocal", "slowfast",
+        "internvideo", "internvideo2", "umt"
       ],
       "attacks": [
         {"name": "amifgsm",        "target": true},
