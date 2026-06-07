@@ -30,8 +30,8 @@ upstream `LICENSE` text or a `NOTICE.md`), see [THIRD_PARTY_NOTICES.md](../THIRD
 | Attack | License |
 |---|---|
 | IFGSM, MIFGSM, AMIFGSM, UAP, Zhang-SSIM/LPIPS/DISTS, Korhonen et al., STAdv, SSAH, GradEstV2, Square | Project code — no separate third-party license |
-| BMTC | No LICENSE file — [mlvccn/BMTC_TransferAttackVid](https://github.com/mlvccn/BMTC_TransferAttackVid) released as companion code to the paper; research use only. **Code not distributed** with this repo (local-only, git-ignored) — obtain from upstream. |
-| StyleFool | No LICENSE file — [yuxincao22/StyleFool](https://github.com/yuxincao22/StyleFool) released as companion code to [arXiv:2203.16000](https://arxiv.org/abs/2203.16000); research use only. **Code not distributed** with this repo (local-only, git-ignored) — obtain from upstream. |
+| BMTC | **Project code (MIT)** — our own implementation of the method, written from scratch against the [paper](https://github.com/mlvccn/BMTC_TransferAttackVid)'s description; **not** derived from the authors' source. The upstream repo ships no LICENSE and is cited for scientific attribution only; none of its code is included. |
+| StyleFool | **Project code (MIT)** — our own implementation of the method described in [arXiv:2203.16000](https://arxiv.org/abs/2203.16000), written from scratch against the paper; **not** derived from the [authors' source](https://github.com/yuxincao22/StyleFool) (which ships no LICENSE and is cited for attribution only). Uses our own VGG/AdaIN style-transfer + NES backend; no upstream code included. |
 
 ---
 
@@ -126,7 +126,7 @@ processes for VMAF metric computation.
 ## Items Requiring Attention Before Redistribution
 
 1. **AMD, ILA** — no LICENSE file in upstream repos (research use only). Their **code is not distributed** with this repository (git-ignored, local-only) and their weights are bring-your-own (no auto-download URL; supply via `--checkpoint-path`). To use them, obtain the code and weights from the upstream repos and clarify redistribution rights with the authors.
-2. **BMTC, StyleFool** — same as above for attacks: code not distributed (local-only); obtain from upstream.
+2. **BMTC, StyleFool** — **our own MIT implementations** of the published methods, distributed with the repo. They are *not* upstream code: written from scratch against the papers, with the original (unlicensed) repos cited for scientific attribution only. No redistribution restriction applies to our code; do not vendor or copy the upstream sources into the repo.
 3. **VideoPure, FreqPure** — same as above for defences: code not distributed (local-only); obtain from upstream. Their bundled MIT/Apache/BSD sub-components travel with the upstream checkout.
 4. **UMT** — upstream MIT license now included at `vcr_bench/models/umt/LICENSE`. (Vendored license/NOTICE files for all bundled third-party code are indexed in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).)
 5. **Dataset videos and model weights** — keep out of source archives unless the respective terms explicitly permit redistribution. VCR-Bench does not bundle raw videos for Kinetics-400 / UCF-101 / SSv2; only the CC0 `demo` subset is auto-downloadable (`redistributable = true` in `configs/datasets.toml`).

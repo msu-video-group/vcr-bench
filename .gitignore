@@ -38,5 +38,3 @@ vcr_bench/models/amd/
 vcr_bench/models/ila/
 vcr_bench/defences/videopure/
 vcr_bench/defences/freqpure/
-vcr_bench/attacks/bmtc/
-vcr_bench/attacks/stylefool/

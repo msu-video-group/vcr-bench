@@ -364,6 +364,7 @@ Peak **allocated** GPU memory for a single Kinetics-400 video on one NVIDIA A100
 - [MMAction2](https://github.com/open-mmlab/mmaction2)
 - [VideoPure](https://github.com/deep-kaixun/VideoPure)
 - [Background Mixup-induced Temporal Consistency (BMTC)](https://github.com/mlvccn/BMTC_TransferAttackVid)
+- [StyleFool: Fooling Video Classification Systems via Style Transfer](https://arxiv.org/abs/2203.16000)
 - [Temporal Shuffling for Defending Deep Action Recognition Models against Adversarial Attacks](https://arxiv.org/abs/2112.07921)
 - [ActionCLIP](https://github.com/sallymmx/ActionCLIP)
 - [Asymmetric Masked Distillation (AMD)](https://github.com/MCG-NJU/AMD)

@@ -37,8 +37,15 @@ rights directly with the upstream authors.
 | `vcr_bench/models/ila/` | [Francis-Rings/ILA](https://github.com/Francis-Rings/ILA) (bundles openai/CLIP, MIT) | model |
 | `vcr_bench/defences/videopure/` | [deep-kaixun/VideoPure](https://github.com/deep-kaixun/VideoPure) (bundles diffusers Apache-2.0, RAFT BSD-3-Clause) | defence |
 | `vcr_bench/defences/freqpure/` | [GaozhengPei/FreqPure](https://github.com/GaozhengPei/FreqPure) (bundles openai/guided-diffusion, MIT) | defence |
-| `vcr_bench/attacks/bmtc/` | [mlvccn/BMTC_TransferAttackVid](https://github.com/mlvccn/BMTC_TransferAttackVid) | attack |
-| `vcr_bench/attacks/stylefool/` | [yuxincao22/StyleFool](https://github.com/yuxincao22/StyleFool) | attack |
+
+> **Note on BMTC / StyleFool attacks.** `vcr_bench/attacks/bmtc/` and
+> `vcr_bench/attacks/stylefool/` are **our own** implementations of the methods
+> described in the respective papers, written from scratch against the paper text
+> and licensed under this repository's MIT license — they are **not** vendored
+> upstream code and are therefore distributed with the repo. The original authors'
+> repositories ([mlvccn/BMTC_TransferAttackVid](https://github.com/mlvccn/BMTC_TransferAttackVid),
+> [yuxincao22/StyleFool](https://github.com/yuxincao22/StyleFool)) ship no LICENSE and
+> are cited for scientific attribution only; none of their source code is included here.
 
 ## Runtime downloads & non-commercial caveats
 
