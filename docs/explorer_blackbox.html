@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VCR Benchmark Black Box Explorer</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>VCR Benchmark: Black Box Explorer</h1>
+    <p class="sub">
+      Interactive GitHub Pages explorer for the query-based blackbox_full track
+      (untargeted attacks). <a href="./explorer.html">Switch to white-box explorer &rarr;</a>
+    </p>
+
+    <div class="panel">
+      <h3>Data Settings</h3>
+      <div class="controls">
+      <div class="control">
+        <label for="targetMode">Target mode</label>
+        <select id="targetMode">
+          <option value="all">all</option>
+          <option value="target">target</option>
+          <option value="untarget">untarget</option>
+        </select>
+      </div>
+      <div class="control">
+        <label for="adaptiveMode">Adaptive mode</label>
+        <select id="adaptiveMode">
+          <option value="all">all</option>
+          <option value="non-adaptive">non-adaptive</option>
+          <option value="adaptive">adaptive</option>
+        </select>
+      </div>
+      <div class="control">
+        <label for="defenceFilter">Defence filter</label>
+        <select id="defenceFilter">
+          <option value="all">all</option>
+        </select>
+      </div>
+      <div class="control">
+        <button id="reloadBtn" type="button">Reload CSV data</button>
+      </div>
+    </div>
+    </div>
+
+    <div class="tabs panel">
+      <button class="tablink active" data-view="attacks">Compare attacks</button>
+      <button class="tablink" data-view="models">Compare models</button>
+      <button class="tablink" data-view="defences">Compare defences</button>
+    </div>
+
+    <div class="panel">
+      <h3>Chart Settings</h3>
+      <div class="controls chart-controls">
+        <div class="control">
+          <label for="primaryMetric">Primary metric (sorting)</label>
+          <select id="primaryMetric">
+            <option value="asr">ASR (%)</option>
+            <option value="adv_acc">Robust Acc (%)</option>
+            <option value="psnr">PSNR</option>
+            <option value="ssim">SSIM</option>
+            <option value="lpips">LPIPS</option>
+            <option value="dists">DISTS</option>
+            <option value="vmaf">VMAF</option>
+            <option value="mse">MSE</option>
+            <option value="query_count">Queries</option>
+            <option value="clear_acc">Clear Accuracy (%)</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="sortOrder">Sort</label>
+          <select id="sortOrder">
+            <option value="best">best first</option>
+            <option value="asc">ascending</option>
+            <option value="desc">descending</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="topN">Top N in chart</label>
+          <input id="topN" type="number" min="3" max="100" value="15">
+        </div>
+        <div class="control">
+          <label for="chartMetrics">Chart metrics (grouped bars)</label>
+          <select id="chartMetrics" multiple size="6">
+            <option value="asr" selected>ASR (%)</option>
+            <option value="adv_acc">Robust Acc (%)</option>
+            <option value="clear_acc">Clear Acc (%)</option>
+            <option value="psnr" selected>PSNR</option>
+            <option value="ssim" selected>SSIM</option>
+            <option value="lpips">LPIPS</option>
+            <option value="dists">DISTS</option>
+            <option value="vmaf">VMAF</option>
+            <option value="mse">MSE</option>
+            <option value="query_count">Queries</option>
+            <option value="mean_time_ms">Mean Time (ms)</option>
+            <option value="mean_iterations">Mean Iterations</option>
+          </select>
+          <div class="row">
+            <button type="button" id="presetAsr">ASR Group</button>
+            <button type="button" id="presetQuality">Quality Group</button>
+            <button type="button" id="presetSpeed">Speed Group</button>
+            <button type="button" id="presetAll">All</button>
+          </div>
+        </div>
+      </div>
+      <div id="summary" class="summary"></div>
+      <canvas id="mainChart" height="120"></canvas>
+      <div class="table-wrap">
+        <table id="mainTable"></table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Configurable Matrix</h3>
+      <div class="controls">
+        <div class="control">
+          <label for="matrixRowAxis">Rows</label>
+          <select id="matrixRowAxis"></select>
+        </div>
+        <div class="control">
+          <label for="matrixColAxis">Columns</label>
+          <select id="matrixColAxis"></select>
+        </div>
+        <div class="control">
+          <label for="matrixMetric1">Cell metric A</label>
+          <select id="matrixMetric1">
+            <option value="asr">ASR (%)</option>
+            <option value="psnr" selected>PSNR</option>
+            <option value="adv_acc">Robust Acc (%)</option>
+            <option value="clear_acc">Clear Acc (%)</option>
+            <option value="ssim">SSIM</option>
+            <option value="lpips">LPIPS</option>
+            <option value="dists">DISTS</option>
+            <option value="vmaf">VMAF</option>
+            <option value="mse">MSE</option>
+            <option value="query_count">Queries</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="matrixMetric2">Cell metric B</label>
+          <select id="matrixMetric2">
+            <option value="asr" selected>ASR (%)</option>
+            <option value="psnr">PSNR</option>
+            <option value="adv_acc">Robust Acc (%)</option>
+            <option value="clear_acc">Clear Acc (%)</option>
+            <option value="ssim">SSIM</option>
+            <option value="lpips">LPIPS</option>
+            <option value="dists">DISTS</option>
+            <option value="vmaf">VMAF</option>
+            <option value="mse">MSE</option>
+            <option value="query_count">Queries</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="matrixTable"></table>
+      </div>
+      <div class="controls">
+        <div class="control">
+          <label for="scatterRowAxis">Scatter rows (color groups)</label>
+          <select id="scatterRowAxis"></select>
+        </div>
+        <div class="control">
+          <label for="scatterColAxis">Scatter columns (shape groups)</label>
+          <select id="scatterColAxis"></select>
+        </div>
+        <div class="control">
+          <label for="scatterMetricX">Scatter X metric</label>
+          <select id="scatterMetricX">
+            <option value="asr">ASR (%)</option>
+            <option value="psnr" selected>PSNR</option>
+            <option value="adv_acc">Robust Acc (%)</option>
+            <option value="clear_acc">Clear Acc (%)</option>
+            <option value="ssim">SSIM</option>
+            <option value="lpips">LPIPS</option>
+            <option value="dists">DISTS</option>
+            <option value="vmaf">VMAF</option>
+            <option value="mse">MSE</option>
+            <option value="query_count">Queries</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="scatterMetricY">Scatter Y metric</label>
+          <select id="scatterMetricY">
+            <option value="asr" selected>ASR (%)</option>
+            <option value="psnr">PSNR</option>
+            <option value="adv_acc">Robust Acc (%)</option>
+            <option value="clear_acc">Clear Acc (%)</option>
+            <option value="ssim">SSIM</option>
+            <option value="lpips">LPIPS</option>
+            <option value="dists">DISTS</option>
+            <option value="vmaf">VMAF</option>
+            <option value="mse">MSE</option>
+            <option value="query_count">Queries</option>
+          </select>
+        </div>
+      </div>
+      <div class="summary" id="matrixScatterLegend"></div>
+      <canvas id="matrixScatterChart" height="120"></canvas>
+    </div>
+
+    <div class="panel">
+      <h3>Raw CSV Viewer (model-attack-defence)</h3>
+      <div class="controls">
+        <div class="control">
+          <label><input type="checkbox" id="csvDetailsMode"> Details (show per-video table)</label>
+        </div>
+        <div class="control">
+          <label for="csvComboSelect">Attack | Defence combo</label>
+          <select id="csvComboSelect"></select>
+        </div>
+        <div class="control">
+          <label for="csvRunSelect">Run</label>
+          <select id="csvRunSelect"></select>
+        </div>
+        <div class="control">
+          <label for="csvRowLimit">Rows limit</label>
+          <input id="csvRowLimit" type="number" min="20" max="5000" value="200">
+        </div>
+      </div>
+      <div id="csvMeta" class="summary"></div>
+      <div class="table-wrap">
+        <table id="csvTable"></table>
+      </div>
+    </div>
+
+    <div id="status" class="status"></div>
+  </div>
+
+  <script>
+    // Drive the shared explorer app against the black-box cache. The "data" root is
+    // shared with the white-box page; only the precomputed cache file differs.
+    window.EXPLORER_CONFIG = {
+      dataRoot: "data",
+      cacheFile: "website_cache_blackbox.json",
+      defaultTargetMode: "untarget",
+    };
+  </script>
+  <script src="./app.js"></script>
+</body>
+</html>

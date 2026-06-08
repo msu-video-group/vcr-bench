@@ -2,7 +2,13 @@
   "use strict";
   const APP_VERSION = "2026-05-25-vcr-full-white-box";
 
-  const DEFAULT_DATA_ROOT = "data";
+  // Per-page overrides, set inline in the explorer HTML before this script loads.
+  // Lets the same app drive multiple tracks (white-box, black-box, ...) that each
+  // share the "data" root but load a different precomputed cache file.
+  const EXPLORER_CONFIG = (typeof window !== "undefined" && window.EXPLORER_CONFIG) || {};
+  const DEFAULT_DATA_ROOT = EXPLORER_CONFIG.dataRoot || "data";
+  const CACHE_FILE = EXPLORER_CONFIG.cacheFile || "website_cache.json";
+  const DEFAULT_TARGET_MODE = EXPLORER_CONFIG.defaultTargetMode || "all";
 
   const METRIC_DIRECTIONS = {
     asr: "desc",
@@ -20,6 +26,7 @@
     mean_time: "asc",
     mean_time_ms: "asc",
     mean_iterations: "asc",
+    query_count: "asc",
   };
 
   const PREFERRED_METRICS = [
@@ -36,6 +43,7 @@
     "vmaf",
     "mse",
     "iter_count",
+    "query_count",
     "time",
     "mean_time",
     "mean_time_ms",
@@ -123,7 +131,7 @@
   }
 
   async function tryLoadCache(base) {
-    const url = `${base.replace(/\/+$/, "")}/website_cache.json`;
+    const url = `${base.replace(/\/+$/, "")}/${CACHE_FILE}`;
     const data = await fetchJson(url);
     return { data, url };
   }
@@ -191,6 +199,7 @@
       mean_time: "Mean Time (s)",
       mean_time_ms: "Mean Time (ms)",
       mean_iterations: "Mean Iters",
+      query_count: "Queries",
     };
     return map[k] || k;
   }
@@ -1200,6 +1209,10 @@
     document.title = `${title} (${APP_VERSION})`;
     setStatus(`app start ${APP_VERSION}`, "");
     initFromQuery();
+    const targetSel = byId("targetMode");
+    if (targetSel && [...targetSel.options].some((o) => o.value === DEFAULT_TARGET_MODE)) {
+      targetSel.value = DEFAULT_TARGET_MODE;
+    }
     setChartMetrics(["asr", "psnr", "ssim"]);
     initEvents();
     reloadData();

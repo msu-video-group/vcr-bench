@@ -6,32 +6,32 @@ import json
 import math
 import shutil
 import time
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
 
-ATTACKS = (
-    "amifgsm",
-    "ifgsm",
-    "mifgsm",
-    "korhonen_et_al",
-    "zhang_ssim",
-    "zhang_dists",
-    "zhang_lpips",
-    "stadv",
-)
+@dataclass(frozen=True)
+class TrackConfig:
+    """Describes one benchmark track (white-box, black-box, ...).
 
-DEFENCES = (
-    ("no_defence", "non-adaptive"),
-    ("crop_resize", "adaptive"),
-    ("flip", "adaptive"),
-    ("gaussian_blur", "adaptive"),
-    ("rotate", "adaptive"),
-    ("shuffle", "adaptive"),
-    ("temporal_median", "adaptive"),
-)
+    A track is a set of result folders named ``{attack}_{target_mode}_{defence}_{adaptive}``
+    that all share the same per-video CSV layout. Each track is rendered into its own
+    GitHub Pages data sub-directory and its own ``website_cache`` JSON file so the
+    explorer can show tracks separately.
+    """
 
-MEAN_METRICS = [
+    name: str
+    source_id: str
+    attacks: tuple[str, ...]
+    defences: tuple[tuple[str, str], ...]
+    target_mode: str
+    cache_file: str
+    default_results_root: str
+    extra_mean_metrics: tuple[str, ...] = field(default_factory=tuple)
+
+
+BASE_MEAN_METRICS = [
     "eps",
     "max_iters",
     "psnr",
@@ -46,6 +46,60 @@ MEAN_METRICS = [
     "mean_time_ms",
     "mean_iterations",
 ]
+
+
+TRACKS: dict[str, TrackConfig] = {
+    "full_white_box": TrackConfig(
+        name="full_white_box",
+        source_id="full_white_box",
+        attacks=(
+            "amifgsm",
+            "ifgsm",
+            "mifgsm",
+            "korhonen_et_al",
+            "zhang_ssim",
+            "zhang_dists",
+            "zhang_lpips",
+            "stadv",
+        ),
+        defences=(
+            ("no_defence", "non-adaptive"),
+            ("crop_resize", "adaptive"),
+            ("flip", "adaptive"),
+            ("gaussian_blur", "adaptive"),
+            ("rotate", "adaptive"),
+            ("shuffle", "adaptive"),
+            ("temporal_median", "adaptive"),
+            ("diff_jpeg", "adaptive"),
+        ),
+        target_mode="target",
+        cache_file="website_cache.json",
+        default_results_root="remote_results/autolaunch_full_white_box/results",
+    ),
+    "blackbox_full": TrackConfig(
+        name="blackbox_full",
+        source_id="blackbox_full",
+        attacks=(
+            "gradestv2",
+            "bmtc",
+            "stylefool",
+            "square",
+        ),
+        defences=(
+            ("no_defence", "non-adaptive"),
+            ("crop_resize", "adaptive"),
+            ("flip", "adaptive"),
+            ("gaussian_blur", "adaptive"),
+            ("rotate", "adaptive"),
+            ("shuffle", "adaptive"),
+            ("temporal_median", "adaptive"),
+        ),
+        target_mode="untarget",
+        cache_file="website_cache_blackbox.json",
+        default_results_root="remote_results/autolaunch_blackbox_full/results",
+        extra_mean_metrics=("query_count",),
+    ),
+}
 
 
 def parse_float(value: object) -> Optional[float]:
@@ -106,43 +160,52 @@ def compute_counts_from_rows(rows: list[dict[str, str]]) -> dict[str, float]:
     }
 
 
-def attack_folder(attack: str, defence: str, adaptive: str) -> str:
-    return f"{attack}_target_{defence}_{adaptive}"
+def attack_folder(track: TrackConfig, attack: str, defence: str, adaptive: str) -> str:
+    return f"{attack}_{track.target_mode}_{defence}_{adaptive}"
 
 
-def ordinary_folders() -> set[str]:
-    return {attack_folder(attack, defence, adaptive) for attack in ATTACKS for defence, adaptive in DEFENCES}
+def ordinary_folders(track: TrackConfig) -> set[str]:
+    return {
+        attack_folder(track, attack, defence, adaptive)
+        for attack in track.attacks
+        for defence, adaptive in track.defences
+    }
 
 
-def parse_attack_meta(attack_folder_name: str) -> dict[str, object]:
-    for attack in ATTACKS:
-        prefix = f"{attack}_target_"
+def parse_attack_meta(track: TrackConfig, attack_folder_name: str) -> dict[str, object]:
+    for attack in track.attacks:
+        prefix = f"{attack}_{track.target_mode}_"
         if not attack_folder_name.startswith(prefix):
             continue
         rest = attack_folder_name[len(prefix) :]
-        for defence, adaptive in DEFENCES:
+        for defence, adaptive in track.defences:
             suffix = f"{defence}_{adaptive}"
             if rest == suffix:
                 return {
                     "attack": attack,
-                    "targetMode": "target",
+                    "targetMode": track.target_mode,
                     "defence": defence,
                     "adaptiveMode": adaptive,
                     "fullVideo": False,
                 }
     return {
         "attack": attack_folder_name,
-        "targetMode": "target",
+        "targetMode": track.target_mode,
         "defence": "unknown",
         "adaptiveMode": "non-adaptive",
         "fullVideo": False,
     }
 
 
-def build_run(log_row: dict[str, str], rows: list[dict[str, str]], csv_rel_path: str) -> dict[str, object]:
+def build_run(
+    track: TrackConfig,
+    log_row: dict[str, str],
+    rows: list[dict[str, str]],
+    csv_rel_path: str,
+) -> dict[str, object]:
     attack_folder_name = (log_row.get("attack") or "").strip()
     model = (log_row.get("model") or "").strip()
-    meta = parse_attack_meta(attack_folder_name)
+    meta = parse_attack_meta(track, attack_folder_name)
 
     counts_from_rows = compute_counts_from_rows(rows)
     clear_correct = parse_float(log_row.get("clear_correct"))
@@ -155,8 +218,9 @@ def build_run(log_row: dict[str, str], rows: list[dict[str, str]], csv_rel_path:
     target_success = counts_from_rows["target_success"] if target_success is None else target_success
     num_total = float(len(rows)) if num_total is None or num_total <= 0 else num_total
 
+    mean_metrics = list(BASE_MEAN_METRICS) + list(track.extra_mean_metrics)
     metrics: dict[str, Optional[float]] = {}
-    for metric in MEAN_METRICS:
+    for metric in mean_metrics:
         if metric == "eps":
             metrics[metric] = parse_float(log_row.get("eps"))
         elif metric == "max_iters":
@@ -181,9 +245,9 @@ def build_run(log_row: dict[str, str], rows: list[dict[str, str]], csv_rel_path:
     adv_acc = (100.0 * (clear_correct - attacked_success) / num_total) if num_total > 0 else None
 
     return {
-        "key": f"full_white_box|{attack_folder_name}|{model}",
-        "sourceId": "full_white_box",
-        "sourceFolder": "full_white_box",
+        "key": f"{track.source_id}|{attack_folder_name}|{model}",
+        "sourceId": track.source_id,
+        "sourceFolder": track.name,
         "attackFolder": attack_folder_name,
         "attack": meta["attack"],
         "model": model,
@@ -205,9 +269,9 @@ def build_run(log_row: dict[str, str], rows: list[dict[str, str]], csv_rel_path:
     }
 
 
-def build_site_data(results_root: Path, out_data: Path) -> dict[str, object]:
-    expected_folders = ordinary_folders()
-    out_root = out_data / "full_white_box"
+def build_site_data(track: TrackConfig, results_root: Path, out_data: Path) -> dict[str, object]:
+    expected_folders = ordinary_folders(track)
+    out_root = out_data / track.name
     if out_root.exists():
         shutil.rmtree(out_root)
     out_root.mkdir(parents=True, exist_ok=True)
@@ -242,7 +306,7 @@ def build_site_data(results_root: Path, out_data: Path) -> dict[str, object]:
             copied_csv += 1
 
     if merged_fields:
-        write_csv_rows(out_root / "log_full_white_box.csv", merged_rows, merged_fields)
+        write_csv_rows(out_root / f"log_{track.name}.csv", merged_rows, merged_fields)
 
     runs = []
     missing_csv = 0
@@ -261,14 +325,16 @@ def build_site_data(results_root: Path, out_data: Path) -> dict[str, object]:
         rows = read_csv_rows(csv_path)
         if not rows:
             continue
-        runs.append(build_run(log_row, rows, str(csv_path.relative_to(out_data))))
+        runs.append(build_run(track, log_row, rows, str(csv_path.relative_to(out_data))))
 
     cache = {
         "schema_version": 1,
+        "track": track.name,
         "generated_at": int(time.time()),
         "results_root": str(out_data),
         "runs": runs,
         "stats": {
+            "track": track.name,
             "ordinary_folders": len(expected_folders),
             "missing_folders": missing_folders,
             "merged_log_rows": len(merged_rows),
@@ -278,22 +344,30 @@ def build_site_data(results_root: Path, out_data: Path) -> dict[str, object]:
         },
     }
     out_data.mkdir(parents=True, exist_ok=True)
-    with (out_data / "website_cache.json").open("w", encoding="utf-8") as handle:
+    with (out_data / track.cache_file).open("w", encoding="utf-8") as handle:
         json.dump(cache, handle, ensure_ascii=False, indent=2, allow_nan=False)
     return cache["stats"]
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Build GitHub Pages data for the full_white_box benchmark.")
+    parser = argparse.ArgumentParser(description="Build GitHub Pages data for a benchmark track.")
+    parser.add_argument(
+        "--track",
+        default="full_white_box",
+        choices=sorted(TRACKS.keys()),
+        help="Which benchmark track to build.",
+    )
     parser.add_argument(
         "--results-root",
-        default="remote_results/autolaunch_full_white_box/results",
-        help="Pulled remote full_white_box results directory.",
+        default=None,
+        help="Pulled remote results directory for the track (defaults per track).",
     )
     parser.add_argument("--out-data", default="docs/data", help="GitHub Pages data directory.")
     args = parser.parse_args()
 
-    stats = build_site_data(Path(args.results_root).resolve(), Path(args.out_data).resolve())
+    track = TRACKS[args.track]
+    results_root = args.results_root or track.default_results_root
+    stats = build_site_data(track, Path(results_root).resolve(), Path(args.out_data).resolve())
     print(json.dumps(stats, indent=2, ensure_ascii=False))
     return 0
 

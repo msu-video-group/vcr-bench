@@ -1,0 +1,1 @@
+video_name,gt_label,gt_class,clear_label,clear_class,clear_conf,target_label,target_class,attacked_label,attacked_class,attacked_conf,benign_conf,psnr,ssim,mse,lpips,vmaf,time,iter_count,query_count
