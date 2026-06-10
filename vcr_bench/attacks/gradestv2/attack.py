@@ -24,7 +24,7 @@ class GradEstV2Attack(BaseQueryVideoAttack):
         sigma_decay: float = 0.997,
         n_samples: int = 10,
         n_samples_late: int = 5,
-        spatial_size: int | None = 224,    # larger default than gradest
+        spatial_size: int | None = 224,    # full-frame-ish default
         temporal_tiles: int = 8,           # independent noise groups along time axis
         smooth_scale: float = 0.5,         # noise generated at N*smooth_scale, upsampled to N
         query_budget: int = 100_000,

@@ -50,17 +50,14 @@ Attacks operate on sampled video tensors in `[0, 255]` before model preprocessin
 | `amifgsm` | AMI-FGSM | `default` | Gradient-based white-box | Momentum iterative FGSM variant with an adaptive momentum update. |
 | `bmtc` | BMTC | `default` | Query / transfer-oriented video attack | Background Mixup-induced Temporal Consistency attack with optional offline artifact preparation. |
 | `flickering` | Flickering Attack | `default` | Video-specific white-box | Optimizes temporally varying flicker perturbations with regularization. |
-| `gradest` | GradEst | `default` | Query-based black-box | Estimates gradients from model queries using random perturbation samples. |
-| `gradestv2` | GradEstV2 | `default` | Query-based black-box | Enhanced GradEst variant with temporal tiling, adaptive sampling, and coarse-to-fine search. |
+| `gradestv2` | GradEstV2 | `default` | Query-based black-box | NES-based black-box attack with temporal tiling, adaptive sampling, and coarse-to-fine search. |
 | `ifgsm` | I-FGSM | `default` | Gradient-based white-box | Iterative Fast Gradient Sign Method under an `L_\infty` perturbation budget. |
 | `korhonen_et_al` | Korhonen et al. | `default` | Gradient-based video attack | Video-oriented iterative attack following the Korhonen et al. perturbation strategy implemented in the benchmark. |
 | `mifgsm` | MI-FGSM | `default` | Gradient-based white-box | Momentum Iterative FGSM, accumulating normalized gradients across steps. |
-| `parsimonious` | Parsimonious Attack | `default` | Query-based black-box | Block-coordinate black-box attack designed to reduce query usage. |
 | `square` | Square Attack | `default` | Query-based black-box | Randomized square-patch black-box attack with optional guided variant. |
 | `ssah` | SSAH | `default` | Perceptual / style-oriented attack | SSAH-style attack integrated through the common sampled-video attack interface. |
 | `stadv` | ST-Adv | `default` | Spatiotemporal attack | Optimizes a spatial transformation field rather than only additive pixel noise. |
 | `stylefool` | StyleFool | `default` | Query / style-oriented attack | Style-transfer-based attack with an offline preparation hook for expensive style optimization. |
-| `tenad` | TENAD | `default` | Query-based video attack | Temporal adversarial attack with binary search and restart controls. |
 | `uap` | UAP | `default` | Universal perturbation | Learns or applies a universal video perturbation across samples. |
 | `zhang_dists` | Zhang-DISTS | `default` | Perceptual-loss white-box | Zhang-style iterative attack using a DISTS-oriented objective. |
 | `zhang_lpips` | Zhang-LPIPS | `default` | Perceptual-loss white-box | Zhang-style iterative attack using an LPIPS-oriented objective. |

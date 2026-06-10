@@ -1,0 +1,37 @@
+{
+  "_preset": "full_blackbox",
+  "_description": "Full black-box benchmark reproduction: 28 models x 4 query-based attacks (untargeted) x 7 defences, 30 videos. Reproduces results/remote_attacks/blackbox_full (the black-box explorer dataset).",
+  "tracks": [
+    {
+      "name": "blackbox-full",
+      "attack_name": "blackbox_full",
+      "dataset": "kinetics400",
+      "num_videos": 30,
+      "save_videos": 0,
+      "models": [
+        "actionclip", "timesformer", "tsmnonlocal", "ila",
+        "tsm", "tsn", "uniformerv2", "onepeace", "amd",
+        "tadaformer", "slowonly", "videomae", "tpn", "videomaev2",
+        "c2d", "r2plus1d", "tanet", "uniformer", "videoswin", "mvitv2",
+        "x3d", "csn", "i3d", "i3dnonlocal", "slowfast",
+        "internvideo", "internvideo2", "umt"
+      ],
+      "attacks": [
+        {"name": "gradestv2", "target": false},
+        {"name": "bmtc",      "target": false},
+        {"name": "stylefool", "target": false},
+        {"name": "square",    "target": false}
+      ],
+      "defences": [
+        {"name": "no_defence",      "adaptive": false},
+        {"name": "crop_resize",     "adaptive": true},
+        {"name": "flip",            "adaptive": true},
+        {"name": "gaussian_blur",   "adaptive": true},
+        {"name": "rotate",          "adaptive": true},
+        {"name": "shuffle",         "adaptive": true},
+        {"name": "temporal_median", "adaptive": true}
+      ],
+      "extra_args": ["--num-workers", "4", "--batch-size", "1", "--separate-logs", "--allow-misclassified"]
+    }
+  ]
+}

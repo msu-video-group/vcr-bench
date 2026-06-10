@@ -37,34 +37,35 @@
       "extra_args": ["--full-videos", "--separate-logs", "--allow-misclassified", "--metric-workers", "12", "--batch-size", "4", "--num-workers", "4"]
     },
     {
-      "name": "diffusion-white-box",
-      "attack_name": "diffusion_white_box",
+      "name": "blackbox-full",
+      "attack_name": "blackbox_full",
       "dataset": "kinetics400",
-      "num_videos": 100,
-      "save_videos": 5,
+      "num_videos": 30,
+      "save_videos": 0,
       "models": [
         "actionclip", "timesformer", "tsmnonlocal", "ila",
         "tsm", "tsn", "uniformerv2", "onepeace", "amd",
         "tadaformer", "slowonly", "videomae", "tpn", "videomaev2",
-        "c2d", "r2plus1d", "tanet", "uniformer", "videoswin", "mvitv2"
+        "c2d", "r2plus1d", "tanet", "uniformer", "videoswin", "mvitv2",
+        "x3d", "csn", "i3d", "i3dnonlocal", "slowfast",
+        "internvideo", "internvideo2", "umt"
       ],
       "attacks": [
-        {"name": "amifgsm",        "target": true},
-        {"name": "ifgsm",          "target": true},
-        {"name": "mifgsm",         "target": true},
-        {"name": "korhonen_et_al", "target": true},
-        {"name": "zhang_ssim",     "target": true},
-        {"name": "zhang_dists",    "target": true},
-        {"name": "zhang_lpips",    "target": true},
-        {"name": "stadv",          "target": true}
+        {"name": "gradestv2", "target": false},
+        {"name": "bmtc",      "target": false},
+        {"name": "stylefool", "target": false},
+        {"name": "square",    "target": false}
       ],
       "defences": [
-        {"name": "freqpure",  "adaptive": false},
-        {"name": "videopure", "adaptive": false},
-        {"name": "freqpure",  "adaptive": true},
-        {"name": "videopure", "adaptive": true}
+        {"name": "no_defence",      "adaptive": false},
+        {"name": "crop_resize",     "adaptive": true},
+        {"name": "flip",            "adaptive": true},
+        {"name": "gaussian_blur",   "adaptive": true},
+        {"name": "rotate",          "adaptive": true},
+        {"name": "shuffle",         "adaptive": true},
+        {"name": "temporal_median", "adaptive": true}
       ],
-      "extra_args": ["--full-videos", "--separate-logs", "--allow-misclassified", "--metric-workers", "12", "--batch-size", "4", "--num-workers", "4"]
+      "extra_args": ["--num-workers", "4", "--batch-size", "1", "--separate-logs", "--allow-misclassified"]
     }
   ]
 }

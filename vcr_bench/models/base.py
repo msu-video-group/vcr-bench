@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from abc import ABC, abstractmethod
 from typing import Any
 from pathlib import Path
@@ -19,6 +20,32 @@ from .pipeline_tools import (
 from vcr_bench.utils.io import decode_video_nthwc
 from vcr_bench.utils.preprocessing import to_format
 from vcr_bench.types import PredictionBundle
+
+
+# Diffusion defences (e.g. freqpure, videopure) run a diffusion model over every
+# sampled frame, so the heavy multi-clip test sampling (num_clips up to 10 -> 320
+# frames) is both prohibitively slow and overflows the purifier. When the env var
+# VCR_BENCH_DIFFUSION_MAX_FRAMES is set (by the attack CLI for diffusion defences),
+# reduce num_clips so that num_clips*clip_len stays within the cap. This is
+# reduce-only: it never raises a model's configured num_clips.
+def _apply_diffusion_frame_cap(loading: dict) -> dict:
+    try:
+        cap = int(os.getenv("VCR_BENCH_DIFFUSION_MAX_FRAMES", "0") or "0")
+    except (TypeError, ValueError):
+        cap = 0
+    if cap <= 0:
+        return loading
+    clip_len = int(loading.get("clip_len", 16) or 16)
+    num_clips = int(loading.get("num_clips", 1) or 1)
+    if clip_len <= 0 or num_clips <= 1:
+        return loading
+    max_clips = max(1, cap // clip_len)
+    new_clips = min(num_clips, max_clips)
+    if new_clips == num_clips:
+        return loading
+    capped = dict(loading)
+    capped["num_clips"] = new_clips
+    return capped
 
 
 class BaseVideoClassifier(ABC):
@@ -434,7 +461,8 @@ class BaseVideoClassifier(ABC):
         key = str(stage).lower()
         if key not in loading_configs or key not in preprocessing_configs:
             raise ValueError(f"Unsupported pipeline stage for {self.__class__.__name__}: {stage}")
-        return make_pipeline_config(key, loading_configs[key], preprocessing_configs[key])
+        loading = _apply_diffusion_frame_cap(loading_configs[key])
+        return make_pipeline_config(key, loading, preprocessing_configs[key])
 
     def _decode_video_raw(self, path: str) -> torch.Tensor:
         return decode_video_nthwc(path, return_info=False)

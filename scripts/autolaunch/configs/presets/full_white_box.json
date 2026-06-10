@@ -1,0 +1,42 @@
+{
+  "_preset": "full_white_box",
+  "_description": "Full white-box benchmark reproduction: 28 models x 8 gradient/optimisation attacks (targeted) x 8 defences, 100 videos. Reproduces results/remote_attacks/full_white_box (the white-box explorer dataset).",
+  "tracks": [
+    {
+      "name": "full-white-box",
+      "attack_name": "full_white_box",
+      "dataset": "kinetics400",
+      "num_videos": 100,
+      "save_videos": 5,
+      "models": [
+        "actionclip", "timesformer", "tsmnonlocal", "ila",
+        "tsm", "tsn", "uniformerv2", "onepeace", "amd",
+        "tadaformer", "slowonly", "videomae", "tpn", "videomaev2",
+        "c2d", "r2plus1d", "tanet", "uniformer", "videoswin", "mvitv2",
+        "x3d", "csn", "i3d", "i3dnonlocal", "slowfast",
+        "internvideo", "internvideo2", "umt"
+      ],
+      "attacks": [
+        {"name": "amifgsm",        "target": true},
+        {"name": "ifgsm",          "target": true},
+        {"name": "mifgsm",         "target": true},
+        {"name": "korhonen_et_al", "target": true},
+        {"name": "zhang_ssim",     "target": true},
+        {"name": "zhang_dists",    "target": true},
+        {"name": "zhang_lpips",    "target": true},
+        {"name": "stadv",          "target": true}
+      ],
+      "defences": [
+        {"name": "no_defence",           "adaptive": false},
+        {"name": "crop_resize",          "adaptive": true},
+        {"name": "flip",                 "adaptive": true},
+        {"name": "gaussian_blur",        "adaptive": true},
+        {"name": "rotate",               "adaptive": true},
+        {"name": "shuffle",              "adaptive": true},
+        {"name": "temporal_median",      "adaptive": true},
+        {"name": "diff_jpeg",            "adaptive": true}
+      ],
+      "extra_args": ["--full-videos", "--separate-logs", "--allow-misclassified", "--metric-workers", "12", "--batch-size", "4", "--num-workers", "4"]
+    }
+  ]
+}

@@ -12,7 +12,7 @@
         "delta": 0.6,
         "forward_noise_steps": 5,
         "sampling_method": "ddim",
-        "frame_batch_size": 1
+        "frame_batch_size": 16
       }
     },
     "strong": {
@@ -25,7 +25,7 @@
         "delta": 0.6,
         "forward_noise_steps": 5,
         "sampling_method": "ddim",
-        "frame_batch_size": 1
+        "frame_batch_size": 16
       }
     },
     "ddpm": {
@@ -38,7 +38,7 @@
         "delta": 0.6,
         "forward_noise_steps": 5,
         "sampling_method": "ddpm",
-        "frame_batch_size": 1
+        "frame_batch_size": 16
       }
     }
   },

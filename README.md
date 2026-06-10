@@ -111,10 +111,10 @@ no manual dataset setup needed.
 
 | Category | Methods |
 |---|---|
-| Gradient-based (L∞) | I-FGSM, MI-FGSM, AMI-FGSM, GradEst, GradEstV2 |
+| Gradient-based (L∞) | I-FGSM, MI-FGSM, AMI-FGSM, GradEstV2 |
 | Perceptual / spatial | StAdv, SSAH, StyleFool, Zhang-DISTS, Zhang-LPIPS, Zhang-SSIM, Flickering |
-| Universal / transferable | UAP, BMTC, TENAD, Korhonen et al. |
-| Query-based (black-box) | Square, Parsimonious |
+| Universal / transferable | UAP, BMTC, Korhonen et al. |
+| Query-based (black-box) | Square |
 
 ### Defences
 
@@ -142,7 +142,7 @@ no manual dataset setup needed.
 
 ```
 --model <name>                 Model to attack (x3d, timesformer, videomae, …)
---attack <name>                Attack method (ifgsm, mifgsm, square, gradest, …)
+--attack <name>                Attack method (ifgsm, mifgsm, square, gradestv2, …)
 --dataset kinetics400          Dataset name
 --dataset-subset <name>        Named subset from configs/datasets.toml
 --num-videos <n>               How many videos to process  [default: 25]

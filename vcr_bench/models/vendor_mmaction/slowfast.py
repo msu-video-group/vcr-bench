@@ -255,10 +255,10 @@ class ResNet3dSlowFast(nn.Module):
         for i, layer_name in enumerate(self.slow_path.res_layers):
             x_slow = getattr(self.slow_path, layer_name)(x_slow)
             x_fast = getattr(self.fast_path, layer_name)(x_fast)
-            if i == 0 and self.slow_path.with_pool2:
-                x_slow = self.slow_path.pool2(x_slow)
-            if i == 0 and self.fast_path.with_pool2:
-                x_fast = self.fast_path.pool2(x_fast)
+            # NOTE: mmaction's ResNet3dSlowFast.forward intentionally does NOT apply
+            # pool2 (the temporal MaxPool after layer1 used by the standalone ResNet3d).
+            # Applying it here halves the temporal dim of both pathways and corrupts
+            # every downstream feature (~14% top-1 drop), so it must be omitted.
             if i != len(self.slow_path.res_layers) - 1 and self.slow_path.lateral:
                 lateral_name = self.slow_path.lateral_connections[i]
                 x_slow = torch.cat((x_slow, getattr(self.slow_path, lateral_name)(x_fast)), dim=1)

@@ -1,0 +1,38 @@
+{
+  "_preset": "quick",
+  "_description": "Partial / smoke reproduction: a tiny slice of both tracks (3 models, 1 attack, no_defence + 1 adaptive defence, 8 videos) to sanity-check the pipeline end to end in minutes. Uses distinct attack_name values (quick_white_box / quick_blackbox) so it writes to scratch folders and never overwrites the canonical full_white_box / blackbox_full results.",
+  "tracks": [
+    {
+      "name": "quick-white-box",
+      "attack_name": "quick_white_box",
+      "dataset": "kinetics400",
+      "num_videos": 8,
+      "save_videos": 0,
+      "models": ["tsn", "tsm", "timesformer"],
+      "attacks": [
+        {"name": "ifgsm", "target": true}
+      ],
+      "defences": [
+        {"name": "no_defence", "adaptive": false},
+        {"name": "flip",       "adaptive": true}
+      ],
+      "extra_args": ["--full-videos", "--separate-logs", "--allow-misclassified", "--metric-workers", "8", "--batch-size", "2", "--num-workers", "2"]
+    },
+    {
+      "name": "quick-blackbox",
+      "attack_name": "quick_blackbox",
+      "dataset": "kinetics400",
+      "num_videos": 8,
+      "save_videos": 0,
+      "models": ["tsn", "tsm", "timesformer"],
+      "attacks": [
+        {"name": "gradestv2", "target": false}
+      ],
+      "defences": [
+        {"name": "no_defence", "adaptive": false},
+        {"name": "flip",       "adaptive": true}
+      ],
+      "extra_args": ["--num-workers", "2", "--batch-size", "1", "--separate-logs", "--allow-misclassified"]
+    }
+  ]
+}

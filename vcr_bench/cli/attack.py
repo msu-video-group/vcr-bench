@@ -2,9 +2,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
+
+# Defences that run a diffusion model per frame; for these we cap classifier
+# frame sampling (see _apply_diffusion_frame_cap in models/base.py).
+DIFFUSION_DEFENCES = {"freqpure", "videopure"}
+DEFAULT_DIFFUSION_MAX_FRAMES = 32
 
 from vcr_bench.attacks import create_attack, get_attack_spec
 from vcr_bench.cli.common import (
@@ -91,6 +97,14 @@ def build_base_parser(*, add_help: bool) -> argparse.ArgumentParser:
     p.add_argument("--metric-workers", default="auto", help="Parallel artifact/VMAF workers: auto or a positive integer. Default: auto.")
     p.add_argument("--defence", default=None, help="Defence name to apply.")
     p.add_argument("--adaptive", action="store_true", help="Apply defence adaptively before attack gradient computation.")
+    p.add_argument(
+        "--diffusion-max-frames",
+        type=int,
+        default=None,
+        help="Diffusion-defence mode: cap classifier sampling to roughly this many frames "
+        "(reduce-only num_clips). Default: auto (32) for diffusion defences (freqpure/videopure), "
+        "off otherwise. Pass 0 to disable.",
+    )
     p.add_argument("--separate-logs", action="store_true")
     p.add_argument("--comment", default="")
     p.add_argument("--results-root", default="results", help="Root folder for attack result CSV outputs")
@@ -290,6 +304,18 @@ def main(argv: list[str] | None = None) -> None:
         return
 
     effective_stage = "attack" if args.lite_attack else args.pipeline_stage
+
+    # Diffusion-defence mode: cap classifier frame sampling so the per-frame
+    # diffusion purifier isn't fed the full multi-clip test sampling (up to 320
+    # frames). Auto-on for diffusion defences; --diffusion-max-frames overrides
+    # (0 disables). Consumed via env by models.base._apply_diffusion_frame_cap.
+    diffusion_cap = args.diffusion_max_frames
+    if diffusion_cap is None:
+        is_diffusion = (args.defence or "").strip().lower() in DIFFUSION_DEFENCES
+        diffusion_cap = DEFAULT_DIFFUSION_MAX_FRAMES if is_diffusion else 0
+    if diffusion_cap and diffusion_cap > 0:
+        os.environ["VCR_BENCH_DIFFUSION_MAX_FRAMES"] = str(int(diffusion_cap))
+        print(f"[attack] diffusion-defence mode: capping sampling to ~{int(diffusion_cap)} frames")
 
     if args.print_defaults:
         ctx = build_model_dataset_context(args, pipeline_stage_override=effective_stage)
